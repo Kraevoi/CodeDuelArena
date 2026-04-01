@@ -69,9 +69,85 @@ namespace CodeDuelArena.Hubs
                 
                 DataStorage.SaveUsers(users);
                 
-                await Clients.Client(p1.ConnectionId).SendAsync("DuelStarted", new { duelId, opponent = p2.Username });
-                await Clients.Client(p2.ConnectionId).SendAsync("DuelStarted", new { duelId, opponent = p1.Username });
+                await Clients.Client(p1.ConnectionId).SendAsync("DuelStarted", new { 
+                    duelId, 
+                    opponent = p2.Username,
+                    task = GenerateDuelTask()
+                });
+                await Clients.Client(p2.ConnectionId).SendAsync("DuelStarted", new { 
+                    duelId, 
+                    opponent = p1.Username,
+                    task = GenerateDuelTask()
+                });
                 await Clients.All.SendAsync("SystemMessage", $"⚔️ ДУЭЛЬ НАЧАЛАСЬ: {p1.Username} VS {p2.Username}!");
+                
+                // Запускаем таймер на 60 секунд
+                _ = Task.Run(async () => {
+                    await Task.Delay(60000);
+                    var currentUsers = DataStorage.GetUsers();
+                    var u1 = currentUsers.FirstOrDefault(u => u.ConnectionId == p1.ConnectionId);
+                    var u2 = currentUsers.FirstOrDefault(u => u.ConnectionId == p2.ConnectionId);
+                    if (u1 != null && u1.CurrentDuelId == duelId)
+                    {
+                        u1.CurrentDuelId = -1;
+                        u1.Losses++;
+                        DataStorage.SaveUsers(currentUsers);
+                        await Clients.Client(p1.ConnectionId).SendAsync("DuelTimeout", "Время вышло! Ты проиграл!");
+                    }
+                    if (u2 != null && u2.CurrentDuelId == duelId)
+                    {
+                        u2.CurrentDuelId = -1;
+                        u2.Losses++;
+                        DataStorage.SaveUsers(currentUsers);
+                        await Clients.Client(p2.ConnectionId).SendAsync("DuelTimeout", "Время вышло! Ты проиграл!");
+                    }
+                });
+            }
+        }
+
+        private string GenerateDuelTask()
+        {
+            var tasks = new[]
+            {
+                "Напиши функцию, которая возвращает сумму чисел от 1 до n",
+                "Напиши функцию, которая проверяет, является ли число простым",
+                "Напиши функцию, которая возвращает n-ное число Фибоначчи",
+                "Напиши функцию, которая разворачивает строку"
+            };
+            return tasks[new Random().Next(tasks.Length)];
+        }
+
+        public async Task SubmitDuelSolution(string solution, int duelId)
+        {
+            var users = DataStorage.GetUsers();
+            var user = users.FirstOrDefault(u => u.ConnectionId == Context.ConnectionId);
+            
+            if (user != null && user.CurrentDuelId == duelId)
+            {
+                // Простая проверка решения
+                bool isCorrect = !string.IsNullOrWhiteSpace(solution) && solution.Length > 5;
+                
+                if (isCorrect)
+                {
+                    user.CurrentDuelId = -1;
+                    user.Wins++;
+                    user.Score += 100;
+                    DataStorage.SaveUsers(users);
+                    
+                    await Clients.Caller.SendAsync("DuelResult", new { 
+                        success = true, 
+                        message = "Ты победил в дуэли! +100 очков",
+                        newScore = user.Score
+                    });
+                    await Clients.All.SendAsync("UpdateLeaderboard", users.OrderByDescending(u => u.Score).Take(10));
+                }
+                else
+                {
+                    await Clients.Caller.SendAsync("DuelResult", new { 
+                        success = false, 
+                        message = "Решение неверное! Попробуй еще."
+                    });
+                }
             }
         }
 
@@ -84,9 +160,9 @@ namespace CodeDuelArena.Hubs
             if (user == null || quest == null)
                 return;
 
+            // Проверка решения
             bool isCorrect = solutionCode.Contains(quest.SolutionCode) || 
-                            solutionCode.Trim().Replace(" ", "") == quest.SolutionCode.Replace(" ", "") ||
-                            solutionCode.ToLower().Contains(quest.ExpectedOutput.ToLower());
+                            solutionCode.Trim().Replace(" ", "") == quest.SolutionCode.Replace(" ", "");
 
             if (isCorrect && !user.CompletedQuests.Contains(quest.Id.ToString()))
             {
@@ -114,24 +190,24 @@ namespace CodeDuelArena.Hubs
         }
 
         public async Task SendChatMessage(string message)
-{
-    if (string.IsNullOrWhiteSpace(message))
-        return;
-        
-    var users = DataStorage.GetUsers();
-    var user = users.FirstOrDefault(u => u.ConnectionId == Context.ConnectionId);
-    
-    if (user != null)
-    {
-        var chatMsg = new ChatMessage 
-        { 
-            User = user.Username, 
-            Text = message, 
-            Time = DateTime.Now.ToString("HH:mm") 
-        };
-        await Clients.All.SendAsync("ReceiveChatMessage", chatMsg);
-    }
-}
+        {
+            if (string.IsNullOrWhiteSpace(message))
+                return;
+                
+            var users = DataStorage.GetUsers();
+            var user = users.FirstOrDefault(u => u.ConnectionId == Context.ConnectionId);
+            
+            if (user != null)
+            {
+                var chatMsg = new ChatMessage 
+                { 
+                    User = user.Username, 
+                    Text = message, 
+                    Time = DateTime.Now.ToString("HH:mm") 
+                };
+                await Clients.All.SendAsync("ReceiveChatMessage", chatMsg);
+            }
+        }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -150,9 +226,3 @@ namespace CodeDuelArena.Hubs
         }
     }
 }
-
-
-
-
-//ipconfig | findstr IPv4
-//http://192.168.1.195:8080

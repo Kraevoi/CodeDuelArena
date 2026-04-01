@@ -1,90 +1,6 @@
-﻿// ============ АУТЕНТИФИКАЦИЯ ============
-$(document).ready(function() {
-    // Проверка авторизации при загрузке
-    $.get("/Auth/CheckAuth", function(data) {
-        if (data.authenticated) {
-            showLoggedInUI(data.username, data.score);
-            if (window.connection) {
-                connection.invoke("RegisterUser", data.username);
-            }
-        } else {
-            showLoggedOutUI();
-        }
-    });
-    
-    $("#showAuthBtn").click(function() {
-        $("#authModal").modal("show");
-    });
-    
-    $("#loginBtn").click(function() {
-        let username = $("#loginUsername").val().trim();
-        let password = $("#loginPassword").val();
-        let remember = $("#loginRemember").is(":checked");
-        
-        $.post("/Auth/Login", { username: username, password: password, rememberMe: remember })
-            .done(function(data) {
-                if (data.success) {
-                    $("#authModal").modal("hide");
-                    showLoggedInUI(data.username, data.score);
-                    if (window.connection) {
-                        connection.invoke("RegisterUser", data.username);
-                    }
-                    showNotification(`Добро пожаловать, ${data.username}!`, "success");
-                } else {
-                    $("#authError").text(data.error).removeClass("d-none");
-                }
-            });
-    });
-    
-    $("#registerBtnModal").click(function() {
-        let username = $("#regUsername").val().trim();
-        let email = $("#regEmail").val().trim();
-        let password = $("#regPassword").val();
-        let remember = $("#regRemember").is(":checked");
-        
-        $.post("/Auth/Register", { username: username, password: password, email: email, rememberMe: remember })
-            .done(function(data) {
-                if (data.success) {
-                    $("#authModal").modal("hide");
-                    showLoggedInUI(data.username, 0);
-                    if (window.connection) {
-                        connection.invoke("RegisterUser", data.username);
-                    }
-                    showNotification(`Регистрация успешна! Добро пожаловать, ${data.username}!`, "success");
-                } else {
-                    $("#authError").text(data.error).removeClass("d-none");
-                }
-            });
-    });
-    
-    $("#logoutBtn").on("click", function() {
-        $.post("/Auth/Logout", function() {
-            showLoggedOutUI();
-            if (window.connection) {
-                window.connection.stop();
-                location.reload();
-            }
-        });
-    });
-    
-    function showLoggedInUI(username, score) {
-        $("#userInfo").removeClass("d-none");
-        $("#showAuthBtn").addClass("d-none");
-        $("#userNameDisplay").text(username);
-        $("#userScoreDisplay").text(`⭐ ${score}`);
-    }
-    
-    function showLoggedOutUI() {
-        $("#userInfo").addClass("d-none");
-        $("#showAuthBtn").removeClass("d-none");
-    }
-    
-    window.showLoggedInUI = showLoggedInUI;
-});
-
-
-let connection = null;
+﻿let connection = null;
 let currentUser = null;
+let currentDuel = null;
 
 $(function() {
     connection = new signalR.HubConnectionBuilder()
@@ -96,34 +12,22 @@ $(function() {
         currentUser = user;
         $("#registerBtn").html(`<i class="fas fa-user"></i> ${user.username}`).prop("disabled", true);
         $("#usernameInput").prop("disabled", true);
-        
-        // Обновляем статистику в главной
         updateUserStats(user);
-        
-        // Показываем уведомление
         showNotification(`Добро пожаловать, ${user.username}!`, "success");
     });
     
     connection.on("UpdateLeaderboard", (users) => {
         let html = '<table class="table table-dark table-striped">';
-        html += '<thead class="bg-danger">\
-                    <tr>\
-                        <th>#</th>\
-                        <th>Игрок</th>\
-                        <th>Очки</th>\
-                        <th>Победы</th>\
-                    </tr>\
-                </thead><tbody>';
-        
+        html += '<thead class="bg-danger"><tr><th>#</th><th>Игрок</th><th>⭐ Очки</th><th>🏆 Победы</th><th>💀 Поражения</th></tr></thead><tbody>';
         users.forEach((u, idx) => {
             html += `<tr>
                         <td class="fw-bold">${idx + 1}</td>
                         <td>${escapeHtml(u.username)}</td>
                         <td class="text-danger fw-bold">${u.score}</td>
                         <td>${u.wins}</td>
-                    </tr>`;
+                        <td>${u.losses}</td>
+                     </tr>`;
         });
-        
         html += '</tbody></table>';
         $("#leaderboardTable").html(html);
     });
@@ -151,15 +55,55 @@ $(function() {
     });
     
     connection.on("DuelStarted", (data) => {
-        showNotification(`⚔️ ДУЭЛЬ НАЧАЛАСЬ! Противник: ${data.opponent}. Duel ID: ${data.duelId}`, "warning");
+        currentDuel = data;
+        showDuelModal(data);
     });
     
+    connection.on("DuelResult", (res) => {
+        if(res.success && res.newScore !== undefined && currentUser) {
+            currentUser.score = res.newScore;
+            updateUserStats(currentUser);
+        }
+        showNotification(res.message, res.success ? "success" : "error");
+        $("#duelModal").modal("hide");
+        currentDuel = null;
+    });
+    
+    connection.on("DuelTimeout", (msg) => {
+        showNotification(msg, "error");
+        $("#duelModal").modal("hide");
+        currentDuel = null;
+    });
+    
+    // Отправка сообщения
+    $("#sendChatBtn").click(function() {
+        let msg = $("#chatInput").val();
+        if(msg && connection && currentUser) {
+            connection.invoke("SendChatMessage", msg);
+            $("#chatInput").val("");
+        }
+    });
+    
+    $("#chatInput").keypress(function(e) {
+        if(e.which == 13) {
+            $("#sendChatBtn").click();
+        }
+    });
+    
+    // Регистрация
     $("#registerBtn").click(() => {
         let name = $("#usernameInput").val().trim();
         if(name) {
             connection.invoke("RegisterUser", name);
         } else {
             showNotification("Введи никнейм, епта!", "error");
+        }
+    });
+    
+    // Кнопка дуэли
+    $("#duelQueueBtn").click(function() {
+        if(connection && currentUser) {
+            connection.invoke("JoinDuelQueue");
         }
     });
     
@@ -186,6 +130,59 @@ function updateUserStats(user) {
     }
 }
 
+function showDuelModal(data) {
+    let modalHtml = `
+        <div class="modal fade" id="duelModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content bg-dark text-white border-danger">
+                    <div class="modal-header border-danger">
+                        <h5 class="modal-title">⚔️ ДУЭЛЬ С ${data.opponent}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger text-center">
+                            <h3>⏱️ <span id="duelTimer">60</span> секунд</h3>
+                        </div>
+                        <div class="card bg-black border-danger mb-3">
+                            <div class="card-header bg-danger">ЗАДАНИЕ</div>
+                            <div class="card-body">
+                                <p class="text-info">${data.task}</p>
+                            </div>
+                        </div>
+                        <textarea id="duelSolution" class="form-control bg-black text-white border-danger" rows="6" placeholder="Напиши решение..."></textarea>
+                        <button id="submitDuelBtn" class="btn btn-danger w-100 mt-3">⚔️ ОТПРАВИТЬ РЕШЕНИЕ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $("body").append(modalHtml);
+    $("#duelModal").modal("show");
+    
+    let timeLeft = 60;
+    let timer = setInterval(() => {
+        timeLeft--;
+        $("#duelTimer").text(timeLeft);
+        if(timeLeft <= 0) {
+            clearInterval(timer);
+        }
+    }, 1000);
+    
+    $("#submitDuelBtn").click(function() {
+        let solution = $("#duelSolution").val();
+        if(solution && window.connection && data.duelId) {
+            window.connection.invoke("SubmitDuelSolution", solution, data.duelId);
+            clearInterval(timer);
+        }
+    });
+    
+    $("#duelModal").on("hidden.bs.modal", function() {
+        $(this).remove();
+        clearInterval(timer);
+    });
+}
+
 function showNotification(message, type) {
     let bgColor = type === "success" ? "#28a745" : type === "error" ? "#dc3545" : "#17a2b8";
     let notification = $(`<div class="alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} alert-dismissible fade show" style="position: fixed; top: 80px; right: 20px; z-index: 99999; min-width: 300px;" role="alert">
@@ -208,3 +205,12 @@ function escapeHtml(str) {
         return m;
     });
 }
+
+window.submitQuest = function(questId) {
+    let code = $(`#code_${questId}`).val();
+    if(code && window.connection) {
+        window.connection.invoke("SubmitQuestSolution", code, questId);
+    } else if(!code) {
+        alert("Напиши решение!");
+    }
+};

@@ -6,10 +6,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 builder.Services.AddSession();
+builder.Services.AddDistributedMemoryCache();
 
 var app = builder.Build();
 
-// Важно для работы SignalR на Render
+// Настройка для работы SignalR на Render
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
