@@ -1,0 +1,8 @@
+<div style="position:fixed; bottom:20px; right:20px; width:320px; background:#111; border:1px solid red; border-radius:8px; z-index:1000;">
+    <div class="bg-danger text-white p-2" onclick="$('#chatBox').toggle()">💬 ЧАТ</div>
+    <div id="chatBox" style="display:none; height:300px; overflow:auto; padding:10px;">
+        <div id="chatMessages"></div>
+        <input id="chatInput" class="form-control mt-2" placeholder="Сообщение..." />
+        <button id="chatSend" class="btn btn-danger btn-sm w-100 mt-1">Отправить</button>
+    </div>
+</div>

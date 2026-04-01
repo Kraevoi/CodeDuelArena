@@ -13,6 +13,5 @@ namespace CodeDuelArena.Models
         public int CurrentDuelId { get; set; } = -1;
         public bool IsInQueue { get; set; } = false;
         public List<string> CompletedQuests { get; set; } = new List<string>();
-        public List<string> CompletedHacks { get; set; } = new List<string>();
     }
 }
