@@ -8,9 +8,6 @@ builder.Services.AddSignalR();
 builder.Services.AddSession();
 builder.Services.AddDistributedMemoryCache();
 
-// Настройка Data Protection для работы в контейнере
-builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo("/tmp/keys"));
-
 var app = builder.Build();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -29,7 +26,6 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthorization();
 
-// Отключаем глобальный Antiforgery для API маршрутов
 app.MapControllers();
 app.MapControllerRoute(
     name: "default",
