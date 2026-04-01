@@ -9,31 +9,79 @@ namespace CodeDuelArena.Controllers
     public class AuthController : Controller
     {
         [HttpPost]
-        public IActionResult Register(RegisterModel model)
+        public IActionResult Register([FromBody] RegisterModel model)
         {
-            if (ModelState.IsValid)
+            if (model == null || string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Password))
             {
-                if (UserAccounts.Register(model.Username, model.Password, model.Email, out string error))
-                {
-                    var account = UserAccounts.Login(model.Username, model.Password, out _);
-                    if (account != null)
-                    {
-                        SetAuthCookie(account.Username, model.RememberMe);
-                        return Json(new { success = true, username = account.Username });
-                    }
-                }
-                return Json(new { success = false, error = error });
+                return Json(new { success = false, error = "Заполните все поля" });
             }
-            return Json(new { success = false, error = "Неверные данные" });
+
+            if (UserAccounts.Register(model.Username, model.Password, model.Email ?? "", out string error))
+            {
+                var account = UserAccounts.Login(model.Username, model.Password, out _);
+                if (account != null)
+                {
+                    SetAuthCookie(account.Username, model.RememberMe);
+                    
+                    // Создаем пользователя в DataStorage для SignalR
+                    var users = DataStorage.GetUsers();
+                    if (!users.Any(u => u.Username == account.Username))
+                    {
+                        users.Add(new UserModel 
+                        { 
+                            Username = account.Username,
+                            Score = account.Score,
+                            Wins = account.Wins,
+                            Losses = account.Losses,
+                            CompletedQuests = account.CompletedQuests ?? new List<string>()
+                        });
+                        DataStorage.SaveUsers(users);
+                    }
+                    
+                    return Json(new { success = true, username = account.Username, score = account.Score });
+                }
+                return Json(new { success = false, error = "Ошибка при входе после регистрации" });
+            }
+            return Json(new { success = false, error = error });
         }
         
         [HttpPost]
-        public IActionResult Login(LoginModel model)
+        public IActionResult Login([FromBody] LoginModel model)
         {
+            if (model == null || string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Password))
+            {
+                return Json(new { success = false, error = "Заполните все поля" });
+            }
+
             var account = UserAccounts.Login(model.Username, model.Password, out string error);
             if (account != null)
             {
                 SetAuthCookie(account.Username, model.RememberMe);
+                
+                // Создаем пользователя в DataStorage для SignalR
+                var users = DataStorage.GetUsers();
+                var existingUser = users.FirstOrDefault(u => u.Username == account.Username);
+                if (existingUser == null)
+                {
+                    users.Add(new UserModel 
+                    { 
+                        Username = account.Username,
+                        Score = account.Score,
+                        Wins = account.Wins,
+                        Losses = account.Losses,
+                        CompletedQuests = account.CompletedQuests ?? new List<string>()
+                    });
+                    DataStorage.SaveUsers(users);
+                }
+                else
+                {
+                    existingUser.Score = account.Score;
+                    existingUser.Wins = account.Wins;
+                    existingUser.Losses = account.Losses;
+                    existingUser.CompletedQuests = account.CompletedQuests ?? new List<string>();
+                    DataStorage.SaveUsers(users);
+                }
+                
                 return Json(new { success = true, username = account.Username, score = account.Score });
             }
             return Json(new { success = false, error = error });
@@ -46,6 +94,7 @@ namespace CodeDuelArena.Controllers
             return Json(new { success = true });
         }
         
+        [HttpGet]
         public IActionResult CheckAuth()
         {
             var username = GetAuthUser();

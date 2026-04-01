@@ -20,7 +20,8 @@ namespace CodeDuelArena.Data
         
         public static List<UserAccount> GetAll()
         {
-            return JsonConvert.DeserializeObject<List<UserAccount>>(File.ReadAllText(AccountsPath)) ?? new List<UserAccount>();
+            var json = File.ReadAllText(AccountsPath);
+            return JsonConvert.DeserializeObject<List<UserAccount>>(json) ?? new List<UserAccount>();
         }
         
         public static void SaveAll(List<UserAccount> accounts)
@@ -54,7 +55,12 @@ namespace CodeDuelArena.Data
             {
                 Username = username,
                 PasswordHash = HashPassword(password),
-                Email = email,
+                Email = email ?? "",
+                Score = 0,
+                Wins = 0,
+                Losses = 0,
+                CompletedQuests = new List<string>(),
+                CompletedHacks = new List<string>(),
                 CreatedAt = DateTime.Now,
                 LastLogin = DateTime.Now
             };
@@ -91,6 +97,21 @@ namespace CodeDuelArena.Data
         public static UserAccount? GetByUsername(string username)
         {
             return GetAll().FirstOrDefault(a => a.Username.ToLower() == username.ToLower());
+        }
+        
+        public static void UpdateStats(string username, int scoreDelta = 0, bool win = false, bool loss = false, string? questId = null)
+        {
+            var accounts = GetAll();
+            var account = accounts.FirstOrDefault(a => a.Username.ToLower() == username.ToLower());
+            if (account != null)
+            {
+                account.Score += scoreDelta;
+                if (win) account.Wins++;
+                if (loss) account.Losses++;
+                if (questId != null && !account.CompletedQuests.Contains(questId))
+                    account.CompletedQuests.Add(questId);
+                SaveAll(accounts);
+            }
         }
         
         private static string HashPassword(string password)
