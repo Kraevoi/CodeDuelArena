@@ -1,7 +1,7 @@
 ﻿// ============ АУТЕНТИФИКАЦИЯ ============
 $(document).ready(function() {
     // Проверка авторизации при загрузке
-    $.get("/Auth/CheckAuth", function(data) {
+    $.get("/api/Auth/check", function(data) {
         if (data.authenticated) {
             showLoggedInUI(data.username, data.score);
             if (window.connection) {
@@ -22,7 +22,7 @@ $(document).ready(function() {
         let remember = $("#loginRemember").is(":checked");
         
         $.ajax({
-            url: "/Auth/Login",
+            url: "/api/Auth/login",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({ username: username, password: password, rememberMe: remember }),
@@ -48,7 +48,7 @@ $(document).ready(function() {
         let remember = $("#regRemember").is(":checked");
         
         $.ajax({
-            url: "/Auth/Register",
+            url: "/api/Auth/register",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({ username: username, password: password, email: email, rememberMe: remember }),
@@ -68,7 +68,7 @@ $(document).ready(function() {
     });
     
     $("#logoutBtn").on("click", function() {
-        $.post("/Auth/Logout", function() {
+        $.post("/api/Auth/logout", function() {
             showLoggedOutUI();
             if (window.connection) {
                 location.reload();

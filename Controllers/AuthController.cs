@@ -6,9 +6,13 @@ using System.Text.Json;
 
 namespace CodeDuelArena.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class AuthController : Controller
     {
         [HttpPost]
+        [Route("register")]
+        [IgnoreAntiforgeryToken]
         public IActionResult Register([FromBody] RegisterModel model)
         {
             if (model == null || string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Password))
@@ -23,7 +27,6 @@ namespace CodeDuelArena.Controllers
                 {
                     SetAuthCookie(account.Username, model.RememberMe);
                     
-                    // Создаем пользователя в DataStorage для SignalR
                     var users = DataStorage.GetUsers();
                     if (!users.Any(u => u.Username == account.Username))
                     {
@@ -46,6 +49,8 @@ namespace CodeDuelArena.Controllers
         }
         
         [HttpPost]
+        [Route("login")]
+        [IgnoreAntiforgeryToken]
         public IActionResult Login([FromBody] LoginModel model)
         {
             if (model == null || string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Password))
@@ -58,7 +63,6 @@ namespace CodeDuelArena.Controllers
             {
                 SetAuthCookie(account.Username, model.RememberMe);
                 
-                // Создаем пользователя в DataStorage для SignalR
                 var users = DataStorage.GetUsers();
                 var existingUser = users.FirstOrDefault(u => u.Username == account.Username);
                 if (existingUser == null)
@@ -88,6 +92,8 @@ namespace CodeDuelArena.Controllers
         }
         
         [HttpPost]
+        [Route("logout")]
+        [IgnoreAntiforgeryToken]
         public IActionResult Logout()
         {
             Response.Cookies.Delete("auth_user");
@@ -95,6 +101,8 @@ namespace CodeDuelArena.Controllers
         }
         
         [HttpGet]
+        [Route("check")]
+        [IgnoreAntiforgeryToken]
         public IActionResult CheckAuth()
         {
             var username = GetAuthUser();

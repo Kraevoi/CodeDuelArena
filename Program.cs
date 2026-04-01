@@ -8,9 +8,11 @@ builder.Services.AddSignalR();
 builder.Services.AddSession();
 builder.Services.AddDistributedMemoryCache();
 
+// Настройка Data Protection для работы в контейнере
+builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo("/tmp/keys"));
+
 var app = builder.Build();
 
-// Настройка для работы SignalR на Render
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
@@ -27,6 +29,8 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthorization();
 
+// Отключаем глобальный Antiforgery для API маршрутов
+app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
