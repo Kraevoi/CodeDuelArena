@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using CodeDuelArena.Models;
 
@@ -11,10 +12,9 @@ namespace CodeDuelArena.Controllers
         public IActionResult Register([FromBody] RegisterModel model)
         {
             if (_users.ContainsKey(model.Username))
-                return Json(new { success = false, error = "Имя пользователя уже занято" });
+                return Json(new { success = false, error = "Имя занято" });
             
             _users[model.Username] = (model.Password, model.Email ?? "", 0, 0, 0, new List<string>());
-            
             SetCookie(model.Username, model.RememberMe);
             return Json(new { success = true, username = model.Username, score = 0 });
         }
@@ -23,7 +23,7 @@ namespace CodeDuelArena.Controllers
         public IActionResult Login([FromBody] LoginModel model)
         {
             if (!_users.TryGetValue(model.Username, out var user) || user.Password != model.Password)
-                return Json(new { success = false, error = "Неверный логин или пароль" });
+                return Json(new { success = false, error = "Неверные данные" });
             
             SetCookie(model.Username, model.RememberMe);
             return Json(new { success = true, username = model.Username, score = user.Score });
@@ -41,7 +41,7 @@ namespace CodeDuelArena.Controllers
         {
             var username = Request.Cookies["auth_user"];
             if (username != null && _users.ContainsKey(username))
-                return Json(new { authenticated = true, username = username, score = _users[username].Score });
+                return Json(new { authenticated = true, username, score = _users[username].Score });
             return Json(new { authenticated = false });
         }
 
