@@ -5,7 +5,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 builder.Services.AddSession();
-builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

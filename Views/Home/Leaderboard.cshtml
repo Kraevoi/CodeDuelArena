@@ -1,9 +1,45 @@
 @model List<CodeDuelArena.Models.UserModel>
-<h2 class="text-danger">🏆 ТАБЛИЦА</h2>
-<table class="table table-dark">
-    <tr><th>#</th><th>Игрок</th><th>Очки</th><th>Победы</th><th>Квесты</th></tr>
-    @for(int i=0;i<Model.Count;i++)
-    {
-        <tr><td>@(i+1)</td><td>@Model[i].Username</td><td>@Model[i].Score</td><td>@Model[i].Wins</td><td>@Model[i].CompletedQuests.Count</td></tr>
-    }
-</table>
+@{
+    ViewData["Title"] = "Таблица лидеров";
+}
+
+<h2 class="text-danger fw-bold mb-4">🏆 ТАБЛИЦА ЛИДЕРОВ АРЕНЫ</h2>
+
+<div class="table-responsive">
+    <table class="table table-dark table-hover table-striped">
+        <thead class="bg-danger text-white">
+            <tr>
+                <th>#</th>
+                <th>ИГРОК</th>
+                <th>⭐ ОЧКИ</th>
+                <th>🏆 ПОБЕДЫ</th>
+                <th>💀 ПОРАЖЕНИЯ</th>
+                <th>✅ КВЕСТЫ</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(Model.Any())
+            {
+                for(int i = 0; i < Model.Count; i++)
+                {
+                    <tr>
+                        <td class="fw-bold text-@(i == 0 ? "warning" : i == 1 ? "secondary" : i == 2 ? "info" : "white")">
+                            @(i == 0 ? "👑" : i == 1 ? "🥈" : i == 2 ? "🥉" : $"#{i+1}")
+                        </td>
+                        <td>@Model[i].Username</td>
+                        <td class="text-danger fw-bold">@Model[i].Score</td>
+                        <td>@Model[i].Wins</td>
+                        <td>@Model[i].Losses</td>
+                        <td>@Model[i].CompletedQuests.Count</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted">Нет игроков</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

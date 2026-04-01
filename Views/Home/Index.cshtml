@@ -1,29 +1,58 @@
 ﻿@{
     ViewData["Title"] = "Арена";
 }
-<h1 class="text-danger">⚔️ CODE DUEL ARENA</h1>
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card bg-dark">
-            <div class="card-header bg-danger">🔥 Статистика</div>
-            <div class="card-body" id="userStats">Войдите чтобы видеть статистику</div>
-            <button id="duelQueueBtn" class="btn btn-danger">⚔️ В очередь на дуэль</button>
+
+<div class="text-center">
+    <h1 class="display-4 text-danger fw-bold">⚔️ CODE DUEL ARENA</h1>
+    <p class="lead text-info">Исправляй легаси, взламывай, уничтожай оппонентов.</p>
+    
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <div class="card bg-dark border-danger mb-4">
+                <div class="card-header bg-danger text-white fw-bold">
+                    🔥 ТВОЯ СТАТИСТИКА
+                </div>
+                <div class="card-body" id="userStats">
+                    <div class="text-center text-muted">
+                        <p>Войди в систему, чтобы видеть свои данные</p>
+                        <i class="text-info">Введи никнейм в правом верхнем углу</i>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button id="duelQueueBtn" class="btn btn-danger w-100">
+                        ⚡ ВСТАТЬ В ОЧЕРЕДЬ НА ДУЭЛЬ
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card bg-dark">
-            <div class="card-header bg-danger">📢 Жалоба</div>
-            <div class="card-body">
-                <form method="post" action="/Home/ReportBug">
-                    <textarea name="bugText" class="form-control" rows="3"></textarea>
-                    <button type="submit" class="btn btn-danger mt-2">Отправить</button>
-                </form>
+        
+        <div class="col-md-6">
+            <div class="card bg-dark border-danger">
+                <div class="card-header bg-danger text-white fw-bold">
+                    📢 ЖАЛОБА / БАГ
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="ReportBug">
+                        <textarea name="bugText" class="form-control bg-black text-white border-danger" rows="4" placeholder="Опиши проблему или баг..."></textarea>
+                        <button type="submit" class="btn btn-danger mt-3 w-100">
+                            🚨 ОТПРАВИТЬ ЖАЛОБУ
+                        </button>
+                    </form>
+                    @if(TempData["ReportMessage"] != null)
+                    {
+                        <div class="alert alert-info mt-3 mb-0">
+                            @TempData["ReportMessage"]
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </div>
+    
+    <div class="mt-5">
+        <h3 class="text-danger fw-bold">🏆 ТАБЛИЦА ЛИДЕРОВ</h3>
+        <div id="leaderboardTable" class="mt-3">
+            <div class="text-center text-muted">Загрузка...</div>
+        </div>
+    </div>
 </div>
-<div class="mt-4"><h3>🏆 ТАБЛИЦА</h3><div id="leaderboardTable"></div></div>
-<script>
-    $("#duelQueueBtn").click(() => connection?.invoke("JoinDuelQueue"));
-    setInterval(() => { if(currentUser) $("#userStats").html(`Ник: ${currentUser.username}<br>Очки: ${currentUser.score}<br>Победы: ${currentUser.wins}<br>Квестов: ${currentUser.completedQuests?.length || 0}`); }, 500);
-</script>

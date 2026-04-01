@@ -1,14 +1,31 @@
 @model List<CodeDuelArena.Models.QuestModel>
-<h2 class="text-danger">🛠️ КВЕСТЫ</h2>
-@foreach(var q in Model)
-{
-    <div class="card bg-dark mb-3">
-        <div class="card-header bg-danger">@q.Title [@q.Points pts]</div>
-        <div class="card-body">
-            <p>@q.Description</p>
-            <pre class="bg-black text-warning p-2">@q.LegacyCode</pre>
-            <textarea id="code_@q.Id" class="form-control bg-dark text-white" rows="4"></textarea>
-            <button class="btn btn-danger mt-2" onclick="submitQuest(@q.Id)">Сдать</button>
-        </div>
-    </div>
+@{
+    ViewData["Title"] = "Квесты";
 }
+
+<h2 class="text-danger fw-bold mb-4">🛠️ КВЕСТЫ ИСПРАВЛЕНИЯ ЛЕГАСИ И ВЗЛОМА</h2>
+
+<div class="row" id="questList">
+    @foreach(var quest in Model)
+    {
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark border-@(quest.Type == "LegacyFix" ? "danger" : "primary") h-100">
+                <div class="card-header bg-@(quest.Type == "LegacyFix" ? "danger" : "primary") text-white fw-bold">
+                    @(quest.Type == "LegacyFix" ? "🔧 ЛЕГАСИ-КОД" : "💀 ВЗЛОМ") - @quest.Title
+                    <span class="badge bg-warning text-dark float-end">@quest.Points очков</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-info">@quest.Description</p>
+                    <div class="bg-black p-3 rounded mb-3">
+                        <small class="text-secondary">КОД ДЛЯ ИСПРАВЛЕНИЯ:</small>
+                        <pre class="text-warning mt-2 mb-0" style="font-size: 0.9rem;"><code>@quest.LegacyCode</code></pre>
+                    </div>
+                    <textarea id="code_@quest.Id" class="form-control bg-black text-white border-danger" rows="6" placeholder="Напиши свой код здесь..."></textarea>
+                    <button class="btn btn-outline-@(quest.Type == "LegacyFix" ? "danger" : "primary") w-100 mt-3" onclick="submitQuest(@quest.Id)">
+                        ⚔️ СДАТЬ РЕШЕНИЕ
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>

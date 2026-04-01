@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using CodeDuelArena.Data;
-using System.IO;
 
 namespace CodeDuelArena.Controllers
 {

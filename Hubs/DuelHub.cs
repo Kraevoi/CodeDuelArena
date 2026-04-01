@@ -64,12 +64,17 @@ namespace CodeDuelArena.Hubs
                 user.CompletedQuests.Add(quest.Id.ToString());
                 DataStorage.SaveUsers(users);
                 
-                await Clients.Caller.SendAsync("QuestResult", new { success = true, message = $"✅ +{quest.Points} очков", newScore = user.Score });
+                await Clients.Caller.SendAsync("QuestResult", new { success = true, message = $"✅ Квест выполнен! +{quest.Points} очков", newScore = user.Score });
                 await Clients.All.SendAsync("UpdateLeaderboard", users.OrderByDescending(u => u.Score).Take(10));
+                await Clients.All.SendAsync("SystemMessage", $"{user.Username} прошел квест '{quest.Title}'!");
+            }
+            else if (isCorrect && user.CompletedQuests.Contains(quest.Id.ToString()))
+            {
+                await Clients.Caller.SendAsync("QuestResult", new { success = false, message = "Ты уже прошел этот квест!" });
             }
             else
             {
-                await Clients.Caller.SendAsync("QuestResult", new { success = false, message = "❌ Неверно" });
+                await Clients.Caller.SendAsync("QuestResult", new { success = false, message = "❌ Решение неверное. Попробуй еще." });
             }
         }
 
@@ -82,7 +87,8 @@ namespace CodeDuelArena.Hubs
             {
                 user.IsInQueue = true;
                 DataStorage.SaveUsers(users);
-                await Clients.Caller.SendAsync("QueueJoined", "В очереди...");
+                await Clients.Caller.SendAsync("QueueJoined", "Ты в очереди на дуэль!");
+                await Clients.All.SendAsync("SystemMessage", $"{user.Username} ищет противника...");
                 await TryMatchUsers();
             }
         }
@@ -91,6 +97,13 @@ namespace CodeDuelArena.Hubs
         {
             var users = DataStorage.GetUsers();
             var queue = users.Where(u => u.IsInQueue && u.CurrentDuelId == -1).ToList();
+            
+            var tasks = new[] { 
+                "Напиши функцию, которая возвращает сумму чисел от 1 до n",
+                "Напиши функцию, которая проверяет, является ли число простым",
+                "Напиши функцию, которая возвращает n-ное число Фибоначчи",
+                "Напиши функцию, которая разворачивает строку"
+            };
             
             for (int i = 0; i < queue.Count - 1; i += 2)
             {
@@ -104,8 +117,11 @@ namespace CodeDuelArena.Hubs
                 p2.CurrentDuelId = duelId;
                 DataStorage.SaveUsers(users);
                 
-                await Clients.Client(p1.ConnectionId).SendAsync("DuelStarted", new { duelId, opponent = p2.Username, task = "Напиши функцию суммы чисел от 1 до n" });
-                await Clients.Client(p2.ConnectionId).SendAsync("DuelStarted", new { duelId, opponent = p1.Username, task = "Напиши функцию суммы чисел от 1 до n" });
+                var task = tasks[new Random().Next(tasks.Length)];
+                
+                await Clients.Client(p1.ConnectionId).SendAsync("DuelStarted", new { duelId, opponent = p2.Username, task });
+                await Clients.Client(p2.ConnectionId).SendAsync("DuelStarted", new { duelId, opponent = p1.Username, task });
+                await Clients.All.SendAsync("SystemMessage", $"⚔️ ДУЭЛЬ: {p1.Username} VS {p2.Username}!");
             }
         }
 
@@ -123,6 +139,7 @@ namespace CodeDuelArena.Hubs
                 
                 await Clients.Caller.SendAsync("DuelResult", new { success = true, message = "Победа! +100 очков", newScore = user.Score });
                 await Clients.All.SendAsync("UpdateLeaderboard", users.OrderByDescending(u => u.Score).Take(10));
+                await Clients.All.SendAsync("SystemMessage", $"{user.Username} победил в дуэли!");
             }
         }
 
@@ -135,6 +152,7 @@ namespace CodeDuelArena.Hubs
                 users.Remove(user);
                 DataStorage.SaveUsers(users);
                 await Clients.All.SendAsync("UpdateLeaderboard", users.OrderByDescending(u => u.Score).Take(10));
+                await Clients.All.SendAsync("SystemMessage", $"{user.Username} покинул арену...");
             }
             await base.OnDisconnectedAsync(exception);
         }

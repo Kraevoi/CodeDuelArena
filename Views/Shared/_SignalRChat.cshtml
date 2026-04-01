@@ -21,20 +21,4 @@
     function toggleChat() {
         $("#chatContent").slideToggle(200);
     }
-    
-    $(document).ready(function() {
-        $("#sendChatBtn").click(function() {
-            let msg = $("#chatInput").val();
-            if(msg && window.connection) {
-                window.connection.invoke("SendChatMessage", msg);
-                $("#chatInput").val("");
-            }
-        });
-        
-        $("#chatInput").keypress(function(e) {
-            if(e.which == 13) {
-                $("#sendChatBtn").click();
-            }
-        });
-    });
 </script>

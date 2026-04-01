@@ -26,7 +26,7 @@ namespace CodeDuelArena.Data
                     Id = 1,
                     Title = "Легаси: Факториал",
                     Type = "LegacyFix",
-                    Description = "Исправь функцию факториала",
+                    Description = "Функция считает факториал, но использует глобальные переменные. Исправь.",
                     LegacyCode = "int result; void Fact(int n) { if(n==0) return; result*=n; Fact(n-1); }",
                     SolutionCode = "int Fact(int n) { if(n<=1) return 1; return n * Fact(n-1); }",
                     Points = 150
@@ -36,7 +36,7 @@ namespace CodeDuelArena.Data
                     Id = 2,
                     Title = "Взлом пароля",
                     Type = "Hack",
-                    Description = "Верни true",
+                    Description = "Взломай функцию проверки пароля.",
                     LegacyCode = "bool CheckPass(string p) { return p == \"admin123\"; }",
                     SolutionCode = "return true;",
                     Points = 200
