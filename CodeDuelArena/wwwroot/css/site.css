@@ -1,0 +1,18 @@
+/* Дополнительные стили, если нужно */
+.card {
+    border-radius: 8px;
+}
+
+pre code {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+.text-glow {
+    animation: pulse 1s infinite;
+}

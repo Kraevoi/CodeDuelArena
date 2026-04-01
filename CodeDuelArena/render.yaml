@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: codeduel-arena
+    runtime: dotnet
+    buildCommand: dotnet publish -c Release -o release
+    startCommand: cd release && dotnet CodeDuelArena.dll
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+    plan: free

@@ -1,0 +1,42 @@
+@model List<CodeDuelArena.Models.QuestModel>
+@{
+    ViewData["Title"] = "Квесты";
+}
+
+<h2 class="text-danger fw-bold mb-4">🛠️ КВЕСТЫ ИСПРАВЛЕНИЯ ЛЕГАСИ И ВЗЛОМА</h2>
+
+<div class="row" id="questList">
+    @foreach(var quest in Model)
+    {
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark border-@(quest.Type == "LegacyFix" ? "danger" : "primary") h-100">
+                <div class="card-header bg-@(quest.Type == "LegacyFix" ? "danger" : "primary") text-white fw-bold">
+                    @(quest.Type == "LegacyFix" ? "🔧 ЛЕГАСИ-КОД" : "💀 ВЗЛОМ") - @quest.Title
+                    <span class="badge bg-warning text-dark float-end">@quest.Points очков</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-info">@quest.Description</p>
+                    <div class="bg-black p-3 rounded mb-3">
+                        <small class="text-secondary">КОД ДЛЯ ИСПРАВЛЕНИЯ:</small>
+                        <pre class="text-warning mt-2 mb-0" style="font-size: 0.9rem;"><code>@quest.LegacyCode</code></pre>
+                    </div>
+                    <textarea id="code_@quest.Id" class="form-control bg-black text-white border-danger" rows="6" placeholder="Напиши свой код здесь..."></textarea>
+                    <button class="btn btn-outline-@(quest.Type == "LegacyFix" ? "danger" : "primary") w-100 mt-3" onclick="window.submitQuest(@quest.Id)">
+                        ⚔️ СДАТЬ РЕШЕНИЕ
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+    window.submitQuest = function(questId) {
+        let code = document.getElementById(`code_${questId}`).value;
+        if(code && window.connection) {
+            window.connection.invoke("SubmitQuestSolution", code, questId);
+        } else if(!code) {
+            alert("Напиши решение, епта!");
+        }
+    };
+</script>
