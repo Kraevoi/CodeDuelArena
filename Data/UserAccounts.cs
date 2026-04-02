@@ -11,35 +11,60 @@ namespace CodeDuelArena.Data
 {
     public static class UserAccounts
     {
-        private static readonly string AccountsPath = "accounts.json";
+        // Используем постоянную директорию на Render
+        private static readonly string DataDir = Environment.GetEnvironmentVariable("RENDER") != null 
+            ? "/opt/render/project/src/data" 
+            : Directory.GetCurrentDirectory();
+        
+        private static readonly string AccountsPath = Path.Combine(DataDir, "accounts.json");
 
         static UserAccounts()
         {
+            // Создаем папку если не существует
+            if (!Directory.Exists(DataDir))
+                Directory.CreateDirectory(DataDir);
+            
             if (!File.Exists(AccountsPath))
                 File.WriteAllText(AccountsPath, "[]");
         }
 
         public static List<UserAccount> GetAll()
         {
-            return JsonConvert.DeserializeObject<List<UserAccount>>(File.ReadAllText(AccountsPath)) ?? new List<UserAccount>();
+            try
+            {
+                var json = File.ReadAllText(AccountsPath);
+                return JsonConvert.DeserializeObject<List<UserAccount>>(json) ?? new List<UserAccount>();
+            }
+            catch
+            {
+                return new List<UserAccount>();
+            }
         }
 
         public static void SaveAll(List<UserAccount> accounts)
         {
-            File.WriteAllText(AccountsPath, JsonConvert.SerializeObject(accounts, Formatting.Indented));
+            try
+            {
+                var json = JsonConvert.SerializeObject(accounts, Formatting.Indented);
+                File.WriteAllText(AccountsPath, json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка сохранения: {ex.Message}");
+            }
         }
 
         public static bool Register(string username, string password, string email, out string error)
         {
             var accounts = GetAll();
 
-            if (accounts.Any(a => a.Username.ToLower() == username.ToLower()))
+            if (accounts.Any(a => a.Username.Equals(username, StringComparison.OrdinalIgnoreCase)))
             {
                 error = "Имя пользователя уже занято";
                 return false;
             }
 
-            if (accounts.Any(a => a.Email.ToLower() == email.ToLower() && !string.IsNullOrWhiteSpace(email)))
+            if (!string.IsNullOrWhiteSpace(email) && accounts.Any(a => a.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
             {
                 error = "Email уже используется";
                 return false;
@@ -62,6 +87,10 @@ namespace CodeDuelArena.Data
                 Username = username,
                 PasswordHash = HashPassword(password),
                 Email = email ?? "",
+                Score = 0,
+                Wins = 0,
+                Losses = 0,
+                CompletedQuests = new List<string>(),
                 RegisteredAt = DateTime.Now,
                 LastLogin = DateTime.Now
             };
@@ -75,7 +104,7 @@ namespace CodeDuelArena.Data
         public static UserAccount? Login(string username, string password, out string error)
         {
             var accounts = GetAll();
-            var account = accounts.FirstOrDefault(a => a.Username.ToLower() == username.ToLower());
+            var account = accounts.FirstOrDefault(a => a.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
 
             if (account == null)
             {
@@ -97,13 +126,13 @@ namespace CodeDuelArena.Data
 
         public static UserAccount? GetByUsername(string username)
         {
-            return GetAll().FirstOrDefault(a => a.Username.ToLower() == username.ToLower());
+            return GetAll().FirstOrDefault(a => a.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
         }
 
         public static void UpdateStats(string username, int scoreDelta = 0, bool win = false, bool loss = false, string? questId = null)
         {
             var accounts = GetAll();
-            var account = accounts.FirstOrDefault(a => a.Username.ToLower() == username.ToLower());
+            var account = accounts.FirstOrDefault(a => a.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
             if (account != null)
             {
                 account.Score += scoreDelta;
