@@ -7,7 +7,12 @@ namespace CodeDuelArena.Controllers
     {
         public IActionResult Index() => View();
         public IActionResult Quests() => View(DataStorage.GetQuests());
-        public IActionResult Leaderboard() => View(DataStorage.GetUsers().OrderByDescending(u => u.Score).Take(10).ToList());
+        
+        public IActionResult Leaderboard() 
+        {
+            var allUsers = UserAccounts.GetAllUsers();
+            return View(allUsers.OrderByDescending(u => u.Score).Take(20).ToList());
+        }
 
         [HttpPost]
         public IActionResult ReportBug(string bugText)

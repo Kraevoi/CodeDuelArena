@@ -1,41 +1,32 @@
 using Microsoft.AspNetCore.Mvc;
 using CodeDuelArena.Models;
+using CodeDuelArena.Data;
 
 namespace CodeDuelArena.Controllers
 {
     public class AuthController : Controller
     {
-        private static Dictionary<string, (string Password, string Email, int Score, int Wins, int Losses, List<string> Quests)> _users = new();
-
         [HttpPost]
         public IActionResult Register(RegisterModel model)
         {
-            if (string.IsNullOrWhiteSpace(model.Username) || model.Username.Length < 3)
-                return Json(new { success = false, error = "Логин минимум 3 символа" });
-            
-            if (string.IsNullOrWhiteSpace(model.Password) || model.Password.Length < 4)
-                return Json(new { success = false, error = "Пароль минимум 4 символа" });
-            
-            if (_users.ContainsKey(model.Username))
-                return Json(new { success = false, error = "Имя уже занято" });
-            
-            _users[model.Username] = (model.Password, model.Email ?? "", 0, 0, 0, new List<string>());
-            
-            SetCookie(model.Username, model.RememberMe);
-            return Json(new { success = true, username = model.Username, score = 0 });
+            if (UserAccounts.Register(model.Username, model.Password, model.Email ?? "", out string error))
+            {
+                SetCookie(model.Username, model.RememberMe);
+                return Json(new { success = true, username = model.Username, score = 0 });
+            }
+            return Json(new { success = false, error = error });
         }
 
         [HttpPost]
         public IActionResult Login(LoginModel model)
         {
-            if (!_users.TryGetValue(model.Username, out var user))
-                return Json(new { success = false, error = "Пользователь не найден" });
-            
-            if (user.Password != model.Password)
-                return Json(new { success = false, error = "Неверный пароль" });
-            
-            SetCookie(model.Username, model.RememberMe);
-            return Json(new { success = true, username = model.Username, score = user.Score });
+            var account = UserAccounts.Login(model.Username, model.Password, out string error);
+            if (account != null)
+            {
+                SetCookie(model.Username, model.RememberMe);
+                return Json(new { success = true, username = account.Username, score = account.Score });
+            }
+            return Json(new { success = false, error = error });
         }
 
         [HttpPost]
@@ -49,50 +40,20 @@ namespace CodeDuelArena.Controllers
         public IActionResult CheckAuth()
         {
             var username = Request.Cookies["auth_user"];
-            if (username != null && _users.ContainsKey(username))
-                return Json(new { authenticated = true, username, score = _users[username].Score });
+            if (username != null)
+            {
+                var account = UserAccounts.GetByUsername(username);
+                if (account != null)
+                    return Json(new { authenticated = true, username = account.Username, score = account.Score });
+            }
             return Json(new { authenticated = false });
         }
-        
-        public static int GetUserScore(string username)
+
+        [HttpGet]
+        public IActionResult GetAllUsers()
         {
-            return _users.TryGetValue(username, out var user) ? user.Score : 0;
-        }
-        
-        public static void AddUserScore(string username, int points)
-        {
-            if (_users.ContainsKey(username))
-            {
-                var user = _users[username];
-                _users[username] = (user.Password, user.Email, user.Score + points, user.Wins, user.Losses, user.Quests);
-            }
-        }
-        
-        public static void AddUserWin(string username)
-        {
-            if (_users.ContainsKey(username))
-            {
-                var user = _users[username];
-                _users[username] = (user.Password, user.Email, user.Score + 100, user.Wins + 1, user.Losses, user.Quests);
-            }
-        }
-        
-        public static void AddQuestToUser(string username, string questId)
-        {
-            if (_users.ContainsKey(username))
-            {
-                var user = _users[username];
-                if (!user.Quests.Contains(questId))
-                {
-                    var newQuests = new List<string>(user.Quests) { questId };
-                    _users[username] = (user.Password, user.Email, user.Score, user.Wins, user.Losses, newQuests);
-                }
-            }
-        }
-        
-        public static bool HasCompletedQuest(string username, string questId)
-        {
-            return _users.TryGetValue(username, out var user) && user.Quests.Contains(questId);
+            var users = UserAccounts.GetAllUsers();
+            return Json(users.Select(u => new { u.Username, u.Score, u.Wins, u.Losses, u.CompletedQuests }));
         }
 
         private void SetCookie(string username, bool remember)

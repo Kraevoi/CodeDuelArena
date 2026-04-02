@@ -1,9 +1,9 @@
-@model List<CodeDuelArena.Models.UserModel>
+@model List<CodeDuelArena.Models.UserAccount>
 @{
     ViewData["Title"] = "Таблица лидеров";
 }
 
-<h2 class="text-danger fw-bold mb-4">🏆 ТАБЛИЦА ЛИДЕРОВ АРЕНЫ</h2>
+<h2 class="text-danger fw-bold mb-4">🏆 ТАБЛИЦА ЛИДЕРОВ (ВСЕ ИГРОКИ)</h2>
 
 <div class="table-responsive">
     <table class="table table-dark table-hover table-striped">
@@ -15,6 +15,7 @@
                 <th>🏆 ПОБЕДЫ</th>
                 <th>💀 ПОРАЖЕНИЯ</th>
                 <th>✅ КВЕСТЫ</th>
+                <th>📅 ДАТА РЕГИСТРАЦИИ</th>
             </tr>
         </thead>
         <tbody>
@@ -31,14 +32,13 @@
                         <td>@Model[i].Wins</td>
                         <td>@Model[i].Losses</td>
                         <td>@Model[i].CompletedQuests.Count</td>
+                        <td>@Model[i].RegisteredAt.ToString("dd.MM.yyyy")</td>
                     </tr>
                 }
             }
             else
             {
-                <tr>
-                    <td colspan="6" class="text-center text-muted">Нет игроков</td>
-                </tr>
+                <tr><td colspan="7" class="text-center text-muted">Нет игроков</td></tr>
             }
         </tbody>
     </table>
