@@ -20,16 +20,9 @@ $(function() {
     });
     
     connection.on("UpdateLeaderboard", (users) => {
-        let html = '<table class="table table-dark table-striped">';
-        html += '<thead class="bg-danger"><tr><th>#</th><th>Игрок</th><th>⭐ Очки</th><th>🏆 Победы</th><th>💀 Поражения</th></tr></thead><tbody>';
+        let html = '<table class="table table-dark table-striped"><thead class="bg-danger"><tr><th>#</th><th>Игрок</th><th>⭐ Очки</th><th>🏆 Победы</th><th>💀 Поражения</th></tr></thead><tbody>';
         users.forEach((u, idx) => {
-            html += `<tr>
-                        <td class="fw-bold">${idx + 1}</td>
-                        <td>${escapeHtml(u.username)}</td>
-                        <td class="text-danger fw-bold">${u.score}</td>
-                        <td>${u.wins}</td>
-                        <td>${u.losses}</td>
-                     </tr>`;
+            html += `<tr><td class="fw-bold">${idx + 1}</td><td>${escapeHtml(u.username)}</td><td class="text-danger fw-bold">${u.score}</td><td>${u.wins}</td><td>${u.losses}</td></tr>`;
         });
         html += '</tbody></table>';
         $("#leaderboardTable").html(html);
@@ -97,12 +90,18 @@ $(function() {
         let password = $("#loginPassword").val();
         let remember = $("#loginRemember").is(":checked");
         
-        $.post("/Auth/Login", { username: username, password: password, rememberMe: remember }, (data) => {
-            if(data.success) {
-                $("#authModal").modal("hide");
-                location.reload();
-            } else {
-                $("#authError").text(data.error).removeClass("d-none");
+        $.ajax({
+            url: "/Auth/Login",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ username: username, password: password, rememberMe: remember }),
+            success: function(data) {
+                if(data.success) {
+                    $("#authModal").modal("hide");
+                    location.reload();
+                } else {
+                    $("#authError").text(data.error).removeClass("d-none");
+                }
             }
         });
     });
@@ -113,12 +112,18 @@ $(function() {
         let password = $("#regPassword").val();
         let remember = $("#regRemember").is(":checked");
         
-        $.post("/Auth/Register", { username: username, password: password, email: email, rememberMe: remember }, (data) => {
-            if(data.success) {
-                $("#authModal").modal("hide");
-                location.reload();
-            } else {
-                $("#authError").text(data.error).removeClass("d-none");
+        $.ajax({
+            url: "/Auth/Register",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ username: username, password: password, email: email, rememberMe: remember }),
+            success: function(data) {
+                if(data.success) {
+                    $("#authModal").modal("hide");
+                    location.reload();
+                } else {
+                    $("#authError").text(data.error).removeClass("d-none");
+                }
             }
         });
     });

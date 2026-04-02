@@ -1,12 +1,11 @@
-using System;
 using System.Collections.Generic;
 
 namespace CodeDuelArena.Models
 {
     public class UserModel
     {
-        public string ConnectionId { get; set; } = Guid.NewGuid().ToString();
-        public string Username { get; set; } = "Anon";
+        public string ConnectionId { get; set; } = "";
+        public string Username { get; set; } = "";
         public int Score { get; set; } = 0;
         public int Wins { get; set; } = 0;
         public int Losses { get; set; } = 0;

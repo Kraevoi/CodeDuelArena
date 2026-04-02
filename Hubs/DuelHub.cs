@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using CodeDuelArena.Models;
 using CodeDuelArena.Data;
+using CodeDuelArena.Controllers;
 
 namespace CodeDuelArena.Hubs
 {
@@ -13,13 +14,19 @@ namespace CodeDuelArena.Hubs
             
             if (user == null)
             {
-                user = new UserModel { ConnectionId = Context.ConnectionId, Username = username };
+                user = new UserModel 
+                { 
+                    ConnectionId = Context.ConnectionId, 
+                    Username = username,
+                    Score = AuthController.GetUserScore(username)
+                };
                 users.Add(user);
                 DataStorage.SaveUsers(users);
             }
             else
             {
                 user.Username = username;
+                user.Score = AuthController.GetUserScore(username);
                 DataStorage.SaveUsers(users);
             }
             
@@ -55,26 +62,34 @@ namespace CodeDuelArena.Hubs
             
             if (user == null || quest == null) return;
 
+            string questIdStr = questId.ToString();
+            
+            // Проверка решения
             bool isCorrect = solutionCode.Contains(quest.SolutionCode) || 
-                            solutionCode.Trim().Replace(" ", "") == quest.SolutionCode.Replace(" ", "");
+                            solutionCode.Trim().Replace(" ", "").Replace("\n", "").Replace("\r", "") == quest.SolutionCode.Replace(" ", "").Replace("\n", "").Replace("\r", "");
 
-            if (isCorrect && !user.CompletedQuests.Contains(quest.Id.ToString()))
+            if (isCorrect && !user.CompletedQuests.Contains(questIdStr))
             {
+                // Начисляем баллы
                 user.Score += quest.Points;
-                user.CompletedQuests.Add(quest.Id.ToString());
+                user.CompletedQuests.Add(questIdStr);
                 DataStorage.SaveUsers(users);
                 
-                await Clients.Caller.SendAsync("QuestResult", new { success = true, message = $"✅ Квест выполнен! +{quest.Points} очков", newScore = user.Score });
-                await Clients.All.SendAsync("UpdateLeaderboard", users.OrderByDescending(u => u.Score).Take(10));
-                await Clients.All.SendAsync("SystemMessage", $"{user.Username} прошел квест '{quest.Title}'!");
+                // Обновляем баллы в AuthController
+                AuthController.AddUserScore(user.Username, quest.Points);
+                AuthController.AddQuestToUser(user.Username, questIdStr);
+                
+                await Clients.Caller.SendAsync("QuestResult", new { success = true, message = $"✅ +{quest.Points} очков!", newScore = user.Score });
+                await Clients.All.SendAsync("UpdateLeaderboard", DataStorage.GetUsers().OrderByDescending(u => u.Score).Take(10));
+                await Clients.All.SendAsync("SystemMessage", $"{user.Username} прошел квест '{quest.Title}' и получил {quest.Points} очков!");
             }
-            else if (isCorrect && user.CompletedQuests.Contains(quest.Id.ToString()))
+            else if (isCorrect && user.CompletedQuests.Contains(questIdStr))
             {
                 await Clients.Caller.SendAsync("QuestResult", new { success = false, message = "Ты уже прошел этот квест!" });
             }
             else
             {
-                await Clients.Caller.SendAsync("QuestResult", new { success = false, message = "❌ Решение неверное. Попробуй еще." });
+                await Clients.Caller.SendAsync("QuestResult", new { success = false, message = "❌ Решение неверное. Попробуй еще!" });
             }
         }
 
@@ -102,7 +117,8 @@ namespace CodeDuelArena.Hubs
                 "Напиши функцию, которая возвращает сумму чисел от 1 до n",
                 "Напиши функцию, которая проверяет, является ли число простым",
                 "Напиши функцию, которая возвращает n-ное число Фибоначчи",
-                "Напиши функцию, которая разворачивает строку"
+                "Напиши функцию, которая разворачивает строку",
+                "Напиши функцию, которая возвращает максимальное число в массиве"
             };
             
             for (int i = 0; i < queue.Count - 1; i += 2)
@@ -121,7 +137,29 @@ namespace CodeDuelArena.Hubs
                 
                 await Clients.Client(p1.ConnectionId).SendAsync("DuelStarted", new { duelId, opponent = p2.Username, task });
                 await Clients.Client(p2.ConnectionId).SendAsync("DuelStarted", new { duelId, opponent = p1.Username, task });
-                await Clients.All.SendAsync("SystemMessage", $"⚔️ ДУЭЛЬ: {p1.Username} VS {p2.Username}!");
+                await Clients.All.SendAsync("SystemMessage", $"⚔️ ДУЭЛЬ НАЧАЛАСЬ: {p1.Username} VS {p2.Username}!");
+                
+                // Таймер 60 секунд
+                _ = Task.Run(async () => {
+                    await Task.Delay(60000);
+                    var currentUsers = DataStorage.GetUsers();
+                    var u1 = currentUsers.FirstOrDefault(u => u.ConnectionId == p1.ConnectionId);
+                    var u2 = currentUsers.FirstOrDefault(u => u.ConnectionId == p2.ConnectionId);
+                    if (u1 != null && u1.CurrentDuelId == duelId)
+                    {
+                        u1.CurrentDuelId = -1;
+                        u1.Losses++;
+                        DataStorage.SaveUsers(currentUsers);
+                        await Clients.Client(p1.ConnectionId).SendAsync("DuelTimeout", "Время вышло! Ты проиграл!");
+                    }
+                    if (u2 != null && u2.CurrentDuelId == duelId)
+                    {
+                        u2.CurrentDuelId = -1;
+                        u2.Losses++;
+                        DataStorage.SaveUsers(currentUsers);
+                        await Clients.Client(p2.ConnectionId).SendAsync("DuelTimeout", "Время вышло! Ты проиграл!");
+                    }
+                });
             }
         }
 
@@ -137,8 +175,11 @@ namespace CodeDuelArena.Hubs
                 user.Score += 100;
                 DataStorage.SaveUsers(users);
                 
-                await Clients.Caller.SendAsync("DuelResult", new { success = true, message = "Победа! +100 очков", newScore = user.Score });
-                await Clients.All.SendAsync("UpdateLeaderboard", users.OrderByDescending(u => u.Score).Take(10));
+                // Обновляем в AuthController
+                AuthController.AddUserWin(user.Username);
+                
+                await Clients.Caller.SendAsync("DuelResult", new { success = true, message = "Победа! +100 очков!", newScore = user.Score });
+                await Clients.All.SendAsync("UpdateLeaderboard", DataStorage.GetUsers().OrderByDescending(u => u.Score).Take(10));
                 await Clients.All.SendAsync("SystemMessage", $"{user.Username} победил в дуэли!");
             }
         }
@@ -151,7 +192,7 @@ namespace CodeDuelArena.Hubs
             {
                 users.Remove(user);
                 DataStorage.SaveUsers(users);
-                await Clients.All.SendAsync("UpdateLeaderboard", users.OrderByDescending(u => u.Score).Take(10));
+                await Clients.All.SendAsync("UpdateLeaderboard", DataStorage.GetUsers().OrderByDescending(u => u.Score).Take(10));
                 await Clients.All.SendAsync("SystemMessage", $"{user.Username} покинул арену...");
             }
             await base.OnDisconnectedAsync(exception);
