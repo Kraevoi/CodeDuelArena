@@ -8,7 +8,7 @@ namespace CodeDuelArena.Controllers
         private static Dictionary<string, (string Password, string Email, int Score, int Wins, int Losses, List<string> Quests)> _users = new();
 
         [HttpPost]
-        public IActionResult Register([FromBody] RegisterModel model)
+        public IActionResult Register(RegisterModel model)
         {
             if (string.IsNullOrWhiteSpace(model.Username) || model.Username.Length < 3)
                 return Json(new { success = false, error = "Логин минимум 3 символа" });
@@ -26,7 +26,7 @@ namespace CodeDuelArena.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login([FromBody] LoginModel model)
+        public IActionResult Login(LoginModel model)
         {
             if (!_users.TryGetValue(model.Username, out var user))
                 return Json(new { success = false, error = "Пользователь не найден" });
@@ -50,7 +50,7 @@ namespace CodeDuelArena.Controllers
         {
             var username = Request.Cookies["auth_user"];
             if (username != null && _users.ContainsKey(username))
-                return Json(new { authenticated = true, username = username, score = _users[username].Score });
+                return Json(new { authenticated = true, username, score = _users[username].Score });
             return Json(new { authenticated = false });
         }
         

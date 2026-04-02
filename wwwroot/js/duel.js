@@ -8,7 +8,6 @@ $(function() {
         .withAutomaticReconnect()
         .build();
     
-    // SignalR события
     connection.on("UserRegistered", (user) => {
         currentUser = user;
         $("#userInfo").removeClass("d-none");
@@ -70,7 +69,6 @@ $(function() {
         $("#duelModal").remove();
     });
     
-    // Запуск соединения
     connection.start()
         .then(() => {
             console.log("SignalR connected");
@@ -93,8 +91,7 @@ $(function() {
         $.ajax({
             url: "/Auth/Login",
             type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ username: username, password: password, rememberMe: remember }),
+            data: { username: username, password: password, rememberMe: remember },
             success: function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
@@ -102,6 +99,9 @@ $(function() {
                 } else {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
+            },
+            error: function() {
+                $("#authError").text("Ошибка соединения").removeClass("d-none");
             }
         });
     });
@@ -115,8 +115,7 @@ $(function() {
         $.ajax({
             url: "/Auth/Register",
             type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ username: username, password: password, email: email, rememberMe: remember }),
+            data: { username: username, password: password, email: email, rememberMe: remember },
             success: function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
@@ -124,6 +123,9 @@ $(function() {
                 } else {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
+            },
+            error: function() {
+                $("#authError").text("Ошибка соединения").removeClass("d-none");
             }
         });
     });
