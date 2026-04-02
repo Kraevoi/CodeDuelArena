@@ -1,13 +1,205 @@
-/* Дополнительные стили, если нужно */
-.card {
-    border-radius: 8px;
-}
-
-pre code {
+/* ОСНОВНЫЕ СТИЛИ */
+body {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+    color: #ffffff;
     font-family: 'Courier New', monospace;
-    font-size: 12px;
 }
 
+/* НАВИГАЦИЯ */
+.navbar {
+    border-bottom: 2px solid #dc3545;
+    background: #000000 !important;
+}
+
+.navbar-brand {
+    color: #dc3545 !important;
+    font-weight: bold;
+}
+
+.nav-link {
+    color: #ffffff !important;
+}
+
+.nav-link:hover {
+    color: #dc3545 !important;
+}
+
+/* КАРТОЧКИ */
+.card {
+    background: #111111;
+    border: 1px solid #dc3545;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(220, 53, 69, 0.3);
+}
+
+.card-header {
+    background-color: #dc3545 !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+.card-body {
+    color: #ffffff;
+}
+
+/* КНОПКИ */
+.btn-danger {
+    background: #dc3545;
+    border: none;
+    font-weight: bold;
+}
+
+.btn-danger:hover {
+    background: #bb2d3b;
+    transform: scale(1.02);
+}
+
+.btn-outline-danger {
+    border: 1px solid #dc3545;
+    color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background: #dc3545;
+    color: #ffffff;
+}
+
+/* БЛОК КОДА */
+pre {
+    background: #000000;
+    padding: 10px;
+    border-left: 3px solid #dc3545;
+    overflow-x: auto;
+    color: #ffc107;
+}
+
+code {
+    color: #ffc107;
+}
+
+/* ТАБЛИЦЫ */
+.table {
+    color: #ffffff;
+}
+
+.table-dark {
+    background: #111111;
+    color: #ffffff;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.table thead th {
+    background-color: #dc3545;
+    color: white;
+    border-bottom: none;
+}
+
+/* ФОРМЫ И ИНПУТЫ */
+.form-control {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #dc3545;
+}
+
+.form-control:focus {
+    background: #1a1a1a;
+    color: #ffffff;
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-control::placeholder {
+    color: #6c757d;
+}
+
+/* ЧАТ */
+#chatPanel {
+    z-index: 9999;
+}
+
+#chatContent {
+    background: #000000;
+}
+
+#chatMessages {
+    background: #000000;
+    color: #ffffff !important;
+}
+
+#messagesList {
+    color: #ffffff !important;
+}
+
+#messagesList div {
+    color: #ffffff !important;
+}
+
+#messagesList .system-message {
+    color: #17a2b8 !important;
+}
+
+#messagesList .user-name {
+    color: #dc3545 !important;
+}
+
+#messagesList .message-text {
+    color: #ffffff !important;
+}
+
+#messagesList .message-time {
+    color: #888888 !important;
+}
+
+#chatInput {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #dc3545;
+}
+
+/* СКРОЛЛБАР */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #dc3545;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #bb2d3b;
+}
+
+/* МОДАЛЬНЫЕ ОКНА */
+.modal-content {
+    background: #111111;
+    border: 1px solid #dc3545;
+}
+
+.modal-header {
+    border-bottom-color: #dc3545;
+}
+
+.modal-footer {
+    border-top-color: #dc3545;
+}
+
+.btn-close-white {
+    filter: invert(1);
+}
+
+/* АНИМАЦИИ */
 @keyframes pulse {
     0% { opacity: 0.6; }
     100% { opacity: 1; }
@@ -15,4 +207,62 @@ pre code {
 
 .text-glow {
     animation: pulse 1s infinite;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.text-white {
+    color: #ffffff !important;
+}
+
+.text-info {
+    color: #17a2b8 !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.bg-black {
+    background-color: #000000 !important;
+}
+
+.bg-dark {
+    background-color: #111111 !important;
+}
+
+.border-danger {
+    border-color: #dc3545 !important;
+}
+
+/* ФУТЕР */
+footer {
+    border-top: 1px solid #dc3545;
+    background: #000000;
+}
+
+/* УВЕДОМЛЕНИЯ */
+.alert {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 99999;
+    min-width: 300px;
+}
+
+.alert-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.alert-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.alert-info {
+    background-color: #17a2b8;
+    color: white;
 }

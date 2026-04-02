@@ -8,6 +8,7 @@ $(function() {
         .withAutomaticReconnect()
         .build();
     
+    // SignalR события
     connection.on("UserRegistered", (user) => {
         currentUser = user;
         $("#userInfo").removeClass("d-none");
@@ -27,13 +28,19 @@ $(function() {
         $("#leaderboardTable").html(html);
     });
     
+    // ЧАТ - с правильными цветами
     connection.on("ReceiveChatMessage", (msg) => {
-        $("#messagesList").append(`<div class="mb-1"><b class="text-danger">${escapeHtml(msg.user)}</b> [${msg.time}]: ${escapeHtml(msg.text)}</div>`);
+        let messageHtml = `<div style="margin-bottom: 5px;">
+            <span class="user-name" style="color: #dc3545; font-weight: bold;">${escapeHtml(msg.user)}</span>
+            <span class="message-time" style="color: #888888;"> [${msg.time}]</span>
+            <span class="message-text" style="color: #ffffff;">: ${escapeHtml(msg.text)}</span>
+        </div>`;
+        $("#messagesList").append(messageHtml);
         $("#chatMessages").scrollTop($("#chatMessages")[0].scrollHeight);
     });
     
     connection.on("SystemMessage", (msg) => {
-        $("#messagesList").append(`<div class="mb-1 text-info"><i class="fas fa-info-circle"></i> ${escapeHtml(msg)}</div>`);
+        $("#messagesList").append(`<div class="system-message" style="color: #17a2b8; margin-bottom: 5px;"><i class="fas fa-info-circle"></i> ${escapeHtml(msg)}</div>`);
         $("#chatMessages").scrollTop($("#chatMessages")[0].scrollHeight);
     });
     
@@ -69,6 +76,7 @@ $(function() {
         $("#duelModal").remove();
     });
     
+    // Запуск соединения
     connection.start()
         .then(() => {
             console.log("SignalR connected");
@@ -134,7 +142,7 @@ $(function() {
         $.post("/Auth/Logout", () => location.reload());
     });
     
-    // Чат
+    // Чат - отправка
     $("#sendChatBtn").click(() => {
         let msg = $("#chatInput").val();
         if(msg && connection) {
