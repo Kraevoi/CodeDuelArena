@@ -1,8 +1,12 @@
 ﻿let connection = null;
 let currentUser = null;
 let isAuthCheckDone = false;
+let handlersInitialized = false;
 
 $(function() {
+    if (handlersInitialized) return;
+    handlersInitialized = true;
+    
     connection = new signalR.HubConnectionBuilder()
         .withUrl("/duelHub")
         .configureLogging(signalR.LogLevel.Information)
@@ -89,9 +93,11 @@ $(function() {
         })
         .catch(err => console.error(err));
     
-    $("#showAuthBtn").click(() => $("#authModal").modal("show"));
+    $("#showAuthBtn").click(function() {
+        $("#authModal").modal("show");
+    });
     
-    $("#loginBtn").off("click").on("click", function() {
+    $("#loginBtn").click(function() {
         let username = $("#loginUsername").val().trim();
         let password = $("#loginPassword").val();
         let remember = $("#loginRemember").is(":checked");
@@ -114,7 +120,7 @@ $(function() {
         });
     });
     
-    $("#registerBtnModal").off("click").on("click", function() {
+    $("#registerBtnModal").click(function() {
         let username = $("#regUsername").val().trim();
         let email = $("#regEmail").val().trim();
         let password = $("#regPassword").val();
@@ -138,11 +144,11 @@ $(function() {
         });
     });
     
-    $("#logoutBtn").off("click").on("click", function() {
+    $("#logoutBtn").click(function() {
         $.post("/Auth/Logout", () => location.reload());
     });
     
-    $("#sendChatBtn").off("click").on("click", function() {
+    $("#sendChatBtn").click(function() {
         let msg = $("#chatInput").val();
         if(msg && connection) {
             connection.invoke("SendChatMessage", msg);
@@ -150,11 +156,11 @@ $(function() {
         }
     });
     
-    $("#chatInput").off("keypress").on("keypress", function(e) {
+    $("#chatInput").keypress(function(e) {
         if(e.which == 13) $("#sendChatBtn").click();
     });
     
-    $("#duelQueueBtn").off("click").on("click", function() {
+    $("#duelQueueBtn").click(function() {
         if(connection && currentUser) {
             connection.invoke("JoinDuelQueue");
         } else {
@@ -216,7 +222,7 @@ function showDuelModal(data) {
         if(timeLeft <= 0) clearInterval(timer);
     }, 1000);
     
-    $("#submitDuelBtn").off("click").on("click", function() {
+    $("#submitDuelBtn").click(function() {
         let solution = $("#duelSolution").val();
         if(solution && window.connection && data.duelId) {
             window.connection.invoke("SubmitDuelSolution", solution, data.duelId);
