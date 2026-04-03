@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace CodeDuelArena.Models
 {
@@ -22,15 +23,15 @@ namespace CodeDuelArena.Models
         public int Wins { get; set; } = 0;
         public int Losses { get; set; } = 0;
         
-        public string CompletedQuestsJson { get; set; } = ""[]"";
+        public string CompletedQuestsJson { get; set; } = "[]";
         
         public DateTime RegisteredAt { get; set; } = DateTime.Now;
         public DateTime LastLogin { get; set; } = DateTime.Now;
         
         public List<string> CompletedQuests
         {
-            get => string.IsNullOrEmpty(CompletedQuestsJson) ? new List<string>() : System.Text.Json.JsonSerializer.Deserialize<List<string>>(CompletedQuestsJson) ?? new List<string>();
-            set => CompletedQuestsJson = System.Text.Json.JsonSerializer.Serialize(value);
+            get => string.IsNullOrEmpty(CompletedQuestsJson) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(CompletedQuestsJson) ?? new List<string>();
+            set => CompletedQuestsJson = JsonSerializer.Serialize(value);
         }
     }
 }

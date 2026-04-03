@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connStr = builder.Configuration.GetConnectionString(""DefaultConnection"");
+var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connStr));
 
@@ -27,8 +27,8 @@ app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(
-    name: ""default"",
-    pattern: ""{controller=Home}/{action=Index}/{id?}"");
-app.MapHub<DuelHub>(""/duelHub"");
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapHub<DuelHub>("/duelHub");
 
 app.Run();

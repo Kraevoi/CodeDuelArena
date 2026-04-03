@@ -29,9 +29,9 @@ namespace CodeDuelArena.Controllers
         public IActionResult ReportBug(string bugText)
         {
             if (!string.IsNullOrWhiteSpace(bugText))
-                System.IO.File.AppendAllText(""bugs.txt"", $""{DateTime.Now}: {bugText}\n"");
-            TempData[""ReportMessage""] = ""Жалоба отправлена"";
-            return RedirectToAction(""Index"");
+                System.IO.File.AppendAllText("bugs.txt", $"{DateTime.Now}: {bugText}\n");
+            TempData["ReportMessage"] = "Жалоба отправлена";
+            return RedirectToAction("Index");
         }
     }
 }
