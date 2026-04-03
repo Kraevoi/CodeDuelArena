@@ -92,18 +92,22 @@ $(function() {
         let password = $("#loginPassword").val();
         let remember = $("#loginRemember").is(":checked");
         
-        $.post("/Auth/Login", { username: username, password: password, rememberMe: remember })
-            .done(function(data) {
+        $.ajax({
+            url: "/Auth/Login",
+            type: "POST",
+            data: { username: username, password: password, rememberMe: remember },
+            success: function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
                     location.reload();
                 } else {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
-            })
-            .fail(function(xhr) {
+            },
+            error: function(xhr) {
                 $("#authError").text("Ошибка: " + xhr.status).removeClass("d-none");
-            });
+            }
+        });
     });
     
     $("#registerBtnModal").click(() => {
@@ -112,18 +116,22 @@ $(function() {
         let password = $("#regPassword").val();
         let remember = $("#regRemember").is(":checked");
         
-        $.post("/Auth/Register", { username: username, password: password, email: email, rememberMe: remember })
-            .done(function(data) {
+        $.ajax({
+            url: "/Auth/Register",
+            type: "POST",
+            data: { username: username, password: password, email: email, rememberMe: remember },
+            success: function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
                     location.reload();
                 } else {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
-            })
-            .fail(function(xhr) {
+            },
+            error: function(xhr) {
                 $("#authError").text("Ошибка: " + xhr.status).removeClass("d-none");
-            });
+            }
+        });
     });
     
     $("#logoutBtn").click(() => {
