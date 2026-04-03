@@ -8,7 +8,6 @@ $(function() {
         .withAutomaticReconnect()
         .build();
     
-    // SignalR события
     connection.on("UserRegistered", (user) => {
         currentUser = user;
         $("#userInfo").removeClass("d-none");
@@ -75,7 +74,6 @@ $(function() {
         $("#duelModal").remove();
     });
     
-    // Запуск соединения
     connection.start()
         .then(() => {
             console.log("SignalR connected");
@@ -87,69 +85,51 @@ $(function() {
         })
         .catch(err => console.error(err));
     
-    // Аутентификация
     $("#showAuthBtn").click(() => $("#authModal").modal("show"));
     
-    // ========== ИСПРАВЛЕННЫЙ ЛОГИН ==========
     $("#loginBtn").click(() => {
         let username = $("#loginUsername").val().trim();
         let password = $("#loginPassword").val();
         let remember = $("#loginRemember").is(":checked");
         
-        $.ajax({
-            url: "/Auth/Login",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ username: username, password: password, rememberMe: remember }),
-            success: function(data) {
+        $.post("/Auth/Login", { username: username, password: password, rememberMe: remember })
+            .done(function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
                     location.reload();
                 } else {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
-            },
-            error: function(xhr) {
-                console.error("Login error:", xhr);
-                let errorMsg = xhr.responseJSON?.error || "Ошибка соединения";
-                $("#authError").text(errorMsg).removeClass("d-none");
-            }
-        });
+            })
+            .fail(function(xhr) {
+                $("#authError").text("Ошибка: " + xhr.status).removeClass("d-none");
+            });
     });
     
-    // ========== ИСПРАВЛЕННАЯ РЕГИСТРАЦИЯ ==========
     $("#registerBtnModal").click(() => {
         let username = $("#regUsername").val().trim();
         let email = $("#regEmail").val().trim();
         let password = $("#regPassword").val();
         let remember = $("#regRemember").is(":checked");
         
-        $.ajax({
-            url: "/Auth/Register",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({ username: username, password: password, email: email, rememberMe: remember }),
-            success: function(data) {
+        $.post("/Auth/Register", { username: username, password: password, email: email, rememberMe: remember })
+            .done(function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
                     location.reload();
                 } else {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
-            },
-            error: function(xhr) {
-                console.error("Register error:", xhr);
-                let errorMsg = xhr.responseJSON?.error || "Ошибка соединения";
-                $("#authError").text(errorMsg).removeClass("d-none");
-            }
-        });
+            })
+            .fail(function(xhr) {
+                $("#authError").text("Ошибка: " + xhr.status).removeClass("d-none");
+            });
     });
     
     $("#logoutBtn").click(() => {
         $.post("/Auth/Logout", () => location.reload());
     });
     
-    // Чат
     $("#sendChatBtn").click(() => {
         let msg = $("#chatInput").val();
         if(msg && connection) {
@@ -162,7 +142,6 @@ $(function() {
         if(e.which == 13) $("#sendChatBtn").click();
     });
     
-    // Дуэль
     $("#duelQueueBtn").click(() => {
         if(connection && currentUser) {
             connection.invoke("JoinDuelQueue");
