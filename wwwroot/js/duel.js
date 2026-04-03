@@ -28,7 +28,6 @@ $(function() {
         $("#leaderboardTable").html(html);
     });
     
-    // ЧАТ - с правильными цветами
     connection.on("ReceiveChatMessage", (msg) => {
         let messageHtml = `<div style="margin-bottom: 5px;">
             <span class="user-name" style="color: #dc3545; font-weight: bold;">${escapeHtml(msg.user)}</span>
@@ -91,6 +90,7 @@ $(function() {
     // Аутентификация
     $("#showAuthBtn").click(() => $("#authModal").modal("show"));
     
+    // ========== ИСПРАВЛЕННЫЙ ЛОГИН ==========
     $("#loginBtn").click(() => {
         let username = $("#loginUsername").val().trim();
         let password = $("#loginPassword").val();
@@ -99,7 +99,8 @@ $(function() {
         $.ajax({
             url: "/Auth/Login",
             type: "POST",
-            data: { username: username, password: password, rememberMe: remember },
+            contentType: "application/json",
+            data: JSON.stringify({ username: username, password: password, rememberMe: remember }),
             success: function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
@@ -108,12 +109,15 @@ $(function() {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
             },
-            error: function() {
-                $("#authError").text("Ошибка соединения").removeClass("d-none");
+            error: function(xhr) {
+                console.error("Login error:", xhr);
+                let errorMsg = xhr.responseJSON?.error || "Ошибка соединения";
+                $("#authError").text(errorMsg).removeClass("d-none");
             }
         });
     });
     
+    // ========== ИСПРАВЛЕННАЯ РЕГИСТРАЦИЯ ==========
     $("#registerBtnModal").click(() => {
         let username = $("#regUsername").val().trim();
         let email = $("#regEmail").val().trim();
@@ -123,7 +127,8 @@ $(function() {
         $.ajax({
             url: "/Auth/Register",
             type: "POST",
-            data: { username: username, password: password, email: email, rememberMe: remember },
+            contentType: "application/json",
+            data: JSON.stringify({ username: username, password: password, email: email, rememberMe: remember }),
             success: function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
@@ -132,8 +137,10 @@ $(function() {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
             },
-            error: function() {
-                $("#authError").text("Ошибка соединения").removeClass("d-none");
+            error: function(xhr) {
+                console.error("Register error:", xhr);
+                let errorMsg = xhr.responseJSON?.error || "Ошибка соединения";
+                $("#authError").text(errorMsg).removeClass("d-none");
             }
         });
     });
@@ -142,7 +149,7 @@ $(function() {
         $.post("/Auth/Logout", () => location.reload());
     });
     
-    // Чат - отправка
+    // Чат
     $("#sendChatBtn").click(() => {
         let msg = $("#chatInput").val();
         if(msg && connection) {
