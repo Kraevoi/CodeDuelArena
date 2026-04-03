@@ -1,5 +1,6 @@
 ﻿let connection = null;
 let currentUser = null;
+let isAuthCheckDone = false;
 
 $(function() {
     connection = new signalR.HubConnectionBuilder()
@@ -21,7 +22,7 @@ $(function() {
     connection.on("UpdateLeaderboard", (users) => {
         let html = '<table class="table table-dark table-striped"><thead class="bg-danger"><tr><th>#</th><th>Игрок</th><th>⭐ Очки</th><th>🏆 Победы</th><th>💀 Поражения</th></tr></thead><tbody>';
         users.forEach((u, idx) => {
-            html += `<tr><td class="fw-bold">${idx + 1}</td><td>${escapeHtml(u.username)}</td><td class="text-danger fw-bold">${u.score}</td><td>${u.wins}</td><td>${u.losses}</td></tr>`;
+            html += `<tr><td class="fw-bold">${idx + 1}${u.username}${u.score}${u.wins}${u.losses}`;
         });
         html += '</tbody></table>';
         $("#leaderboardTable").html(html);
@@ -77,17 +78,20 @@ $(function() {
     connection.start()
         .then(() => {
             console.log("SignalR connected");
-            $.get("/Auth/CheckAuth", function(data) {
-                if(data.authenticated) {
-                    connection.invoke("RegisterUser", data.username);
-                }
-            });
+            if (!isAuthCheckDone) {
+                isAuthCheckDone = true;
+                $.get("/Auth/CheckAuth", function(data) {
+                    if(data.authenticated) {
+                        connection.invoke("RegisterUser", data.username);
+                    }
+                });
+            }
         })
         .catch(err => console.error(err));
     
     $("#showAuthBtn").click(() => $("#authModal").modal("show"));
     
-    $("#loginBtn").click(() => {
+    $("#loginBtn").off("click").on("click", function() {
         let username = $("#loginUsername").val().trim();
         let password = $("#loginPassword").val();
         let remember = $("#loginRemember").is(":checked");
@@ -110,7 +114,7 @@ $(function() {
         });
     });
     
-    $("#registerBtnModal").click(() => {
+    $("#registerBtnModal").off("click").on("click", function() {
         let username = $("#regUsername").val().trim();
         let email = $("#regEmail").val().trim();
         let password = $("#regPassword").val();
@@ -134,11 +138,11 @@ $(function() {
         });
     });
     
-    $("#logoutBtn").click(() => {
+    $("#logoutBtn").off("click").on("click", function() {
         $.post("/Auth/Logout", () => location.reload());
     });
     
-    $("#sendChatBtn").click(() => {
+    $("#sendChatBtn").off("click").on("click", function() {
         let msg = $("#chatInput").val();
         if(msg && connection) {
             connection.invoke("SendChatMessage", msg);
@@ -146,11 +150,11 @@ $(function() {
         }
     });
     
-    $("#chatInput").keypress((e) => {
+    $("#chatInput").off("keypress").on("keypress", function(e) {
         if(e.which == 13) $("#sendChatBtn").click();
     });
     
-    $("#duelQueueBtn").click(() => {
+    $("#duelQueueBtn").off("click").on("click", function() {
         if(connection && currentUser) {
             connection.invoke("JoinDuelQueue");
         } else {
@@ -212,7 +216,7 @@ function showDuelModal(data) {
         if(timeLeft <= 0) clearInterval(timer);
     }, 1000);
     
-    $("#submitDuelBtn").click(() => {
+    $("#submitDuelBtn").off("click").on("click", function() {
         let solution = $("#duelSolution").val();
         if(solution && window.connection && data.duelId) {
             window.connection.invoke("SubmitDuelSolution", solution, data.duelId);
