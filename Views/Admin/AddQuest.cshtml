@@ -1,0 +1,49 @@
+@model CodeDuelArena.Models.QuestModel
+@{
+    ViewData["Title"] = "Add Quest";
+}
+
+<div class="d-flex justify-content-between mb-4">
+    <h2 class="text-danger fw-bold">➕ ДОБАВЛЕНИЕ КВЕСТА</h2>
+    <a href="/Admin/Quests" class="btn btn-outline-danger">← Назад</a>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<div class="card bg-dark border-danger">
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label text-danger">Название</label>
+                <input asp-for="Title" class="form-control bg-black text-white" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-danger">Тип</label>
+                <select asp-for="Type" class="form-control bg-black text-white" required>
+                    <option value="LegacyFix">🔧 Легаси-код</option>
+                    <option value="Hack">💀 Взлом</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-danger">Описание</label>
+                <textarea asp-for="Description" class="form-control bg-black text-white" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-danger">Код для исправления</label>
+                <textarea asp-for="LegacyCode" class="form-control bg-black text-white" rows="5" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-danger">Правильное решение</label>
+                <textarea asp-for="SolutionCode" class="form-control bg-black text-white" rows="5" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-danger">Очки</label>
+                <input asp-for="Points" type="number" class="form-control bg-black text-white" required />
+            </div>
+            <button type="submit" class="btn btn-danger w-100">➕ Добавить квест</button>
+        </form>
+    </div>
+</div>

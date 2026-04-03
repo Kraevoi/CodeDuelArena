@@ -1,0 +1,46 @@
+@model List<CodeDuelArena.Models.UserDb>
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="d-flex justify-content-between mb-4">
+    <h2 class="text-danger fw-bold">👥 УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ</h2>
+    <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-dark table-striped">
+        <thead class="bg-danger">
+            <tr><th>ID</th><th>Имя</th><th>Email</th><th>Очки</th><th>Победы</th><th>Поражения</th><th>Квесты</th><th>Регистрация</th><th>Действие</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.Username</td>
+                    <td>@user.Email</td>
+                    <td class="text-danger">@user.Score</td>
+                    <td>@user.Wins</td>
+                    <td>@user.Losses</td>
+                    <td>@user.CompletedQuests.Count</td>
+                    <td>@user.RegisteredAt.ToString("dd.MM.yyyy")</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser(@user.Id, '@user.Username')">Удалить</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function deleteUser(id, username) {
+        if (confirm(`Удалить пользователя ${username}?`)) {
+            $.post("/Admin/DeleteUser", { id: id }, function(data) {
+                if (data.success) location.reload();
+                else alert("Ошибка");
+            });
+        }
+    }
+</script>
