@@ -3,13 +3,15 @@ using Microsoft.EntityFrameworkCore;
 using CodeDuelArena.Models;
 using CodeDuelArena.Data;
 using Newtonsoft.Json;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace CodeDuelArena.Controllers
 {
     public class AdminController : Controller
     {
         private readonly AppDbContext _db;
-        private static readonly string AdminPasswordHash = HashPassword("KRAEVOI2008");
+        private static readonly string AdminPasswordHash = HashPassword("admin123");
         
         public AdminController(AppDbContext db)
         {
@@ -25,11 +27,11 @@ namespace CodeDuelArena.Controllers
         }
         
         [HttpPost]
-        public IActionResult Login(AdminLoginModel model)
+        public IActionResult Login(string password, bool rememberMe)
         {
-            if (VerifyPassword(model.Password, AdminPasswordHash))
+            if (VerifyPassword(password, AdminPasswordHash))
             {
-                SetAdminCookie(model.RememberMe);
+                SetAdminCookie(rememberMe);
                 AdminLogs.Add("Login", "Admin", "Успешный вход");
                 return RedirectToAction("Dashboard");
             }
@@ -50,7 +52,7 @@ namespace CodeDuelArena.Controllers
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
             
             var users = await _db.Users.ToListAsync();
-            var stats = new AdminStats
+            var stats = new 
             {
                 TotalUsers = users.Count,
                 TotalScore = users.Sum(u => u.Score),
@@ -58,12 +60,12 @@ namespace CodeDuelArena.Controllers
                 TopPlayer = users.OrderByDescending(u => u.Score).FirstOrDefault(),
                 ActiveToday = users.Count(u => u.LastLogin.Date == DateTime.Today),
                 TotalWins = users.Sum(u => u.Wins),
+                TotalLosses = users.Sum(u => u.Losses),
                 TotalQuests = DataStorage.GetQuests().Count
             };
             
             ViewBag.Stats = stats;
             ViewBag.Logs = AdminLogs.GetRecent(30);
-            ViewBag.TotalLosses = users.Sum(u => u.Losses);
             return View();
         }
         
@@ -157,16 +159,8 @@ namespace CodeDuelArena.Controllers
             var users = await _db.Users.ToListAsync();
             var stats = new
             {
-                TotalUsers = users.Count,
-                TotalScore = users.Sum(u => u.Score),
-                AverageScore = users.Any() ? users.Average(u => u.Score) : 0,
-                TotalWins = users.Sum(u => u.Wins),
-                TotalLosses = users.Sum(u => u.Losses),
-                TotalQuestsCompleted = users.Sum(u => u.CompletedQuests.Count),
-                UsersByDay = users.GroupBy(u => u.RegisteredAt.Date).Select(g => new { Date = g.Key, Count = g.Count() }).OrderBy(g => g.Date),
-                Top10 = users.OrderByDescending(u => u.Score).Take(10).Select(u => new { u.Username, u.Score, u.Wins })
+                UsersByDay = users.GroupBy(u => u.RegisteredAt.Date).Select(g => new { Date = g.Key, Count = g.Count() }).OrderBy(g => g.Date)
             };
-            
             return Json(stats);
         }
         
@@ -180,8 +174,7 @@ namespace CodeDuelArena.Controllers
             csv += string.Join("\n", users.Select(u => $"{u.Username},{u.Email},{u.Score},{u.Wins},{u.Losses},{u.RegisteredAt:yyyy-MM-dd HH:mm:ss}"));
             
             AdminLogs.Add("ExportUsers", "Admin", $"Экспортировано {users.Count} пользователей");
-            
-            return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", $"users_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+            return File(Encoding.UTF8.GetBytes(csv), "text/csv", $"users_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
         }
         
         private bool IsAdminLoggedIn()
@@ -200,8 +193,8 @@ namespace CodeDuelArena.Controllers
         
         private static string HashPassword(string password)
         {
-            using var sha256 = System.Security.Cryptography.SHA256.Create();
-            var bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            using var sha256 = SHA256.Create();
+            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(bytes);
         }
         
@@ -209,16 +202,5 @@ namespace CodeDuelArena.Controllers
         {
             return HashPassword(password) == hash;
         }
-    }
-    
-    public class AdminStats
-    {
-        public int TotalUsers { get; set; }
-        public int TotalScore { get; set; }
-        public double AverageScore { get; set; }
-        public UserDb? TopPlayer { get; set; }
-        public int ActiveToday { get; set; }
-        public int TotalWins { get; set; }
-        public int TotalQuests { get; set; }
     }
 }

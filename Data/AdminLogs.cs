@@ -9,7 +9,7 @@ namespace CodeDuelArena.Data
     public static class AdminLogs
     {
         private static readonly string LogsPath = "admin_logs.json";
-        private static readonly List<AdminLogEntry> _logs = new();
+        private static List<AdminLogEntry> _logs = new();
         
         static AdminLogs()
         {
@@ -18,8 +18,7 @@ namespace CodeDuelArena.Data
                 try
                 {
                     var json = File.ReadAllText(LogsPath);
-                    var loaded = JsonConvert.DeserializeObject<List<AdminLogEntry>>(json);
-                    if (loaded != null) _logs = loaded;
+                    _logs = JsonConvert.DeserializeObject<List<AdminLogEntry>>(json) ?? new List<AdminLogEntry>();
                 }
                 catch { }
             }
@@ -27,26 +26,25 @@ namespace CodeDuelArena.Data
         
         public static void Add(string action, string adminName, string details = "")
         {
-            var entry = new AdminLogEntry
+            _logs.Insert(0, new AdminLogEntry
             {
                 Id = _logs.Count + 1,
                 Timestamp = DateTime.Now,
                 Action = action,
                 AdminName = adminName,
                 Details = details
-            };
-            _logs.Add(entry);
+            });
             Save();
         }
         
         public static List<AdminLogEntry> GetRecent(int count = 50)
         {
-            return _logs.OrderByDescending(l => l.Timestamp).Take(count).ToList();
+            return _logs.Take(count).ToList();
         }
         
         public static List<AdminLogEntry> GetAll()
         {
-            return _logs.OrderByDescending(l => l.Timestamp).ToList();
+            return _logs;
         }
         
         private static void Save()
@@ -59,8 +57,8 @@ namespace CodeDuelArena.Data
     {
         public int Id { get; set; }
         public DateTime Timestamp { get; set; }
-        public string Action { get; set; } = string.Empty;
-        public string AdminName { get; set; } = string.Empty;
-        public string Details { get; set; } = string.Empty;
+        public string Action { get; set; } = "";
+        public string AdminName { get; set; } = "";
+        public string Details { get; set; } = "";
     }
 }

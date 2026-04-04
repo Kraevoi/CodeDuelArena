@@ -19,48 +19,62 @@ namespace CodeDuelArena.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(string username, string password, string email, bool rememberMe)
         {
-            if (string.IsNullOrWhiteSpace(username) || username.Length < 3)
-                return Json(new { success = false, error = "Логин минимум 3 символа" });
-            
-            if (string.IsNullOrWhiteSpace(password) || password.Length < 4)
-                return Json(new { success = false, error = "Пароль минимум 4 символа" });
-            
-            var exists = await _db.Users.AnyAsync(u => u.Username == username);
-            if (exists)
-                return Json(new { success = false, error = "Имя уже занято" });
-            
-            var user = new UserDb
+            try
             {
-                Username = username,
-                PasswordHash = HashPassword(password),
-                Email = email ?? "",
-                RegisteredAt = DateTime.Now,
-                LastLogin = DateTime.Now
-            };
-            
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-            
-            SetCookie(username, rememberMe);
-            return Json(new { success = true, username = username, score = 0 });
+                if (string.IsNullOrWhiteSpace(username) || username.Length < 3)
+                    return Json(new { success = false, error = "Логин минимум 3 символа" });
+                
+                if (string.IsNullOrWhiteSpace(password) || password.Length < 4)
+                    return Json(new { success = false, error = "Пароль минимум 4 символа" });
+                
+                var exists = await _db.Users.AnyAsync(u => u.Username == username);
+                if (exists)
+                    return Json(new { success = false, error = "Имя уже занято" });
+                
+                var user = new UserDb
+                {
+                    Username = username,
+                    PasswordHash = HashPassword(password),
+                    Email = email ?? "",
+                    RegisteredAt = DateTime.Now,
+                    LastLogin = DateTime.Now
+                };
+                
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+                
+                SetCookie(username, rememberMe);
+                return Json(new { success = true, username = username, score = 0 });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
         }
         
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password, bool rememberMe)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == username);
-            
-            if (user == null)
-                return Json(new { success = false, error = "Пользователь не найден" });
-            
-            if (!VerifyPassword(password, user.PasswordHash))
-                return Json(new { success = false, error = "Неверный пароль" });
-            
-            user.LastLogin = DateTime.Now;
-            await _db.SaveChangesAsync();
-            
-            SetCookie(username, rememberMe);
-            return Json(new { success = true, username = user.Username, score = user.Score });
+            try
+            {
+                var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == username);
+                
+                if (user == null)
+                    return Json(new { success = false, error = "Пользователь не найден" });
+                
+                if (!VerifyPassword(password, user.PasswordHash))
+                    return Json(new { success = false, error = "Неверный пароль" });
+                
+                user.LastLogin = DateTime.Now;
+                await _db.SaveChangesAsync();
+                
+                SetCookie(username, rememberMe);
+                return Json(new { success = true, username = user.Username, score = user.Score });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
         }
         
         [HttpPost]

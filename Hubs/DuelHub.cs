@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using CodeDuelArena.Models;
 using CodeDuelArena.Data;
+using CodeDuelArena.Controllers;
 
 namespace CodeDuelArena.Hubs
 {
@@ -8,7 +9,6 @@ namespace CodeDuelArena.Hubs
     {
         public async Task RegisterUser(string username)
         {
-            var account = UserAccounts.GetByUsername(username);
             var users = DataStorage.GetUsers();
             var user = users.FirstOrDefault(u => u.ConnectionId == Context.ConnectionId);
             
@@ -18,10 +18,10 @@ namespace CodeDuelArena.Hubs
                 { 
                     ConnectionId = Context.ConnectionId, 
                     Username = username,
-                    Score = account?.Score ?? 0,
-                    Wins = account?.Wins ?? 0,
-                    Losses = account?.Losses ?? 0,
-                    CompletedQuests = account?.CompletedQuests ?? new List<string>()
+                    Score = 0,
+                    Wins = 0,
+                    Losses = 0,
+                    CompletedQuests = new List<string>()
                 };
                 users.Add(user);
                 DataStorage.SaveUsers(users);
@@ -29,15 +29,11 @@ namespace CodeDuelArena.Hubs
             else
             {
                 user.Username = username;
-                user.Score = account?.Score ?? 0;
-                user.Wins = account?.Wins ?? 0;
-                user.Losses = account?.Losses ?? 0;
-                user.CompletedQuests = account?.CompletedQuests ?? new List<string>();
                 DataStorage.SaveUsers(users);
             }
             
             await Clients.Caller.SendAsync("UserRegistered", user);
-            await UpdateAllUsersLeaderboard();
+            await Clients.All.SendAsync("UpdateLeaderboard", users.OrderByDescending(u => u.Score).Take(10));
             await Clients.All.SendAsync("SystemMessage", $"{user.Username} вступил на арену!");
         }
 
@@ -79,10 +75,8 @@ namespace CodeDuelArena.Hubs
                 user.CompletedQuests.Add(questIdStr);
                 DataStorage.SaveUsers(users);
                 
-                UserAccounts.UpdateStats(user.Username, quest.Points, false, false, questIdStr);
-                
                 await Clients.Caller.SendAsync("QuestResult", new { success = true, message = $"✅ +{quest.Points} очков!", newScore = user.Score });
-                await UpdateAllUsersLeaderboard();
+                await Clients.All.SendAsync("UpdateLeaderboard", DataStorage.GetUsers().OrderByDescending(u => u.Score).Take(10));
                 await Clients.All.SendAsync("SystemMessage", $"{user.Username} прошел квест '{quest.Title}' и получил {quest.Points} очков!");
             }
             else if (isCorrect && user.CompletedQuests.Contains(questIdStr))
@@ -154,26 +148,10 @@ namespace CodeDuelArena.Hubs
                 user.Score += 100;
                 DataStorage.SaveUsers(users);
                 
-                UserAccounts.UpdateStats(user.Username, 100, true, false);
-                
                 await Clients.Caller.SendAsync("DuelResult", new { success = true, message = "Победа! +100 очков!", newScore = user.Score });
-                await UpdateAllUsersLeaderboard();
+                await Clients.All.SendAsync("UpdateLeaderboard", DataStorage.GetUsers().OrderByDescending(u => u.Score).Take(10));
                 await Clients.All.SendAsync("SystemMessage", $"{user.Username} победил в дуэли!");
             }
-        }
-
-        private async Task UpdateAllUsersLeaderboard()
-        {
-            var allUsers = UserAccounts.GetAllUsers();
-            var leaderboard = allUsers.OrderByDescending(u => u.Score).Take(20).Select(u => new 
-            { 
-                u.Username, 
-                u.Score, 
-                u.Wins, 
-                u.Losses,
-                CompletedQuests = u.CompletedQuests
-            });
-            await Clients.All.SendAsync("UpdateLeaderboard", leaderboard);
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
@@ -184,7 +162,7 @@ namespace CodeDuelArena.Hubs
             {
                 users.Remove(user);
                 DataStorage.SaveUsers(users);
-                await UpdateAllUsersLeaderboard();
+                await Clients.All.SendAsync("UpdateLeaderboard", DataStorage.GetUsers().OrderByDescending(u => u.Score).Take(10));
                 await Clients.All.SendAsync("SystemMessage", $"{user.Username} покинул арену...");
             }
             await base.OnDisconnectedAsync(exception);

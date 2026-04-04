@@ -1,43 +1,25 @@
 @model List<CodeDuelArena.Models.UserDb>
 @{
-    ViewData["Title"] = "Leaderboard";
+    ViewData["Title"] = "Таблица лидеров";
 }
 
-<h2 class="text-danger fw-bold mb-4">🏆 TABLICA LIDEROV</h2>
-
-<div class="table-responsive">
-    <table class="table table-dark table-hover table-striped">
-        <thead class="bg-danger text-white">
+<h2 class="text-danger">🏆 ТАБЛИЦА ЛИДЕРОВ</h2>
+<table class="table table-dark table-striped">
+    <thead class="bg-danger">
+        <tr><th>#</th><th>Игрок</th><th>⭐ Очки</th><th>🏆 Победы</th><th>💀 Поражения</th><th>✅ Квесты</th><th>📅 Регистрация</th></tr>
+    </thead>
+    <tbody>
+        @for(int i=0; i<Model.Count; i++)
+        {
             <tr>
-                <th>#</th>
-                <th>IGROK</th>
-                <th>⭐ OCHKI</th>
-                <th>🏆 POBEDY</th>
-                <th>💀 PORAZHENIYA</th>
-                <th>✅ KVESTY</th>
-                <th>📅 DATA REGISTRACII</th>
+                <td>@(i+1)</td>
+                <td>@Model[i].Username</td>
+                <td class="text-danger fw-bold">@Model[i].Score</td>
+                <td>@Model[i].Wins</td>
+                <td>@Model[i].Losses</td>
+                <td>@Model[i].CompletedQuests.Count</td>
+                <td>@Model[i].RegisteredAt.ToString("dd.MM.yyyy")</td>
             </tr>
-        </thead>
-        <tbody>
-            @if(Model.Any())
-            {
-                for(int i = 0; i < Model.Count; i++)
-                {
-                    <tr>
-                        <td class="fw-bold">@(i + 1)</td>
-                        <td>@Model[i].Username</td>
-                        <td class="text-danger fw-bold">@Model[i].Score</td>
-                        <td>@Model[i].Wins</td>
-                        <td>@Model[i].Losses</td>
-                        <td>@Model[i].CompletedQuests.Count</td>
-                        <td>@Model[i].RegisteredAt.ToString("dd.MM.yyyy")</td>
-                    </tr>
-                }
-            }
-            else
-            {
-                <tr><td colspan="7" class="text-center text-muted">Net igrokov</td></tr>
-            }
-        </tbody>
-    </table>
-</div>
+        }
+    </tbody>
+</table>

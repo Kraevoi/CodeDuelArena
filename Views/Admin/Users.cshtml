@@ -1,46 +1,26 @@
 @model List<CodeDuelArena.Models.UserDb>
 @{
-    ViewData["Title"] = "Manage Users";
+    ViewData["Title"] = "Users";
 }
 
-<div class="d-flex justify-content-between mb-4">
-    <h2 class="text-danger fw-bold">👥 УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ</h2>
-    <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a>
-</div>
+<h2 class="text-danger">👥 УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ</h2>
+<a href="/Admin/Dashboard" class="btn btn-outline-danger mb-3">← Назад</a>
 
-<div class="table-responsive">
-    <table class="table table-dark table-striped">
-        <thead class="bg-danger">
-            <tr><th>ID</th><th>Имя</th><th>Email</th><th>Очки</th><th>Победы</th><th>Поражения</th><th>Квесты</th><th>Регистрация</th><th>Действие</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var user in Model)
-            {
-                <tr>
-                    <td>@user.Id</td>
-                    <td>@user.Username</td>
-                    <td>@user.Email</td>
-                    <td class="text-danger">@user.Score</td>
-                    <td>@user.Wins</td>
-                    <td>@user.Losses</td>
-                    <td>@user.CompletedQuests.Count</td>
-                    <td>@user.RegisteredAt.ToString("dd.MM.yyyy")</td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteUser(@user.Id, '@user.Username')">Удалить</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+<table class="table table-dark table-striped">
+    <thead class="bg-danger"><tr><th>ID</th><th>Имя</th><th>Email</th><th>Очки</th><th>Победы</th><th>Поражения</th><th>Квесты</th><th>Действие</th></tr></thead>
+    <tbody>
+        @foreach(var u in Model)
+        {
+            <tr>
+                <td>@u.Id</td><td>@u.Username</td><td>@u.Email</td><td class="text-danger">@u.Score</td><td>@u.Wins</td><td>@u.Losses</td><td>@u.CompletedQuests.Count</td>
+                <td><button class="btn btn-sm btn-danger" onclick="deleteUser(@u.Id, '@u.Username')">Удалить</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
 
 <script>
-    function deleteUser(id, username) {
-        if (confirm(`Удалить пользователя ${username}?`)) {
-            $.post("/Admin/DeleteUser", { id: id }, function(data) {
-                if (data.success) location.reload();
-                else alert("Ошибка");
-            });
-        }
+    function deleteUser(id, name) {
+        if(confirm(`Удалить ${name}?`)) $.post("/Admin/DeleteUser", { id: id }, () => location.reload());
     }
 </script>

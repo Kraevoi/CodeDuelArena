@@ -1,45 +1,24 @@
 @model List<CodeDuelArena.Models.QuestModel>
 @{
-    ViewData["Title"] = "Manage Quests";
+    ViewData["Title"] = "Quests";
 }
 
-<div class="d-flex justify-content-between mb-4">
-    <h2 class="text-danger fw-bold">📋 УПРАВЛЕНИЕ КВЕСТАМИ</h2>
-    <div>
-        <a href="/Admin/AddQuest" class="btn btn-danger me-2">➕ Добавить квест</a>
-        <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a>
-    </div>
-</div>
+<h2 class="text-danger">📋 УПРАВЛЕНИЕ КВЕСТАМИ</h2>
+<div class="mb-3"><a href="/Admin/AddQuest" class="btn btn-danger">➕ Добавить квест</a> <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a></div>
 
-<div class="table-responsive">
-    <table class="table table-dark table-striped">
-        <thead class="bg-danger">
-            <tr><th>ID</th><th>Название</th><th>Тип</th><th>Очки</th><th>Действие</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var quest in Model)
-            {
-                <tr>
-                    <td>@quest.Id</td>
-                    <td>@quest.Title</td>
-                    <td><span class="badge @(quest.Type == "LegacyFix" ? "bg-danger" : "bg-primary")">@quest.Type</span></td>
-                    <td>@quest.Points</td>
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteQuest(@quest.Id)">Удалить</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+<table class="table table-dark table-striped">
+    <thead class="bg-danger"><tr><th>ID</th><th>Название</th><th>Тип</th><th>Очки</th><th>Действие</th></tr></thead>
+    <tbody>
+        @foreach(var q in Model)
+        {
+            <tr>
+                <td>@q.Id</td><td>@q.Title</td><td><span class="badge bg-@(q.Type=="LegacyFix"?"danger":"primary")">@q.Type</span></td><td>@q.Points</td>
+                <td><button class="btn btn-sm btn-danger" onclick="deleteQuest(@q.Id)">Удалить</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
 
 <script>
-    function deleteQuest(id) {
-        if (confirm("Удалить квест?")) {
-            $.post("/Admin/DeleteQuest", { id: id }, function(data) {
-                if (data.success) location.reload();
-                else alert("Ошибка");
-            });
-        }
-    }
+    function deleteQuest(id) { if(confirm("Удалить квест?")) $.post("/Admin/DeleteQuest", { id: id }, () => location.reload()); }
 </script>
