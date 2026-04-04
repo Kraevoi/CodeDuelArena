@@ -14,10 +14,6 @@ namespace CodeDuelArena.Data
             modelBuilder.Entity<UserDb>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
-            
-            modelBuilder.Entity<UserDb>()
-                .HasIndex(u => u.Email)
-                .IsUnique();
         }
     }
 }

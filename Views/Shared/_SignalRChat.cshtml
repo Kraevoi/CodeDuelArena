@@ -1,14 +1,14 @@
-<div style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 9999;">
+<div id="chatPanel" style="position: fixed; bottom: 20px; right: 20px; width: 350px; z-index: 9999;">
     <div class="card bg-dark border-danger">
         <div class="card-header bg-danger text-white fw-bold" style="cursor: pointer;" onclick="$('#chatContent').slideToggle()">
-            💬 ЧАТ <i class="fas fa-chevron-down float-end"></i>
+            <i class="fas fa-comments"></i> ГЛОБАЛЬНЫЙ ЧАТ <i class="fas fa-chevron-down float-end"></i>
         </div>
         <div id="chatContent" style="display: none;">
             <div id="chatMessages" style="height: 350px; overflow-y: auto; padding: 10px; background: #000;">
                 <div id="messagesList"></div>
             </div>
             <div class="p-2 border-top border-danger">
-                <input type="text" id="chatInput" class="form-control form-control-sm bg-black text-white border-danger" placeholder="Сообщение...">
+                <input type="text" id="chatInput" class="form-control form-control-sm bg-black text-white border-danger" placeholder="Напиши сообщение...">
                 <button id="sendChatBtn" class="btn btn-danger btn-sm w-100 mt-2">Отправить</button>
             </div>
         </div>
