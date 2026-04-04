@@ -19,10 +19,38 @@
 @if (stats != null)
 {
     <div class="row mb-4">
-        <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.TotalUsers</h3><p>Всего игроков</p></div></div></div>
-        <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.TotalScore</h3><p>Всего очков</p></div></div></div>
-        <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.ActiveToday</h3><p>Активны сегодня</p></div></div></div>
-        <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.TotalWins</h3><p>Всего побед</p></div></div></div>
+        <div class="col-md-3">
+            <div class="card bg-dark text-center">
+                <div class="card-body">
+                    <h3 class="text-danger">@stats.TotalUsers</h3>
+                    <p>Всего игроков</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark text-center">
+                <div class="card-body">
+                    <h3 class="text-danger">@stats.TotalScore</h3>
+                    <p>Всего очков</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark text-center">
+                <div class="card-body">
+                    <h3 class="text-danger">@stats.ActiveToday</h3>
+                    <p>Активны сегодня</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark text-center">
+                <div class="card-body">
+                    <h3 class="text-danger">@stats.TotalWins</h3>
+                    <p>Всего побед</p>
+                </div>
+            </div>
+        </div>
     </div>
 }
 
@@ -32,11 +60,17 @@
         @if (logs != null && logs.Any())
         {
             <table class="table table-dark table-sm">
-                <thead><tr><th>Время</th><th>Действие</th><th>Детали</th></tr></thead>
+                <thead class="text-white">
+                    <tr><th>Время</th><th>Действие</th><th>Детали</th></tr>
+                </thead>
                 <tbody>
-                    @foreach(var log in logs)
+                    @foreach (var log in logs)
                     {
-                        <tr><td>@log.Timestamp.ToString("HH:mm:ss")</td><td>@log.Action</td><td>@log.Details</td></tr>
+                        <tr>
+                            <td>@log.Timestamp.ToString("HH:mm:ss")</td>
+                            <td>@log.Action</td>
+                            <td>@log.Details</td>
+                        </tr>
                     }
                 </tbody>
             </table>
@@ -57,9 +91,9 @@
             if (data.usersByDay && data.usersByDay.length > 0) {
                 new Chart(document.getElementById('activityChart'), {
                     type: 'line',
-                    data: { 
-                        labels: data.usersByDay.map(d => d.date.split('T')[0]), 
-                        datasets: [{ label: 'Новые пользователи', data: data.usersByDay.map(d => d.count), borderColor: '#dc3545', fill: true }] 
+                    data: {
+                        labels: data.usersByDay.map(d => d.date.split('T')[0]),
+                        datasets: [{ label: 'Новые пользователи', data: data.usersByDay.map(d => d.count), borderColor: '#dc3545', fill: true }]
                     }
                 });
             }
