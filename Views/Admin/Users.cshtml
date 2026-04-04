@@ -16,7 +16,6 @@
                 <th>Очки</th>
                 <th>Победы</th>
                 <th>Поражения</th>
-                <th>Квесты</th>
                 <th>Действие</th>
             </tr>
         </thead>
@@ -32,17 +31,16 @@
                         <td class="text-danger fw-bold">@u.Score</td>
                         <td>@u.Wins</td>
                         <td>@u.Losses</td>
-                        <td>@u.CompletedQuests</td>
                         <td>
                             <button class="btn btn-sm btn-danger" onclick="deleteUser(@u.Id, '@u.Username')">Удалить</button>
-                        </td>
+                         </td>
                     </tr>
                 }
             }
             else
             {
                 <tr>
-                    <td colspan="8" class="text-center text-muted">Нет пользователей</td>
+                    <td colspan="7" class="text-center text-muted">Нет пользователей</td>
                 </tr>
             }
         </tbody>

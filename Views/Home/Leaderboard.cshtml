@@ -14,7 +14,6 @@
                 <th>⭐ ОЧКИ</th>
                 <th>🏆 ПОБЕДЫ</th>
                 <th>💀 ПОРАЖЕНИЯ</th>
-                <th>✅ КВЕСТЫ</th>
                 <th>📅 РЕГИСТРАЦИЯ</th>
             </tr>
         </thead>
@@ -29,7 +28,6 @@
                         <td class="text-danger fw-bold">@Model[i].Score</td>
                         <td>@Model[i].Wins</td>
                         <td>@Model[i].Losses</td>
-                        <td>@Model[i].CompletedQuests</td>
                         <td>@Model[i].RegisteredAt.ToString("dd.MM.yyyy")</td>
                     </tr>
                 }
@@ -37,7 +35,7 @@
             else
             {
                 <tr>
-                    <td colspan="7" class="text-center text-muted">Нет игроков</td>
+                    <td colspan="6" class="text-center text-muted">Нет игроков</td>
                 </tr>
             }
         </tbody>
