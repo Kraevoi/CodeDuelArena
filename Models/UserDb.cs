@@ -8,22 +8,19 @@ namespace CodeDuelArena.Models
         [Key]
         public int Id { get; set; }
         
-        [Required, MaxLength(50)]
+        [Required]
         public string Username { get; set; } = string.Empty;
         
-        [Required, MaxLength(255)]
+        [Required]
         public string PasswordHash { get; set; } = string.Empty;
         
-        [MaxLength(100)]
         public string Email { get; set; } = string.Empty;
         
         public int Score { get; set; } = 0;
         public int Wins { get; set; } = 0;
         public int Losses { get; set; } = 0;
         
-        public string CompletedQuests { get; set; } = "";
-        
-        public DateTime RegisteredAt { get; set; } = DateTime.Now;
-        public DateTime LastLogin { get; set; } = DateTime.Now;
+        public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
+        public DateTime LastLogin { get; set; } = DateTime.UtcNow;
     }
 }

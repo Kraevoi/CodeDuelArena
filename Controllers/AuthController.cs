@@ -36,8 +36,8 @@ namespace CodeDuelArena.Controllers
                     Username = username,
                     PasswordHash = HashPassword(password),
                     Email = email ?? "",
-                    RegisteredAt = DateTime.Now,
-                    LastLogin = DateTime.Now
+                    RegisteredAt = DateTime.UtcNow,
+                    LastLogin = DateTime.UtcNow
                 };
                 
                 _db.Users.Add(user);
@@ -48,7 +48,7 @@ namespace CodeDuelArena.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, error = ex.Message });
+                return Json(new { success = false, error = ex.InnerException?.Message ?? ex.Message });
             }
         }
         
@@ -65,7 +65,7 @@ namespace CodeDuelArena.Controllers
                 if (!VerifyPassword(password, user.PasswordHash))
                     return Json(new { success = false, error = "Неверный пароль" });
                 
-                user.LastLogin = DateTime.Now;
+                user.LastLogin = DateTime.UtcNow;
                 await _db.SaveChangesAsync();
                 
                 SetCookie(username, rememberMe);
