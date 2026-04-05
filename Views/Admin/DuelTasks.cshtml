@@ -1,0 +1,87 @@
+@model List<CodeDuelArena.Models.DuelTask>
+@{
+    ViewData["Title"] = "Duel Tasks";
+}
+
+<div class="d-flex justify-content-between mb-4">
+    <h2 class="text-danger">⚔️ ЗАДАНИЯ ДЛЯ ДУЭЛЕЙ</h2>
+    <div>
+        <a href="/Admin/AddDuelTask" class="btn btn-danger me-2">➕ Добавить задание</a>
+        <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a>
+    </div>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-dark table-striped">
+        <thead class="bg-danger text-white">
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Тестовый код</th>
+                <th>Ожидаемый вывод</th>
+                <th>Сложность</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var task in Model)
+            {
+                <tr>
+                    <td>@task.Id</td>
+                    <td>@task.Title</td>
+                    <td>@task.Description</td>
+                    <td><pre style="max-width:200px; overflow-x:auto;">@task.TestCode</pre></td>
+                    <td>@task.ExpectedOutput</td>
+                    <td>
+                        @if (task.Difficulty == 1) { <span class="badge bg-success">★</span> }
+                        else if (task.Difficulty == 2) { <span class="badge bg-info">★★</span> }
+                        else if (task.Difficulty == 3) { <span class="badge bg-warning">★★★</span> }
+                        else if (task.Difficulty == 4) { <span class="badge bg-secondary">★★★★</span> }
+                        else { <span class="badge bg-danger">★★★★★</span> }
+                    </td>
+                    <td>
+                        @if (task.IsActive)
+                        {
+                            <span class="badge bg-success">Активно</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Отключено</span>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" onclick="toggleTask(@task.Id, @task.IsActive.ToString().ToLower())">
+                            @(task.IsActive ? "Отключить" : "Включить")
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTask(@task.Id)">Удалить</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function toggleTask(id, isActive) {
+        $.post("/Admin/ToggleDuelTask", { id: id }, function(data) {
+            if (data.success) location.reload();
+            else alert("Ошибка");
+        });
+    }
+    
+    function deleteTask(id) {
+        if (confirm("Удалить задание?")) {
+            $.post("/Admin/DeleteDuelTask", { id: id }, function(data) {
+                if (data.success) location.reload();
+                else alert("Ошибка");
+            });
+        }
+    }
+</script>

@@ -1,0 +1,49 @@
+@model CodeDuelArena.Models.DuelTask
+@{
+    ViewData["Title"] = "Add Duel Task";
+}
+
+<div class="d-flex justify-content-between mb-4">
+    <h2 class="text-danger">➕ ДОБАВЛЕНИЕ ЗАДАНИЯ ДЛЯ ДУЭЛИ</h2>
+    <a href="/Admin/DuelTasks" class="btn btn-outline-danger">← Назад</a>
+</div>
+
+<div class="card bg-dark">
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label text-danger">Название</label>
+                <input asp-for="Title" class="form-control bg-black text-white" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-danger">Описание</label>
+                <textarea asp-for="Description" class="form-control bg-black text-white" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-danger">Тестовый код (шаблон)</label>
+                <textarea asp-for="TestCode" class="form-control bg-black text-white" rows="5" required></textarea>
+                <small class="text-muted">Например: function sum(a,b) { return a+b; }</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-danger">Ожидаемый вывод</label>
+                <input asp-for="ExpectedOutput" class="form-control bg-black text-white" required />
+                <small class="text-muted">Например: 5</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-danger">Сложность (1-5)</label>
+                <select asp-for="Difficulty" class="form-control bg-black text-white">
+                    <option value="1">★ Легкая</option>
+                    <option value="2">★★ Средняя</option>
+                    <option value="3">★★★ Сложная</option>
+                    <option value="4">★★★★ Очень сложная</option>
+                    <option value="5">★★★★★ Эксперт</option>
+                </select>
+            </div>
+            <div class="mb-3 form-check">
+                <input asp-for="IsActive" class="form-check-input" checked />
+                <label class="form-check-label">Активно</label>
+            </div>
+            <button type="submit" class="btn btn-danger w-100">➕ Добавить задание</button>
+        </form>
+    </div>
+</div>

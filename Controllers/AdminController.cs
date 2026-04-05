@@ -18,6 +18,67 @@ namespace CodeDuelArena.Controllers
             _db = db;
         }
         
+    [HttpGet]
+    public async Task<IActionResult> DuelTasks()
+{
+    if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+    var tasks = await _db.DuelTasks.OrderByDescending(t => t.CreatedAt).ToListAsync();
+    return View(tasks);
+}
+
+    [HttpGet]
+    public IActionResult AddDuelTask()
+    {
+        if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+        return View(new DuelTask());
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddDuelTask(DuelTask model)
+    {
+        if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+    
+        model.CreatedAt = DateTime.UtcNow;
+        _db.DuelTasks.Add(model);
+        await _db.SaveChangesAsync();
+    
+        await LogActivity("Admin", "Добавил задание для дуэли", $"{model.Title}");
+        TempData["Message"] = "Задание для дуэли добавлено!";
+        return RedirectToAction("DuelTasks");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ToggleDuelTask(int id)
+    {
+        if (!IsAdminLoggedIn()) return Json(new { success = false });
+
+        var task = await _db.DuelTasks.FindAsync(id);
+        if (task != null)
+        {
+            task.IsActive = !task.IsActive;
+            await _db.SaveChangesAsync();
+            await LogActivity("Admin", task.IsActive ? "Активировал задание дуэли" : "Деактивировал задание дуэли", task.Title);
+            return Json(new { success = true, isActive = task.IsActive });
+        }   
+    return Json(new { success = false });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteDuelTask(int id)
+    {
+        if (!IsAdminLoggedIn()) return Json(new { success = false });
+
+        var task = await _db.DuelTasks.FindAsync(id);
+        if (task != null)
+        {
+            _db.DuelTasks.Remove(task);
+            await _db.SaveChangesAsync();
+            await LogActivity("Admin", "Удалил задание дуэли", task.Title);
+            return Json(new { success = true });
+        }
+    return Json(new { success = false });
+    }
+        
         [HttpGet]
         public IActionResult Login()
         {
