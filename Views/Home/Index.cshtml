@@ -2,14 +2,16 @@
     ViewData["Title"] = "Арена";
 }
 
-<h1 class="text-danger text-center">⚔️ CODE DUEL ARENA</h1>
+<h1 class="text-danger text-center">@ViewData["Title"]</h1>
 <p class="text-center text-info">Исправляй легаси, взламывай, уничтожай оппонентов.</p>
 
 <div class="row mt-4">
     <div class="col-md-6">
         <div class="card bg-dark border-danger">
             <div class="card-header bg-danger">🔥 ТВОЯ СТАТИСТИКА</div>
-            <div class="card-body" id="userStats">Войдите чтобы видеть статистику</div>
+            <div class="card-body" id="userStats">
+                @Html.Raw("<p class='text-muted'>Войдите чтобы видеть статистику</p>")
+            </div>
             <div class="card-footer">
                 <button id="duelQueueBtn" class="btn btn-danger w-100">⚔️ ВСТАТЬ В ОЧЕРЕДЬ НА ДУЭЛЬ</button>
             </div>
@@ -19,10 +21,12 @@
         <div class="card bg-dark border-danger">
             <div class="card-header bg-danger">📢 ЖАЛОБА / БАГ</div>
             <div class="card-body">
-                <form method="post" action="/Home/ReportBug">
-                    <textarea name="bugText" class="form-control bg-black text-white border-danger" rows="4" placeholder="Опишите проблему..."></textarea>
+                @using (Html.BeginForm("ReportBug", "Home", FormMethod.Post))
+                {
+                    @Html.TextArea("bugText", null, new { @class = "form-control bg-black text-white border-danger", rows = 4, placeholder = "Опишите проблему..." })
+                    @Html.ValidationMessage("bugText", new { @class = "text-danger" })
                     <button type="submit" class="btn btn-danger w-100 mt-2">Отправить</button>
-                </form>
+                }
             </div>
         </div>
     </div>

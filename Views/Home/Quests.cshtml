@@ -5,16 +5,16 @@
 
 <h2 class="text-danger">🛠️ КВЕСТЫ</h2>
 <div class="row">
-    @foreach(var q in Model)
+    @foreach(var quest in Model)
     {
         <div class="col-md-6 mb-3">
             <div class="card bg-dark border-danger">
-                <div class="card-header bg-danger">@q.Title [@q.Points pts]</div>
+                <div class="card-header bg-danger">@quest.Title [@quest.Points pts]</div>
                 <div class="card-body">
-                    <p>@q.Description</p>
-                    <pre class="bg-black text-warning p-2">@q.LegacyCode</pre>
-                    <textarea id="code_@q.Id" class="form-control bg-black text-white" rows="4"></textarea>
-                    <button class="btn btn-danger mt-2 w-100" onclick="submitQuest(@q.Id)">Сдать решение</button>
+                    <p>@quest.Description</p>
+                    <pre class="bg-black text-warning p-2">@quest.LegacyCode</pre>
+                    <textarea id="code_@quest.Id" class="form-control bg-black text-white" rows="4"></textarea>
+                    <button class="btn btn-danger mt-2 w-100" onclick="submitQuest(@quest.Id)">Сдать решение</button>
                 </div>
             </div>
         </div>

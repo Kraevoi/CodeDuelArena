@@ -3,47 +3,45 @@
     ViewData["Title"] = "Add Duel Task";
 }
 
-<div class="d-flex justify-content-between mb-4">
-    <h2 class="text-danger">➕ ДОБАВЛЕНИЕ ЗАДАНИЯ ДЛЯ ДУЭЛИ</h2>
-    <a href="/Admin/DuelTasks" class="btn btn-outline-danger">← Назад</a>
-</div>
+<h2 class="text-danger">➕ ДОБАВЛЕНИЕ ЗАДАНИЯ ДЛЯ ДУЭЛИ</h2>
+@Html.ActionLink("← Назад", "DuelTasks", "Admin", null, new { @class = "btn btn-outline-danger mb-3" })
 
 <div class="card bg-dark">
     <div class="card-body">
-        <form method="post">
+        @using (Html.BeginForm("AddDuelTask", "Admin", FormMethod.Post))
+        {
             <div class="mb-3">
-                <label class="form-label text-danger">Название</label>
-                <input asp-for="Title" class="form-control bg-black text-white" required />
+                @Html.LabelFor(m => m.Title, new { @class = "form-label text-danger" })
+                @Html.TextBoxFor(m => m.Title, new { @class = "form-control bg-black text-white", required = "required" })
+                @Html.ValidationMessageFor(m => m.Title, null, new { @class = "text-danger" })
             </div>
             <div class="mb-3">
-                <label class="form-label text-danger">Описание</label>
-                <textarea asp-for="Description" class="form-control bg-black text-white" rows="3" required></textarea>
+                @Html.LabelFor(m => m.Description, new { @class = "form-label text-danger" })
+                @Html.TextAreaFor(m => m.Description, new { @class = "form-control bg-black text-white", rows = 3, required = "required" })
+                @Html.ValidationMessageFor(m => m.Description, null, new { @class = "text-danger" })
             </div>
             <div class="mb-3">
-                <label class="form-label text-danger">Тестовый код (шаблон)</label>
-                <textarea asp-for="TestCode" class="form-control bg-black text-white" rows="5" required></textarea>
+                @Html.LabelFor(m => m.TestCode, new { @class = "form-label text-danger" })
+                @Html.TextAreaFor(m => m.TestCode, new { @class = "form-control bg-black text-white", rows = 5, required = "required" })
                 <small class="text-muted">Например: function sum(a,b) { return a+b; }</small>
+                @Html.ValidationMessageFor(m => m.TestCode, null, new { @class = "text-danger" })
             </div>
             <div class="mb-3">
-                <label class="form-label text-danger">Ожидаемый вывод</label>
-                <input asp-for="ExpectedOutput" class="form-control bg-black text-white" required />
+                @Html.LabelFor(m => m.ExpectedOutput, new { @class = "form-label text-danger" })
+                @Html.TextBoxFor(m => m.ExpectedOutput, new { @class = "form-control bg-black text-white", required = "required" })
                 <small class="text-muted">Например: 5</small>
+                @Html.ValidationMessageFor(m => m.ExpectedOutput, null, new { @class = "text-danger" })
             </div>
             <div class="mb-3">
-                <label class="form-label text-danger">Сложность (1-5)</label>
-                <select asp-for="Difficulty" class="form-control bg-black text-white">
-                    <option value="1">★ Легкая</option>
-                    <option value="2">★★ Средняя</option>
-                    <option value="3">★★★ Сложная</option>
-                    <option value="4">★★★★ Очень сложная</option>
-                    <option value="5">★★★★★ Эксперт</option>
-                </select>
+                @Html.LabelFor(m => m.Difficulty, new { @class = "form-label text-danger" })
+                @Html.DropDownListFor(m => m.Difficulty, new SelectList(new[] { 1, 2, 3, 4, 5 }), new { @class = "form-control bg-black text-white" })
+                @Html.ValidationMessageFor(m => m.Difficulty, null, new { @class = "text-danger" })
             </div>
             <div class="mb-3 form-check">
-                <input asp-for="IsActive" class="form-check-input" checked />
-                <label class="form-check-label">Активно</label>
+                @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input" })
+                @Html.LabelFor(m => m.IsActive, new { @class = "form-check-label" })
             </div>
             <button type="submit" class="btn btn-danger w-100">➕ Добавить задание</button>
-        </form>
+        }
     </div>
 </div>

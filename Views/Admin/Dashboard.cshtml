@@ -3,37 +3,30 @@
     var stats = ViewBag.Stats;
 }
 
-<div class="d-flex justify-content-between mb-4">
-    <h2 class="text-danger">👑 ADMIN DASHBOARD</h2>
-    <div>
-        <a href="/Admin/Complaints" class="btn btn-warning position-relative me-2">
-            📢 Жалобы
-            @if (stats.UnreadComplaints > 0)
-            {
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    @stats.UnreadComplaints
-                </span>
-            }
-        </a>
-        <a href="/Admin/ActivityLogs" class="btn btn-outline-info me-2">📜 Логи</a>
-        <a href="/Admin/Users" class="btn btn-outline-danger me-2">👥 Users</a>
-        <a href="/Admin/Quests" class="btn btn-outline-danger me-2">📋 Quests</a>
-        <a href="/Admin/AddQuest" class="btn btn-outline-danger me-2">➕ Add Quest</a>
-        <a href="/Admin/ExportUsers" class="btn btn-outline-info me-2">📥 Export CSV</a>
-        <a href="/Admin/Logout" class="btn btn-danger">🚪 Exit</a>
-        <a href="/Admin/DuelTasks" class="btn btn-outline-warning me-2">⚔️ Duel Tasks</a>
+<cache expires-after="@TimeSpan.FromMinutes(1)">
+    <div class="d-flex justify-content-between mb-4">
+        <h2 class="text-danger">👑 ADMIN DASHBOARD</h2>
+        <div>
+            <a href="/Admin/Complaints" class="btn btn-warning position-relative me-2">📢 Жалобы</a>
+            <a href="/Admin/DuelTasks" class="btn btn-outline-warning me-2">⚔️ Duel Tasks</a>
+            <a href="/Admin/ActivityLogs" class="btn btn-outline-info me-2">📜 Логи</a>
+            <a href="/Admin/Users" class="btn btn-outline-danger me-2">👥 Users</a>
+            <a href="/Admin/Quests" class="btn btn-outline-danger me-2">📋 Quests</a>
+            <a href="/Admin/ExportUsers" class="btn btn-outline-info me-2">📥 Export CSV</a>
+            <a href="/Admin/Logout" class="btn btn-danger">🚪 Exit</a>
+        </div>
     </div>
-</div>
 
-@if (stats != null)
-{
-    <div class="row mb-4">
-        <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.TotalUsers</h3><p>Всего игроков</p></div></div></div>
-        <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.TotalScore</h3><p>Всего очков</p></div></div></div>
-        <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.ActiveToday</h3><p>Активны сегодня</p></div></div></div>
-        <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.TotalWins</h3><p>Всего побед</p></div></div></div>
-    </div>
-}
+    @if (stats != null)
+    {
+        <div class="row mb-4">
+            <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.TotalUsers</h3><p>Всего игроков</p></div></div></div>
+            <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.TotalScore</h3><p>Всего очков</p></div></div></div>
+            <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.ActiveToday</h3><p>Активны сегодня</p></div></div></div>
+            <div class="col-md-3"><div class="card bg-dark text-center"><div class="card-body"><h3 class="text-danger">@stats.TotalWins</h3><p>Всего побед</p></div></div></div>
+        </div>
+    }
+</cache>
 
 <canvas id="activityChart" height="100"></canvas>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -51,23 +44,4 @@
                 });
             }
         });
-        
-    // Автообновление счетчика непрочитанных жалоб
-    setInterval(function() {
-        fetch('/Admin/GetUnreadCount')
-            .then(res => res.json())
-            .then(data => {
-                if (data.count > 0) {
-                    const badge = document.querySelector('.btn-warning .badge');
-                    if (badge) {
-                        badge.textContent = data.count;
-                    } else {
-                        const btn = document.querySelector('.btn-warning');
-                        if (btn) {
-                            btn.innerHTML = '📢 Жалобы <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">' + data.count + '</span>';
-                        }
-                    }
-                }
-            });
-    }, 30000);
 </script>

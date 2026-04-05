@@ -4,20 +4,48 @@
 }
 
 <h2 class="text-danger">➕ ДОБАВЛЕНИЕ КВЕСТА</h2>
-<a href="/Admin/Quests" class="btn btn-outline-danger mb-3">← Назад</a>
+@Html.ActionLink("← Назад", "Quests", "Admin", null, new { @class = "btn btn-outline-danger mb-3" })
 
-@if(TempData["Message"] != null){ <div class="alert alert-success">@TempData["Message"]</div> }
+@if (TempData["Message"] != null)
+{
+    @Html.Raw($"<div class='alert alert-success'>{TempData["Message"]}</div>")
+}
 
 <div class="card bg-dark">
     <div class="card-body">
-        <form method="post">
-            <div class="mb-2"><label class="text-danger">Название</label><input asp-for="Title" class="form-control bg-black text-white" required /></div>
-            <div class="mb-2"><label class="text-danger">Тип</label><select asp-for="Type" class="form-control bg-black text-white"><option value="LegacyFix">Легаси-код</option><option value="Hack">Взлом</option></select></div>
-            <div class="mb-2"><label class="text-danger">Описание</label><textarea asp-for="Description" class="form-control bg-black text-white" rows="3" required></textarea></div>
-            <div class="mb-2"><label class="text-danger">Код для исправления</label><textarea asp-for="LegacyCode" class="form-control bg-black text-white" rows="5" required></textarea></div>
-            <div class="mb-2"><label class="text-danger">Правильное решение</label><textarea asp-for="SolutionCode" class="form-control bg-black text-white" rows="5" required></textarea></div>
-            <div class="mb-2"><label class="text-danger">Очки</label><input asp-for="Points" type="number" class="form-control bg-black text-white" required /></div>
+        @using (Html.BeginForm("AddQuest", "Admin", FormMethod.Post))
+        {
+            <div class="mb-2">
+                @Html.LabelFor(m => m.Title, new { @class = "text-danger" })
+                @Html.TextBoxFor(m => m.Title, new { @class = "form-control bg-black text-white", required = "required" })
+                @Html.ValidationMessageFor(m => m.Title, null, new { @class = "text-danger" })
+            </div>
+            <div class="mb-2">
+                @Html.LabelFor(m => m.Type, new { @class = "text-danger" })
+                @Html.DropDownListFor(m => m.Type, new SelectList(new[] { "LegacyFix", "Hack" }), new { @class = "form-control bg-black text-white" })
+                @Html.ValidationMessageFor(m => m.Type, null, new { @class = "text-danger" })
+            </div>
+            <div class="mb-2">
+                @Html.LabelFor(m => m.Description, new { @class = "text-danger" })
+                @Html.TextAreaFor(m => m.Description, new { @class = "form-control bg-black text-white", rows = 3, required = "required" })
+                @Html.ValidationMessageFor(m => m.Description, null, new { @class = "text-danger" })
+            </div>
+            <div class="mb-2">
+                @Html.LabelFor(m => m.LegacyCode, new { @class = "text-danger" })
+                @Html.TextAreaFor(m => m.LegacyCode, new { @class = "form-control bg-black text-white", rows = 5, required = "required" })
+                @Html.ValidationMessageFor(m => m.LegacyCode, null, new { @class = "text-danger" })
+            </div>
+            <div class="mb-2">
+                @Html.LabelFor(m => m.SolutionCode, new { @class = "text-danger" })
+                @Html.TextAreaFor(m => m.SolutionCode, new { @class = "form-control bg-black text-white", rows = 5, required = "required" })
+                @Html.ValidationMessageFor(m => m.SolutionCode, null, new { @class = "text-danger" })
+            </div>
+            <div class="mb-2">
+                @Html.LabelFor(m => m.Points, new { @class = "text-danger" })
+                @Html.TextBoxFor(m => m.Points, new { @class = "form-control bg-black text-white", type = "number", required = "required" })
+                @Html.ValidationMessageFor(m => m.Points, null, new { @class = "text-danger" })
+            </div>
             <button type="submit" class="btn btn-danger w-100">➕ Добавить</button>
-        </form>
+        }
     </div>
 </div>
