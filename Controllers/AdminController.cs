@@ -32,7 +32,6 @@ namespace CodeDuelArena.Controllers
             if (VerifyPassword(password, AdminPasswordHash))
             {
                 SetAdminCookie(rememberMe);
-                AdminLogs.Add("Login", "Admin", "Успешный вход");
                 return RedirectToAction("Dashboard");
             }
             ViewBag.Error = "Неверный пароль";
@@ -52,23 +51,99 @@ namespace CodeDuelArena.Controllers
             if (!IsAdminLoggedIn()) return RedirectToAction("Login");
             
             var users = await _db.Users.ToListAsync();
+            var unreadComplaints = await _db.Complaints.CountAsync(c => !c.IsRead);
             var stats = new 
             {
                 TotalUsers = users.Count,
                 TotalScore = users.Sum(u => u.Score),
                 AverageScore = users.Any() ? users.Average(u => u.Score) : 0,
                 TopPlayer = users.OrderByDescending(u => u.Score).FirstOrDefault(),
-                ActiveToday = users.Count(u => u.LastLogin.Date == DateTime.Today),
+                ActiveToday = users.Count(u => u.LastLogin.Date == DateTime.UtcNow.Date),
                 TotalWins = users.Sum(u => u.Wins),
                 TotalLosses = users.Sum(u => u.Losses),
-                TotalQuests = DataStorage.GetQuests().Count
+                TotalQuests = DataStorage.GetQuests().Count,
+                UnreadComplaints = unreadComplaints
             };
             
             ViewBag.Stats = stats;
-            ViewBag.Logs = AdminLogs.GetRecent(30);
             return View();
         }
         
+        [HttpGet]
+        public async Task<IActionResult> Complaints()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var complaints = await _db.Complaints
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+            return View(complaints);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> MarkComplaintRead(int id)
+        {
+            if (!IsAdminLoggedIn()) return Json(new { success = false });
+            
+            var complaint = await _db.Complaints.FindAsync(id);
+            if (complaint != null)
+            {
+                complaint.IsRead = true;
+                await _db.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> DeleteComplaint(int id)
+        {
+            if (!IsAdminLoggedIn()) return Json(new { success = false });
+            
+            var complaint = await _db.Complaints.FindAsync(id);
+            if (complaint != null)
+            {
+                _db.Complaints.Remove(complaint);
+                await _db.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> GetUnreadCount()
+        {
+            if (!IsAdminLoggedIn()) return Json(new { count = 0 });
+            
+            var count = await _db.Complaints.CountAsync(c => !c.IsRead);
+            return Json(new { count = count });
+        }
+        
+
+        [HttpGet]
+        public async Task<IActionResult> ActivityLogs()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var logs = await _db.ActivityLogs
+                .OrderByDescending(l => l.Timestamp)
+                .Take(200)
+                .ToListAsync();
+            return View(logs);
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> AllLogs()
+        {
+            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
+            
+            var logs = await _db.ActivityLogs
+                .OrderByDescending(l => l.Timestamp)
+                .ToListAsync();
+            return View(logs);
+        }
+        
+       
         [HttpGet]
         public async Task<IActionResult> Users()
         {
@@ -85,9 +160,9 @@ namespace CodeDuelArena.Controllers
             var user = await _db.Users.FindAsync(id);
             if (user != null)
             {
+                await LogActivity(user.Username, "Админ удалил пользователя", $"Удален пользователь {user.Username}");
                 _db.Users.Remove(user);
                 await _db.SaveChangesAsync();
-                AdminLogs.Add("DeleteUser", "Admin", $"Удален пользователь {user.Username}");
                 return Json(new { success = true });
             }
             return Json(new { success = false });
@@ -112,7 +187,6 @@ namespace CodeDuelArena.Controllers
             var json = JsonConvert.SerializeObject(quests, Formatting.Indented);
             System.IO.File.WriteAllText("quests.json", json);
             
-            AdminLogs.Add("AddQuest", "Admin", $"Добавлен квест: {model.Title}");
             TempData["Message"] = "Квест добавлен!";
             return RedirectToAction("Quests");
         }
@@ -137,18 +211,9 @@ namespace CodeDuelArena.Controllers
                 quests.Remove(quest);
                 var json = JsonConvert.SerializeObject(quests, Formatting.Indented);
                 System.IO.File.WriteAllText("quests.json", json);
-                AdminLogs.Add("DeleteQuest", "Admin", $"Удален квест: {quest.Title}");
                 return Json(new { success = true });
             }
             return Json(new { success = false });
-        }
-        
-        [HttpGet]
-        public IActionResult Logs()
-        {
-            if (!IsAdminLoggedIn()) return RedirectToAction("Login");
-            var logs = AdminLogs.GetAll();
-            return View(logs);
         }
         
         [HttpGet]
@@ -173,8 +238,21 @@ namespace CodeDuelArena.Controllers
             var csv = "Username,Email,Score,Wins,Losses,RegisteredAt\n";
             csv += string.Join("\n", users.Select(u => $"{u.Username},{u.Email},{u.Score},{u.Wins},{u.Losses},{u.RegisteredAt:yyyy-MM-dd HH:mm:ss}"));
             
-            AdminLogs.Add("ExportUsers", "Admin", $"Экспортировано {users.Count} пользователей");
             return File(Encoding.UTF8.GetBytes(csv), "text/csv", $"users_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+        }
+        
+        private async Task LogActivity(string userName, string action, string details = "")
+        {
+            var log = new ActivityLog
+            {
+                UserName = userName,
+                Action = action,
+                Details = details,
+                Timestamp = DateTime.UtcNow,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"
+            };
+            _db.ActivityLogs.Add(log);
+            await _db.SaveChangesAsync();
         }
         
         private bool IsAdminLoggedIn()

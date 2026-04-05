@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CodeDuelArena.Data;
+using CodeDuelArena.Models;
 
 namespace CodeDuelArena.Controllers
 {
@@ -26,12 +27,43 @@ namespace CodeDuelArena.Controllers
         }
 
         [HttpPost]
-        public IActionResult ReportBug(string bugText)
+        public async Task<IActionResult> ReportBug(string bugText)
         {
             if (!string.IsNullOrWhiteSpace(bugText))
-                System.IO.File.AppendAllText("bugs.txt", $"{DateTime.Now}: {bugText}\n");
-            TempData["ReportMessage"] = "Жалоба отправлена";
+            {
+                var username = Request.Cookies["auth_user"] ?? "Аноним";
+                
+                var complaint = new Complaint
+                {
+                    UserName = username,
+                    Message = bugText,
+                    CreatedAt = DateTime.UtcNow,
+                    IsRead = false
+                };
+                
+                _db.Complaints.Add(complaint);
+                await _db.SaveChangesAsync();
+                
+                // Логируем действие
+                await LogActivity(username, "Отправил жалобу", bugText);
+                
+                TempData["ReportMessage"] = "Жалоба отправлена";
+            }
             return RedirectToAction("Index");
+        }
+        
+        private async Task LogActivity(string userName, string action, string details = "")
+        {
+            var log = new ActivityLog
+            {
+                UserName = userName,
+                Action = action,
+                Details = details,
+                Timestamp = DateTime.UtcNow,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"
+            };
+            _db.ActivityLogs.Add(log);
+            await _db.SaveChangesAsync();
         }
     }
 }
