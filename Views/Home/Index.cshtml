@@ -2,37 +2,73 @@
     ViewData["Title"] = "Арена";
 }
 
-<h1 class="text-danger text-center">@ViewData["Title"]</h1>
-<p class="text-center text-info">Исправляй легаси, взламывай, уничтожай оппонентов.</p>
-
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card bg-dark border-danger">
-            <div class="card-header bg-danger">🔥 ТВОЯ СТАТИСТИКА</div>
-            <div class="card-body" id="userStats">
-                @Html.Raw("<p class='text-muted'>Войдите чтобы видеть статистику</p>")
+<div class="text-center">
+    <h1 class="display-4 text-danger fw-bold">⚔️ CODE DUEL ARENA</h1>
+    <p class="lead text-info">Исправляй легаси, взламывай, уничтожай оппонентов.</p>
+    
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <div class="card bg-dark border-danger mb-4">
+                <div class="card-header bg-danger text-white fw-bold">
+                    🔥 ТВОЯ СТАТИСТИКА
+                </div>
+                <div class="card-body" id="userStats">
+                    <div class="text-center text-muted">
+                        <p>Войди в систему, чтобы видеть свои данные</p>
+                        <i class="text-info">Нажми Войти в правом верхнем углу</i>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button id="duelQueueBtn" class="btn btn-danger w-100">
+                        ⚡ ВСТАТЬ В ОЧЕРЕДЬ НА ДУЭЛЬ
+                    </button>
+                </div>
             </div>
-            <div class="card-footer">
-                <button id="duelQueueBtn" class="btn btn-danger w-100">⚔️ ВСТАТЬ В ОЧЕРЕДЬ НА ДУЭЛЬ</button>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card bg-dark border-danger">
+                <div class="card-header bg-danger text-white fw-bold">
+                    📢 ЖАЛОБА / БАГ
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/Home/ReportBug">
+                        <textarea name="bugText" class="form-control bg-black text-white border-danger" rows="4" placeholder="Опиши проблему или баг..."></textarea>
+                        <button type="submit" class="btn btn-danger mt-3 w-100">
+                            🚨 ОТПРАВИТЬ ЖАЛОБУ
+                        </button>
+                    </form>
+                    @if(TempData["ReportMessage"] != null)
+                    {
+                        <div class="alert alert-info mt-3 mb-0">
+                            @TempData["ReportMessage"]
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card bg-dark border-danger">
-            <div class="card-header bg-danger">📢 ЖАЛОБА / БАГ</div>
-            <div class="card-body">
-                @using (Html.BeginForm("ReportBug", "Home", FormMethod.Post))
-                {
-                    @Html.TextArea("bugText", null, new { @class = "form-control bg-black text-white border-danger", rows = 4, placeholder = "Опишите проблему..." })
-                    @Html.ValidationMessage("bugText", new { @class = "text-danger" })
-                    <button type="submit" class="btn btn-danger w-100 mt-2">Отправить</button>
-                }
-            </div>
+    
+    <div class="mt-5">
+        <h3 class="text-danger fw-bold">🏆 ТАБЛИЦА ЛИДЕРОВ</h3>
+        <div id="leaderboardTable" class="mt-3">
+            <div class="text-center text-muted">Загрузка...</div>
         </div>
     </div>
 </div>
 
-<div class="mt-5">
-    <h3 class="text-danger text-center">🏆 ТАБЛИЦА ЛИДЕРОВ</h3>
-    <div id="leaderboardTable" class="mt-3 text-center">Загрузка...</div>
-</div>
+<script>
+    setInterval(function() {
+        if (window.currentUser) {
+            $("#userStats").html(`
+                <div class="text-start">
+                    <p><i class="fas fa-user text-danger"></i> <strong>Ник:</strong> ${window.currentUser.username}</p>
+                    <p><i class="fas fa-star text-danger"></i> <strong>Очки:</strong> ${window.currentUser.score}</p>
+                    <p><i class="fas fa-trophy text-danger"></i> <strong>Победы:</strong> ${window.currentUser.wins}</p>
+                    <p><i class="fas fa-skull text-danger"></i> <strong>Поражения:</strong> ${window.currentUser.losses}</p>
+                    <p><i class="fas fa-check-circle text-danger"></i> <strong>Квестов пройдено:</strong> ${window.currentUser.completedQuests?.length || 0}</p>
+                </div>
+            `);
+        }
+    }, 500);
+</script>

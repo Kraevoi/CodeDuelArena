@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.codeduel.arena" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>CodeDuel</name>
+    <description>Code Duel Arena Mobile</description>
+    <author email="admin@codeduel.com" href="https://codeduelarena.onrender.com">CodeDuel Team</author>
+    <content src="index.html" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <allow-navigation href="https://codeduelarena.onrender.com/*" />
+    <access origin="https://codeduelarena.onrender.com" />
+    
+    <platform name="android">
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+            <uses-permission android:name="android.permission.READ_CONTACTS" />
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+        </config-file>
+        <preference name="AndroidXEnabled" value="true" />
+    </platform>
+    
+    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="Orientation" value="portrait" />
+</widget>

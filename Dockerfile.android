@@ -1,0 +1,7 @@
+FROM node:18 AS builder
+WORKDIR /app
+COPY . .
+RUN npm install -g cordova
+RUN cordova create app com.codeduel.arena "CodeDuel"
+RUN cordova platform add android
+RUN cordova build android

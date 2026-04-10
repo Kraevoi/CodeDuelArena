@@ -1,5 +1,5 @@
 ﻿let connection = null;
-let currentUser = null;
+window.currentUser = null;
 
 $(function() {
     connection = new signalR.HubConnectionBuilder()
@@ -9,7 +9,7 @@ $(function() {
         .build();
     
     connection.on("UserRegistered", (user) => {
-        currentUser = user;
+        window.currentUser = user;
         $("#userInfo").removeClass("d-none");
         $("#showAuthBtn").addClass("d-none");
         $("#userNameDisplay").text(user.username);
@@ -19,7 +19,7 @@ $(function() {
     });
     
     connection.on("UpdateLeaderboard", (users) => {
-        let html = '<table class="table table-dark table-striped"><thead class="bg-danger"><tr><th>#</th><th>Игрок</th><th>⭐ Очки</th><th>🏆 Победы</th><th>💀 Поражения</th><tr></thead><tbody>';
+        let html = '<table class="table table-dark table-striped"><thead class="bg-danger"><tr><th>#</th><th>Игрок</th><th>⭐ Очки</th><th>🏆 Победы</th><th>💀 Поражения</th></tr></thead><tbody>';
         users.forEach((u, idx) => {
             html += `<tr><td class="fw-bold">${idx + 1}${u.username}${u.score}${u.wins}${u.losses}`;
         });
@@ -39,10 +39,10 @@ $(function() {
     
     connection.on("QuestResult", (res) => {
         showNotification(res.message, res.success ? "success" : "error");
-        if(res.success && res.newScore !== undefined && currentUser) {
-            currentUser.score = res.newScore;
-            updateUserStats(currentUser);
-            $("#userScoreDisplay").text(`⭐ ${currentUser.score}`);
+        if(res.success && res.newScore !== undefined && window.currentUser) {
+            window.currentUser.score = res.newScore;
+            updateUserStats(window.currentUser);
+            $("#userScoreDisplay").text(`⭐ ${window.currentUser.score}`);
         }
     });
     
@@ -63,10 +63,10 @@ $(function() {
     });
     
     connection.on("DuelResult", (res) => {
-        if(res.success && res.newScore !== undefined && currentUser) {
-            currentUser.score = res.newScore;
-            updateUserStats(currentUser);
-            $("#userScoreDisplay").text(`⭐ ${currentUser.score}`);
+        if(res.success && res.newScore !== undefined && window.currentUser) {
+            window.currentUser.score = res.newScore;
+            updateUserStats(window.currentUser);
+            $("#userScoreDisplay").text(`⭐ ${window.currentUser.score}`);
         }
         showNotification(res.message, res.success ? "success" : "error");
         $("#duelModal").remove();
@@ -154,7 +154,7 @@ $(function() {
     });
     
     $("#duelQueueBtn").click(() => {
-        if(connection && currentUser) {
+        if(connection && window.currentUser) {
             connection.invoke("JoinDuelQueue");
         } else {
             showNotification("Сначала войдите в систему", "error");
@@ -165,14 +165,14 @@ $(function() {
 });
 
 function updateUserStats(user) {
-    if($("#userStats").length) {
+    if($("#userStats").length && user) {
         $("#userStats").html(`
             <div class="text-start">
                 <p><i class="fas fa-user text-danger"></i> <strong>Ник:</strong> ${escapeHtml(user.username)}</p>
                 <p><i class="fas fa-star text-danger"></i> <strong>Очки:</strong> ${user.score}</p>
                 <p><i class="fas fa-trophy text-danger"></i> <strong>Победы:</strong> ${user.wins}</p>
                 <p><i class="fas fa-skull text-danger"></i> <strong>Поражения:</strong> ${user.losses}</p>
-                <p><i class="fas fa-check-circle text-danger"></i> <strong>Квестов пройдено:</strong> ${user.completedQuests.length}</p>
+                <p><i class="fas fa-check-circle text-danger"></i> <strong>Квестов пройдено:</strong> ${user.completedQuests?.length || 0}</p>
             </div>
         `);
     }
@@ -192,11 +192,11 @@ function showDuelModal(data) {
                             <h3>⏱️ <span id="duelTimer">${data.timeLimit || 60}</span> секунд</h3>
                         </div>
                         <div class="card bg-black border-danger mb-3">
-                            <div class="card-header bg-danger">${escapeHtml(data.taskTitle)}</div>
+                            <div class="card-header bg-danger">ЗАДАНИЕ</div>
                             <div class="card-body">
-                                <p>${escapeHtml(data.taskDescription)}</p>
-                                <pre class="bg-black text-warning p-2">${escapeHtml(data.testCode)}</pre>
-                                <p><strong>Ожидаемый вывод:</strong> ${escapeHtml(data.expectedOutput)}</p>
+                                <p class="text-info">${escapeHtml(data.taskDescription || data.task)}</p>
+                                ${data.testCode ? `<pre class="bg-black text-warning p-2">${escapeHtml(data.testCode)}</pre>` : ''}
+                                ${data.expectedOutput ? `<p><strong>Ожидаемый вывод:</strong> ${escapeHtml(data.expectedOutput)}</p>` : ''}
                             </div>
                         </div>
                         <textarea id="duelSolution" class="form-control bg-black text-white border-danger" rows="6" placeholder="Напиши решение..."></textarea>
