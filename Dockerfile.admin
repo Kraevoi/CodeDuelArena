@@ -1,0 +1,18 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Копируем ТОЛЬКО папку админки
+COPY CodeDuelArena.Admin/ ./CodeDuelArena.Admin/
+
+# Переходим в папку админки
+WORKDIR /src/CodeDuelArena.Admin
+
+# Восстанавливаем зависимости и публикуем
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/out
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app/out .
+EXPOSE 80
+ENTRYPOINT ["dotnet", "CodeDuelArena.Admin.dll"]
