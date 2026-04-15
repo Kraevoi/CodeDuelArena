@@ -1,0 +1,23 @@
+﻿@page "/Admin/AddQuest"
+@model CodeDuelArena.Admin.Pages.Admin.AddQuestModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Add Quest";
+}
+
+<h2 class="text-danger">➕ ДОБАВЛЕНИЕ КВЕСТА</h2>
+<a href="/Admin/Quests" class="btn btn-outline-danger mb-3">← Назад</a>
+
+<div class="card bg-dark">
+    <div class="card-body">
+        <form method="post">
+            <div class="mb-3"><label class="form-label text-danger">Название</label><input asp-for="Quest.Title" class="form-control bg-black text-white" required /></div>
+            <div class="mb-3"><label class="form-label text-danger">Тип</label><select asp-for="Quest.Type" class="form-control bg-black text-white"><option>LegacyFix</option><option>Hack</option></select></div>
+            <div class="mb-3"><label class="form-label text-danger">Описание</label><textarea asp-for="Quest.Description" class="form-control bg-black text-white" rows="3" required></textarea></div>
+            <div class="mb-3"><label class="form-label text-danger">Legacy код</label><textarea asp-for="Quest.LegacyCode" class="form-control bg-black text-white" rows="5" required></textarea></div>
+            <div class="mb-3"><label class="form-label text-danger">Решение</label><textarea asp-for="Quest.SolutionCode" class="form-control bg-black text-white" rows="5" required></textarea></div>
+            <div class="mb-3"><label class="form-label text-danger">Очки</label><input asp-for="Quest.Points" type="number" class="form-control bg-black text-white" value="100" required /></div>
+            <button type="submit" class="btn btn-danger w-100">➕ Добавить</button>
+        </form>
+    </div>
+</div>
