@@ -9,7 +9,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connStr));
 
 // Добавляем Razor Pages с поддержкой Areas
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages()
+    .AddRazorPagesOptions(options =>
+    {
+        options.Conventions.AddAreaPageRoute("Admin", "/Login", "/Admin");
+    });
+
 builder.Services.AddSignalR();
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
@@ -27,9 +32,12 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthorization();
 
-// Маршрутизация для Razor Pages
 app.MapRazorPages();
 app.MapHub<DuelHub>("/duelHub");
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapGet("/", context =>
 {
