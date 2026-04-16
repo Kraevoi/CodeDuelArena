@@ -19,29 +19,29 @@ public class ComplaintsModel : PageModel
         return Page();
     }
 
-    public async Task<IActionResult> OnPostMarkReadAsync(int id)
+    public async Task<IActionResult> OnPostMarkRead(int id)
+{
+    if (Request.Cookies["admin_auth"] != "true") return new JsonResult(new { success = false });
+    var c = await _db.Complaints.FindAsync(id);
+    if (c != null)
     {
-        if (Request.Cookies["admin_auth"] != "true") return new JsonResult(new { success = false });
-        var c = await _db.Complaints.FindAsync(id);
-        if (c != null)
-        {
-            c.IsRead = true;
-            await _db.SaveChangesAsync();
-            return new JsonResult(new { success = true });
-        }
-        return new JsonResult(new { success = false });
+        c.IsRead = true;
+        await _db.SaveChangesAsync();
+        return new JsonResult(new { success = true });
     }
+    return new JsonResult(new { success = false });
+}
 
-    public async Task<IActionResult> OnPostDeleteAsync(int id)
+public async Task<IActionResult> OnPostDelete(int id)
+{
+    if (Request.Cookies["admin_auth"] != "true") return new JsonResult(new { success = false });
+    var c = await _db.Complaints.FindAsync(id);
+    if (c != null)
     {
-        if (Request.Cookies["admin_auth"] != "true") return new JsonResult(new { success = false });
-        var c = await _db.Complaints.FindAsync(id);
-        if (c != null)
-        {
-            _db.Complaints.Remove(c);
-            await _db.SaveChangesAsync();
-            return new JsonResult(new { success = true });
-        }
-        return new JsonResult(new { success = false });
+        _db.Complaints.Remove(c);
+        await _db.SaveChangesAsync();
+        return new JsonResult(new { success = true });
     }
+    return new JsonResult(new { success = false });
+}
 }

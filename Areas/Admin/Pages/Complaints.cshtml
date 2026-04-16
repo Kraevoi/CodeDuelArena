@@ -57,15 +57,15 @@ else
 
 <script>
     function markRead(id) {
-        $.post('/Admin/Complaints?handler=MarkRead', { id: id }, function(data) {
+    $.post('/Admin/Complaints?handler=MarkRead', { id: id }, function(data) {
+        if (data.success) location.reload();
+    });
+}
+function deleteComplaint(id) {
+    if (confirm('Удалить жалобу?')) {
+        $.post('/Admin/Complaints?handler=Delete', { id: id }, function(data) {
             if (data.success) location.reload();
         });
     }
-    function deleteComplaint(id) {
-        if (confirm('Удалить жалобу?')) {
-            $.post('/Admin/Complaints?handler=Delete', { id: id }, function(data) {
-                if (data.success) location.reload();
-            });
-        }
-    }
+}
 </script>
