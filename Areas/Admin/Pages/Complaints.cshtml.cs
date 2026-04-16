@@ -12,36 +12,38 @@ public class ComplaintsModel : PageModel
     public ComplaintsModel(AppDbContext db) => _db = db;
     public List<Complaint> Complaints { get; set; } = new();
 
-    public async Task<IActionResult> OnGetAsync()
+    public IActionResult OnGet()
     {
         if (Request.Cookies["admin_auth"] != "true") return RedirectToPage("/Admin/Login");
-        Complaints = await _db.Complaints.OrderByDescending(c => c.CreatedAt).ToListAsync();
+        Complaints = _db.Complaints.OrderByDescending(c => c.CreatedAt).ToList();
         return Page();
     }
 
-    public async Task<IActionResult> OnPostMarkRead(int id)
-{
-    if (Request.Cookies["admin_auth"] != "true") return new JsonResult(new { success = false });
-    var c = await _db.Complaints.FindAsync(id);
-    if (c != null)
+    public IActionResult OnPostMarkRead(int id)
     {
-        c.IsRead = true;
-        await _db.SaveChangesAsync();
-        return new JsonResult(new { success = true });
+        if (Request.Cookies["admin_auth"] != "true") return new JsonResult(new { success = false });
+        
+        var complaint = _db.Complaints.Find(id);
+        if (complaint != null)
+        {
+            complaint.IsRead = true;
+            _db.SaveChanges();
+            return new JsonResult(new { success = true });
+        }
+        return new JsonResult(new { success = false });
     }
-    return new JsonResult(new { success = false });
-}
 
-public async Task<IActionResult> OnPostDelete(int id)
-{
-    if (Request.Cookies["admin_auth"] != "true") return new JsonResult(new { success = false });
-    var c = await _db.Complaints.FindAsync(id);
-    if (c != null)
+    public IActionResult OnPostDelete(int id)
     {
-        _db.Complaints.Remove(c);
-        await _db.SaveChangesAsync();
-        return new JsonResult(new { success = true });
+        if (Request.Cookies["admin_auth"] != "true") return new JsonResult(new { success = false });
+        
+        var complaint = _db.Complaints.Find(id);
+        if (complaint != null)
+        {
+            _db.Complaints.Remove(complaint);
+            _db.SaveChanges();
+            return new JsonResult(new { success = true });
+        }
+        return new JsonResult(new { success = false });
     }
-    return new JsonResult(new { success = false });
-}
 }

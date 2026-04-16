@@ -57,15 +57,41 @@ else
 
 <script>
     function markRead(id) {
-    $.post('/Admin/Complaints?handler=MarkRead', { id: id }, function(data) {
-        if (data.success) location.reload();
-    });
-}
-function deleteComplaint(id) {
-    if (confirm('Удалить жалобу?')) {
-        $.post('/Admin/Complaints?handler=Delete', { id: id }, function(data) {
-            if (data.success) location.reload();
+        $.ajax({
+            url: '/Admin/Complaints?handler=MarkRead',
+            type: 'POST',
+            data: { id: id },
+            success: function(data) {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Ошибка при отметке');
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Ошибка соединения: ' + error);
+                console.log(xhr.responseText);
+            }
         });
     }
-}
+    
+    function deleteComplaint(id) {
+        if (confirm('Удалить жалобу?')) {
+            $.ajax({
+                url: '/Admin/Complaints?handler=Delete',
+                type: 'POST',
+                data: { id: id },
+                success: function(data) {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Ошибка при удалении');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Ошибка соединения: ' + error);
+                }
+            });
+        }
+    }
 </script>
