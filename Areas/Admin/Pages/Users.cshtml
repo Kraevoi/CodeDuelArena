@@ -1,17 +1,58 @@
 @page "/Admin/Users"
 @model CodeDuelArena.Areas.Admin.Pages.UsersModel
 @{ ViewData["Title"] = "Users"; }
+
 <h2 class="text-danger">👥 УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ</h2>
 <a href="/Admin/Dashboard" class="btn btn-outline-danger mb-3">← Назад</a>
+
+<div class="mb-3 d-flex gap-2 flex-wrap">
+    <a href="/Admin/Users?sort=name_asc" class="btn btn-sm @(Model.CurrentSort == "name_asc" ? "btn-danger" : "btn-outline-danger")">📜 А-Я</a>
+    <a href="/Admin/Users?sort=name_desc" class="btn btn-sm @(Model.CurrentSort == "name_desc" ? "btn-danger" : "btn-outline-danger")">📜 Я-А</a>
+    <a href="/Admin/Users?sort=score_desc" class="btn btn-sm @(Model.CurrentSort == "score_desc" ? "btn-danger" : "btn-outline-danger")">⭐ Макс рейтинг</a>
+    <a href="/Admin/Users?sort=score_asc" class="btn btn-sm @(Model.CurrentSort == "score_asc" ? "btn-danger" : "btn-outline-danger")">⭐ Мин рейтинг</a>
+    <a href="/Admin/Users?sort=date_desc" class="btn btn-sm @(Model.CurrentSort == "date_desc" ? "btn-danger" : "btn-outline-danger")">📅 Новые</a>
+    <a href="/Admin/Users?sort=date_asc" class="btn btn-sm @(Model.CurrentSort == "date_asc" ? "btn-danger" : "btn-outline-danger")">📅 Старые</a>
+    <a href="/Admin/Users" class="btn btn-sm btn-outline-secondary">🔄 Сброс</a>
+</div>
+
 <table class="table table-dark table-striped">
-    <thead><tr><th>ID</th><th>Имя</th><th>Email</th><th>Очки</th><th>Победы</th><th>Поражения</th><th>Действие</th></tr></thead>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Email</th>
+            <th>Очки</th>
+            <th>Победы</th>
+            <th>Поражения</th>
+            <th>Дата регистрации</th>
+            <th>Действие</th>
+        </tr>
+    </thead>
     <tbody>
         @foreach (var u in Model.Users)
         {
-            <tr><td>@u.Id</td><td>@u.Username</td><td>@u.Email</td><td class="text-danger fw-bold">@u.Score</td><td>@u.Wins</td><td>@u.Losses</td>
-                <td><button class="btn btn-sm btn-danger" onclick="deleteUser(@u.Id)">Удалить</button></td>
+            <tr>
+                <td>@u.Id</td>
+                <td>@u.Username</td>
+                <td>@u.Email</td>
+                <td class="text-danger fw-bold">@u.Score</td>
+                <td>@u.Wins</td>
+                <td>@u.Losses</td>
+                <td>@u.RegisteredAt.ToString("dd.MM.yyyy HH:mm")</td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="deleteUser(@u.Id)">🗑 Удалить</button>
+                </td>
             </tr>
         }
     </tbody>
 </table>
-<script>function deleteUser(id){if(confirm('Удалить?'))$.post('/Admin/Users?handler=Delete',{id},d=>{if(d.success)location.reload()});}</script>
+
+<script>
+    function deleteUser(id) {
+        if (confirm('Удалить пользователя?')) {
+            $.post('/Admin/Users?handler=Delete', { id: id }, function(data) {
+                if (data.success) location.reload();
+            });
+        }
+    }
+</script>
