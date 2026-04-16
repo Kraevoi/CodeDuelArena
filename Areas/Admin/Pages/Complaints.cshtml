@@ -58,7 +58,7 @@ else
 <script>
     function markRead(id) {
         $.ajax({
-            url: '/Admin/Complaints?handler=MarkRead',
+            url: '?handler=MarkRead',
             type: 'POST',
             data: { id: id },
             success: function(data) {
@@ -68,9 +68,8 @@ else
                     alert('Ошибка при отметке');
                 }
             },
-            error: function(xhr, status, error) {
-                alert('Ошибка соединения: ' + error);
-                console.log(xhr.responseText);
+            error: function(xhr) {
+                alert('Ошибка: ' + xhr.status + ' ' + xhr.statusText);
             }
         });
     }
@@ -78,7 +77,7 @@ else
     function deleteComplaint(id) {
         if (confirm('Удалить жалобу?')) {
             $.ajax({
-                url: '/Admin/Complaints?handler=Delete',
+                url: '?handler=Delete',
                 type: 'POST',
                 data: { id: id },
                 success: function(data) {
@@ -88,8 +87,8 @@ else
                         alert('Ошибка при удалении');
                     }
                 },
-                error: function(xhr, status, error) {
-                    alert('Ошибка соединения: ' + error);
+                error: function(xhr) {
+                    alert('Ошибка: ' + xhr.status);
                 }
             });
         }

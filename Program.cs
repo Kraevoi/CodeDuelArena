@@ -29,7 +29,7 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapHub<DuelHub>("/duelHub");
-
+app.MapRazorPages();
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Admin}/{action=Login}/{id?}");

@@ -5,7 +5,7 @@ using CodeDuelArena.Data;
 using CodeDuelArena.Models;
 
 namespace CodeDuelArena.Areas.Admin.Pages;
-
+[IgnoreAntiforgeryToken]
 public class ComplaintsModel : PageModel
 {
     private readonly AppDbContext _db;
