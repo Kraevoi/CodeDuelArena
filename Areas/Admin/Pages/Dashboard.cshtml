@@ -6,7 +6,15 @@
 <div class="d-flex justify-content-between mb-4">
     <h2 class="text-danger">👑 ADMIN DASHBOARD</h2>
     <div>
-        <a href="/Admin/Complaints" class="btn btn-warning me-2">📢 Жалобы (@Model.UnreadComplaints)</a>
+        <a href="/Admin/Complaints" class="btn btn-warning me-2 position-relative">
+            📢 Жалобы
+            @if (Model.UnreadComplaints > 0)
+            {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @Model.UnreadComplaints
+            </span>
+            }
+        </a>
         <a href="/Admin/DuelTasks" class="btn btn-outline-warning me-2">⚔️ Duel Tasks</a>
         <a href="/Admin/ActivityLogs" class="btn btn-outline-info me-2">📜 Логи</a>
         <a href="/Admin/Users" class="btn btn-outline-danger me-2">👥 Users</a>

@@ -25,7 +25,7 @@ public class DashboardModel : PageModel
         TotalScore = users.Sum(u => u.Score);
         ActiveToday = users.Count(u => u.LastLogin.Date == DateTime.UtcNow.Date);
         TotalWins = users.Sum(u => u.Wins);
-        UnreadComplaints = _db.Complaints.Count(c => !c.IsRead);
+       UnreadComplaints = _db.Complaints.Count(c => !c.IsRead);
         return Page();
     }
 }
