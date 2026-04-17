@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Новое сообщение";
+}
+
+<h2 class="text-danger">✉️ Новое сообщение</h2>
+
+<div class="card bg-dark border-danger">
+    <div class="card-body">
+        <div class="mb-3">
+            <label class="form-label text-danger">Кому</label>
+            <input type="text" id="toUser" class="form-control bg-black text-white border-danger" placeholder="Имя пользователя">
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-danger">Сообщение</label>
+            <textarea id="message" class="form-control bg-black text-white border-danger" rows="5" placeholder="Введите сообщение..."></textarea>
+        </div>
+        <button id="sendBtn" class="btn btn-danger w-100">✉️ Отправить</button>
+    </div>
+</div>
+
+<script>
+    $("#sendBtn").click(function() {
+        var toUser = $("#toUser").val().trim();
+        var message = $("#message").val().trim();
+        
+        if (!toUser || !message) {
+            alert("Заполните все поля");
+            return;
+        }
+        
+        $.post("/Message/Send", { toUser: toUser, message: message }, function(data) {
+            if (data.success) {
+                alert("Сообщение отправлено!");
+                window.location.href = "/Message/Inbox";
+            } else {
+                alert(data.error);
+            }
+        });
+    });
+</script>

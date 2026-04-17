@@ -1,0 +1,77 @@
+@model CodeDuelArena.Models.UserDb
+@{
+    ViewData["Title"] = "Профиль";
+    var settings = ViewBag.Settings as CodeDuelArena.Models.UserSettings;
+    var league = ViewBag.League as CodeDuelArena.Models.UserLeague;
+    var achievements = ViewBag.Achievements as List<CodeDuelArena.Models.UserAchievement>;
+    var isOwnProfile = ViewBag.IsOwnProfile;
+}
+
+<h2 class="text-danger">👤 Профиль: @Model.Username</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card bg-dark border-danger">
+            <div class="card-header bg-danger">Аватар</div>
+            <div class="card-body text-center">
+                @if (!string.IsNullOrEmpty(settings?.AvatarUrl))
+                {
+                    <img src="@settings.AvatarUrl" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                }
+                else
+                {
+                    <div class="rounded-circle bg-danger d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;">
+                        <span class="text-white display-1">@Model.Username[0]</span>
+                    </div>
+                }
+                
+                @if (isOwnProfile)
+                {
+                    <form method="post" enctype="multipart/form-data" action="/Profile/UploadAvatar">
+                        <input type="file" name="avatar" class="form-control bg-black text-white mb-2" accept="image/*">
+                        <button type="submit" class="btn btn-danger w-100">Загрузить аватар</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card bg-dark border-danger mb-3">
+            <div class="card-header bg-danger">Статистика</div>
+            <div class="card-body">
+                <p>⭐ Очки: <strong>@Model.Score</strong></p>
+                <p>🏆 Победы: <strong>@Model.Wins</strong></p>
+                <p>💀 Поражения: <strong>@Model.Losses</strong></p>
+                <p>🏅 Лига: <strong>@(league?.League ?? "Bronze")</strong></p>
+            </div>
+        </div>
+        
+        <div class="card bg-dark border-danger">
+            <div class="card-header bg-danger">Достижения</div>
+            <div class="card-body">
+                <div class="row">
+                    @if (achievements != null && achievements.Any())
+                    {
+                        foreach (var ach in achievements)
+                        {
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="display-6 me-2">@ach.Achievement?.Icon</span>
+                                    <div>
+                                        <strong>@ach.Achievement?.Name</strong>
+                                        <small class="text-muted d-block">@ach.Achievement?.Description</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">Нет достижений</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

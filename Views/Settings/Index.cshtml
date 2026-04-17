@@ -1,0 +1,53 @@
+@model CodeDuelArena.Models.UserSettings
+@{
+    ViewData["Title"] = "Настройки";
+}
+
+<h2 class="text-danger">⚙️ Настройки</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card bg-dark border-danger mb-4">
+            <div class="card-header bg-danger">🎨 Тема</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-danger w-100" onclick="setTheme('dark')">🌙 Dark</button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-danger w-100" onclick="setTheme('light')">☀️ Light</button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-danger w-100" onclick="setTheme('matrix')">💚 Matrix</button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-danger w-100" onclick="setTheme('cyber')">🔮 Cyber</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card bg-dark border-danger">
+            <div class="card-header bg-danger">🎨 Кастомный CSS</div>
+            <div class="card-body">
+                <textarea id="customCss" class="form-control bg-black text-white" rows="10" placeholder="body { background: #000; }">@Model.CustomCss</textarea>
+                <button class="btn btn-danger mt-2 w-100" onclick="saveCss()">Сохранить CSS</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setTheme(theme) {
+        $.post("/Settings/UpdateTheme", { theme: theme }, function(data) {
+            if (data.success) location.reload();
+        });
+    }
+    
+    function saveCss() {
+        var css = $("#customCss").val();
+        $.post("/Settings/UpdateCustomCss", { customCss: css }, function(data) {
+            if (data.success) location.reload();
+        });
+    }
+</script>

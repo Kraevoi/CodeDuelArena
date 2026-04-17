@@ -1,0 +1,38 @@
+@model List<CodeDuelArena.Models.PrivateMessage>
+@{
+    ViewData["Title"] = "Отправленные";
+}
+
+<h2 class="text-danger">📤 Отправленные сообщения</h2>
+
+<div class="mb-3">
+    <a href="/Message/Inbox" class="btn btn-outline-danger">Входящие</a>
+    <a href="/Message/New" class="btn btn-danger">✉️ Новое сообщение</a>
+</div>
+
+<div class="card bg-dark border-danger">
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <p class="text-center text-muted">Нет отправленных сообщений</p>
+        }
+        @foreach (var msg in Model)
+        {
+            <div class="border-bottom border-secondary mb-2 pb-2">
+                <div class="d-flex justify-content-between">
+                    <span class="text-danger fw-bold">Кому: @msg.ToUser</span>
+                    <span class="text-muted">@msg.SentAt.ToString("dd.MM.yyyy HH:mm")</span>
+                </div>
+                <div class="mt-1">@msg.Message</div>
+                @if (msg.IsRead)
+                {
+                    <span class="badge bg-success">Прочитано</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning">Не прочитано</span>
+                }
+            </div>
+        }
+    </div>
+</div>
