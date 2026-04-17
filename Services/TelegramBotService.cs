@@ -19,6 +19,7 @@ namespace CodeDuelArena.Services
         
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await Task.Delay(10000);
             _bot.StartReceiving(UpdateHandler, ErrorHandler, cancellationToken: stoppingToken);
             await Task.Delay(-1, stoppingToken);
         }
