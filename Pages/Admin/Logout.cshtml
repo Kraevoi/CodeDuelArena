@@ -1,0 +1,5 @@
+﻿@page
+@{
+    Response.Cookies.Delete(""admin_auth"");
+    Response.Redirect(""/Admin/Login"");
+}

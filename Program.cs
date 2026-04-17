@@ -39,5 +39,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapHub<DuelHub>("/duelHub");
-
+app.MapRazorPages();
 app.Run();
