@@ -1,0 +1,21 @@
+﻿@model List<CodeDuelArena.Models.Complaint>
+@{
+    ViewData[""Title""] = ""Complaints"";
+}
+<h2 class=""text-danger"">Жалобы</h2>
+<table class=""table table-dark"">
+    <thead><tr><th>ID</th><th>Пользователь</th><th>Сообщение</th><th>Дата</th><th>Статус</th><th></th></tr></thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr><td>@c.Id</td><td>@c.UserName</td><td>@c.Message</td><td>@c.CreatedAt.ToString(""dd.MM.yyyy HH:mm"")</td>
+            <td>@(c.IsRead ? "Прочитано" : "Новое")</td>
+            <td><button class=""btn btn-sm btn-success"" onclick=""markRead(@c.Id)"">✓</button>
+            <button class=""btn btn-sm btn-danger"" onclick=""deleteComplaint(@c.Id)"">🗑</button></td></tr>
+        }
+    </tbody>
+</table>
+<script>
+function markRead(id) { $.post(""/Admin/MarkRead"", { id: id }, () => location.reload()); }
+function deleteComplaint(id) { if(confirm(""Удалить?"")) $.post(""/Admin/DeleteComplaint"", { id: id }, () => location.reload()); }
+</script>
