@@ -129,5 +129,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script src="~/js/duel.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+    function applyThemeFromCookie() {
+        var theme = getCookie("user_theme");
+        var themes = {
+            dark: { bg: "linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%)", color: "#fff", cardBg: "#111" },
+            light: { bg: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)", color: "#000", cardBg: "#fff" },
+            matrix: { bg: "#000", color: "#0f0", cardBg: "#0a0a0a" },
+            cyber: { bg: "linear-gradient(135deg, #0a0a2a 0%, #1a0a3a 100%)", color: "#0ff", cardBg: "#0a0a2a" }
+        };
+        var t = themes[theme] || themes.dark;
+        document.body.style.background = t.bg;
+        document.body.style.color = t.color;
+    }
+    
+    function getCookie(name) {
+        var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : null;
+    }
+    
+    applyThemeFromCookie();
+</script>
 </body>
 </html>

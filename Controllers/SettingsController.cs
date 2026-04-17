@@ -20,7 +20,14 @@ namespace CodeDuelArena.Controllers
             var username = Request.Cookies["auth_user"];
             if (string.IsNullOrEmpty(username)) return RedirectToAction("Index", "Home");
             
-            var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username) ?? new UserSettings { Username = username };
+            var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
+            if (settings == null)
+            {
+                settings = new UserSettings { Username = username };
+                _db.UserSettings.Add(settings);
+                await _db.SaveChangesAsync();
+            }
+            
             return View(settings);
         }
         
@@ -39,7 +46,13 @@ namespace CodeDuelArena.Controllers
             settings.Theme = theme;
             await _db.SaveChangesAsync();
             
-            Response.Cookies.Append("user_theme", theme, new CookieOptions { Expires = DateTime.Now.AddYears(1) });
+            Response.Cookies.Append("user_theme", theme, new CookieOptions 
+            { 
+                Expires = DateTime.Now.AddYears(1),
+                Path = "/",
+                SameSite = SameSiteMode.Lax
+            });
+            
             return Json(new { success = true });
         }
         
@@ -59,6 +72,18 @@ namespace CodeDuelArena.Controllers
             await _db.SaveChangesAsync();
             
             return Json(new { success = true });
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> GetTheme()
+        {
+            var username = Request.Cookies["auth_user"];
+            if (string.IsNullOrEmpty(username)) return Json(new { theme = "dark" });
+            
+            var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
+            var theme = settings?.Theme ?? "dark";
+            
+            return Json(new { theme = theme });
         }
     }
 }
