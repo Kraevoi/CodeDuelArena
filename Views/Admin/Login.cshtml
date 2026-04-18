@@ -1,11 +1,10 @@
-﻿@page
-@{
-    ViewData[""Title""] = ""Login"";
+﻿@{
+    ViewData[""Title""] = ""Admin Login"";
 }
 <div class=""row justify-content-center mt-5"">
     <div class=""col-md-4"">
         <div class=""card bg-dark border-danger"">
-            <div class=""card-header bg-danger text-center"">Admin Login</div>
+            <div class=""card-header bg-danger text-center"">Admin Panel</div>
             <div class=""card-body"">
                 @if (ViewBag.Error != null)
                 {
@@ -23,19 +22,3 @@
         </div>
     </div>
 </div>
-@functions {
-    public IActionResult OnPost(string password, bool rememberMe)
-    {
-        if (password == ""admin123"")
-        {
-            Response.Cookies.Append(""admin_auth"", ""true"", new CookieOptions
-            {
-                HttpOnly = true,
-                Expires = rememberMe ? DateTime.Now.AddDays(7) : DateTime.Now.AddHours(1)
-            });
-            return RedirectToPage(""/Admin/Dashboard"");
-        }
-        ViewBag.Error = ""Неверный пароль"";
-        return Page();
-    }
-}

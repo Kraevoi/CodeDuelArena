@@ -1,17 +1,12 @@
-﻿@page
-@using CodeDuelArena.Data
-@using Microsoft.EntityFrameworkCore
-@inject AppDbContext Db
+﻿@model List<CodeDuelArena.Models.ActivityLog>
 @{
-    ViewData[""Title""] = ""Logs"";
-    if (Request.Cookies[""admin_auth""] != ""true"") { Response.Redirect(""/Admin/Login""); return; }
-    var logs = await Db.ActivityLogs.OrderByDescending(l => l.Timestamp).Take(200).ToListAsync();
+    ViewData[""Title""] = ""Activity Logs"";
 }
 <h2 class=""text-danger"">Логи активности</h2>
 <table class=""table table-dark"">
     <thead><tr><th>ID</th><th>Пользователь</th><th>Действие</th><th>Детали</th><th>Время</th><th>IP</th></tr></thead>
     <tbody>
-        @foreach (var log in logs)
+        @foreach (var log in Model)
         {
             <tr>
                 <td>@log.Id</td
@@ -23,4 +18,4 @@
             ?
         }
     </tbody>
-</table>
+</tr>

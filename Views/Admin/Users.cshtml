@@ -1,0 +1,31 @@
+﻿@model List<CodeDuelArena.Models.UserDb>
+@{
+    ViewData[""Title""] = ""Users"";
+}
+<h2 class=""text-danger"">Пользователи</h2>
+<table class=""table table-dark"">
+    <thead>
+        <tr><th>ID</th><th>Имя</th><th>Email</th><th>Очки</th><th>Победы</th><th>Поражения</th><th>Действие</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.Id</td
+                <td>@u.Username</td
+                <td>@u.Email</td
+                <td>@u.Score</td
+                <td>@u.Wins</td
+                <td>@u.Losses</td
+                <td><button class=""btn btn-sm btn-danger"" onclick=""deleteUser(@u.Id)"">Удалить</button></td
+            ?
+        }
+    </tbody>
+</table>
+<script>
+function deleteUser(id) {
+    if(confirm(""Удалить пользователя?"")) {
+        $.post(""/Admin/DeleteUser"", { id: id }, () => location.reload());
+    }
+}
+</script>

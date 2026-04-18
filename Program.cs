@@ -17,7 +17,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<DailyQuestService>();
 builder.Services.AddScoped<AchievementService>();
 builder.Services.AddScoped<LeagueService>();
-builder.Services.AddHostedService<TelegramBotService>();
+// builder.Services.AddHostedService<TelegramBotService>();
 
 var app = builder.Build();
 

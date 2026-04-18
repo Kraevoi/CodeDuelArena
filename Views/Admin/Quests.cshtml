@@ -1,17 +1,13 @@
-﻿@page
-@using CodeDuelArena.Data
-@inject AppDbContext Db
+﻿@model List<CodeDuelArena.Models.QuestModel>
 @{
     ViewData[""Title""] = ""Quests"";
-    if (Request.Cookies[""admin_auth""] != ""true"") { Response.Redirect(""/Admin/Login""); return; }
-    var quests = DataStorage.GetQuests();
 }
 <h2 class=""text-danger"">Квесты</h2>
 <a href=""/Admin/AddQuest"" class=""btn btn-danger mb-3"">➕ Добавить квест</a>
 <table class=""table table-dark"">
     <thead><tr><th>ID</th><th>Название</th><th>Тип</th><th>Очки</th><th></th></tr></thead>
     <tbody>
-        @foreach (var q in quests)
+        @foreach (var q in Model)
         {
             <tr>
                 <td>@q.Id</td
