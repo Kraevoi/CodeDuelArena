@@ -12,16 +12,16 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3">
-                        <button class="btn btn-outline-danger w-100 theme-btn" data-theme="dark">🌙 Dark</button>
+                        <button class="btn btn-outline-danger w-100" onclick="window.setTheme('dark')">🌙 Dark</button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-danger w-100 theme-btn" data-theme="light">☀️ Light</button>
+                        <button class="btn btn-outline-danger w-100" onclick="window.setTheme('light')">☀️ Light</button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-danger w-100 theme-btn" data-theme="matrix">💚 Matrix</button>
+                        <button class="btn btn-outline-danger w-100" onclick="window.setTheme('matrix')">💚 Matrix</button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-danger w-100 theme-btn" data-theme="cyber">🔮 Cyber</button>
+                        <button class="btn btn-outline-danger w-100" onclick="window.setTheme('cyber')">🔮 Cyber</button>
                     </div>
                 </div>
             </div>
@@ -38,13 +38,6 @@
 </div>
 
 <script>
-    $(document).ready(function() {
-        $(".theme-btn").click(function() {
-            var theme = $(this).data("theme");
-            setTheme(theme);
-        });
-    });
-    
     function saveCss() {
         var css = $("#customCss").val();
         $.post("/Settings/UpdateCustomCss", { customCss: css }, function(data) {
