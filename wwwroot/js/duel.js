@@ -261,47 +261,114 @@ window.submitQuest = function(questId) {
     }
 };
 
+
 function applyTheme(theme) {
     var themes = {
         dark: {
             bg: "linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%)",
             color: "#fff",
             cardBg: "#111",
-            border: "#dc3545"
+            border: "#dc3545",
+            btnBg: "#dc3545",
+            btnHover: "#bb2d3b",
+            inputBg: "#000",
+            tableBg: "#111"
         },
         light: {
             bg: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)",
             color: "#000",
             cardBg: "#fff",
-            border: "#dc3545"
+            border: "#dc3545",
+            btnBg: "#dc3545",
+            btnHover: "#bb2d3b",
+            inputBg: "#fff",
+            tableBg: "#fff"
         },
         matrix: {
             bg: "#000",
             color: "#0f0",
             cardBg: "#0a0a0a",
-            border: "#0f0"
+            border: "#0f0",
+            btnBg: "#0f0",
+            btnHover: "#0a0",
+            inputBg: "#000",
+            tableBg: "#0a0a0a"
         },
         cyber: {
             bg: "linear-gradient(135deg, #0a0a2a 0%, #1a0a3a 100%)",
             color: "#0ff",
             cardBg: "#0a0a2a",
-            border: "#0ff"
+            border: "#0ff",
+            btnBg: "#0ff",
+            btnHover: "#0aa",
+            inputBg: "#0a0a2a",
+            tableBg: "#0a0a2a"
         }
     };
     
     var t = themes[theme] || themes.dark;
+    
+
     document.body.style.background = t.bg;
     document.body.style.color = t.color;
     
 
-    var btns = document.querySelectorAll(".btn-danger");
-    btns.forEach(function(btn) {
-        if (theme === "matrix") btn.style.background = "#0f0";
-        else if (theme === "cyber") btn.style.background = "#0ff";
-        else if (theme === "light") btn.style.background = "#dc3545";
-        else btn.style.background = "#dc3545";
+    document.querySelectorAll(".card").forEach(function(card) {
+        card.style.background = t.cardBg;
+        card.style.borderColor = t.border;
     });
     
+
+    document.querySelectorAll(".btn-danger").forEach(function(btn) {
+        btn.style.background = t.btnBg;
+        btn.style.borderColor = t.btnBg;
+    });
+    
+    document.querySelectorAll(".btn-outline-danger").forEach(function(btn) {
+        btn.style.borderColor = t.border;
+        btn.style.color = t.border;
+    });
+    
+    document.querySelectorAll(".btn-outline-danger").forEach(function(btn) {
+        btn.addEventListener("mouseenter", function() {
+            this.style.background = t.btnBg;
+            this.style.color = "#fff";
+        });
+        btn.addEventListener("mouseleave", function() {
+            this.style.background = "transparent";
+            this.style.color = t.border;
+        });
+    });
+    
+
+    document.querySelectorAll(".form-control").forEach(function(input) {
+        input.style.background = t.inputBg;
+        input.style.color = t.color;
+        input.style.borderColor = t.border;
+    });
+    
+ 
+    document.querySelectorAll(".table, .table-dark").forEach(function(table) {
+        table.style.background = t.tableBg;
+        table.style.color = t.color;
+    });
+    
+    document.querySelectorAll(".table thead th").forEach(function(th) {
+        th.style.background = t.border;
+        th.style.color = t.color === "#fff" ? "#fff" : "#000";
+    });
+    
+   
+    var navbar = document.querySelector(".navbar");
+    if (navbar) navbar.style.background = "#000";
+    
+    var chatMessages = document.querySelector("#chatMessages");
+    if (chatMessages) chatMessages.style.background = t.inputBg;
+    
+    var messagesList = document.querySelector("#messagesList");
+    if (messagesList) messagesList.style.color = t.color;
+    
+
     document.cookie = "user_theme=" + theme + "; path=/; max-age=" + (365 * 24 * 60 * 60);
 }
 
@@ -311,4 +378,15 @@ function loadTheme() {
     applyTheme(theme);
 }
 
-loadTheme();
+function setTheme(theme) {
+    $.post("/Settings/UpdateTheme", { theme: theme }, function(data) {
+        if (data.success) {
+            applyTheme(theme);
+        }
+    });
+}
+
+
+$(document).ready(function() {
+    loadTheme();
+});
