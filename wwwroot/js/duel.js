@@ -260,3 +260,55 @@ window.submitQuest = function(questId) {
         alert("Напиши решение!");
     }
 };
+
+function applyTheme(theme) {
+    var themes = {
+        dark: {
+            bg: "linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%)",
+            color: "#fff",
+            cardBg: "#111",
+            border: "#dc3545"
+        },
+        light: {
+            bg: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)",
+            color: "#000",
+            cardBg: "#fff",
+            border: "#dc3545"
+        },
+        matrix: {
+            bg: "#000",
+            color: "#0f0",
+            cardBg: "#0a0a0a",
+            border: "#0f0"
+        },
+        cyber: {
+            bg: "linear-gradient(135deg, #0a0a2a 0%, #1a0a3a 100%)",
+            color: "#0ff",
+            cardBg: "#0a0a2a",
+            border: "#0ff"
+        }
+    };
+    
+    var t = themes[theme] || themes.dark;
+    document.body.style.background = t.bg;
+    document.body.style.color = t.color;
+    
+
+    var btns = document.querySelectorAll(".btn-danger");
+    btns.forEach(function(btn) {
+        if (theme === "matrix") btn.style.background = "#0f0";
+        else if (theme === "cyber") btn.style.background = "#0ff";
+        else if (theme === "light") btn.style.background = "#dc3545";
+        else btn.style.background = "#dc3545";
+    });
+    
+    document.cookie = "user_theme=" + theme + "; path=/; max-age=" + (365 * 24 * 60 * 60);
+}
+
+function loadTheme() {
+    var match = document.cookie.match(/user_theme=([^;]+)/);
+    var theme = match ? match[1] : "dark";
+    applyTheme(theme);
+}
+
+loadTheme();

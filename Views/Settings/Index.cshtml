@@ -12,16 +12,16 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3">
-                        <button class="btn btn-outline-danger w-100" data-theme="dark">🌙 Dark</button>
+                        <button class="btn btn-outline-danger w-100" onclick="setTheme('dark')">🌙 Dark</button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-danger w-100" data-theme="light">☀️ Light</button>
+                        <button class="btn btn-outline-danger w-100" onclick="setTheme('light')">☀️ Light</button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-danger w-100" data-theme="matrix">💚 Matrix</button>
+                        <button class="btn btn-outline-danger w-100" onclick="setTheme('matrix')">💚 Matrix</button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-danger w-100" data-theme="cyber">🔮 Cyber</button>
+                        <button class="btn btn-outline-danger w-100" onclick="setTheme('cyber')">🔮 Cyber</button>
                     </div>
                 </div>
             </div>
@@ -31,81 +31,27 @@
             <div class="card-header bg-danger">🎨 Кастомный CSS</div>
             <div class="card-body">
                 <textarea id="customCss" class="form-control bg-black text-white" rows="10" placeholder="body { background: #000; }">@Model.CustomCss</textarea>
-                <button class="btn btn-danger mt-2 w-100" id="saveCssBtn">Сохранить CSS</button>
+                <button class="btn btn-danger mt-2 w-100" onclick="saveCss()">Сохранить CSS</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    $(document).ready(function() {
-        $("[data-theme]").click(function() {
-            var theme = $(this).data("theme");
-            $.post("/Settings/UpdateTheme", { theme: theme }, function(data) {
-                if (data.success) {
-                    applyTheme(theme);
-                }
-            });
-        });
-        
-        $("#saveCssBtn").click(function() {
-            var css = $("#customCss").val();
-            $.post("/Settings/UpdateCustomCss", { customCss: css }, function(data) {
-                if (data.success) {
-                    applyCustomCss(css);
-                    alert("CSS сохранен!");
-                }
-            });
-        });
-    });
-    
-    function applyTheme(theme) {
-        var themes = {
-            dark: {
-                bg: "linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%)",
-                color: "#fff",
-                cardBg: "#111"
-            },
-            light: {
-                bg: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)",
-                color: "#000",
-                cardBg: "#fff"
-            },
-            matrix: {
-                bg: "#000",
-                color: "#0f0",
-                cardBg: "#0a0a0a"
-            },
-            cyber: {
-                bg: "linear-gradient(135deg, #0a0a2a 0%, #1a0a3a 100%)",
-                color: "#0ff",
-                cardBg: "#0a0a2a"
+    function setTheme(theme) {
+        $.post("/Settings/UpdateTheme", { theme: theme }, function(data) {
+            if (data.success) {
+                applyTheme(theme);
+                location.reload();
             }
-        };
-        
-        var t = themes[theme] || themes.dark;
-        document.body.style.background = t.bg;
-        document.body.style.color = t.color;
-        document.cookie = "user_theme=" + theme + "; path=/; max-age=" + (365 * 24 * 60 * 60);
+        });
     }
     
-    function applyCustomCss(css) {
-        var styleId = "custom-theme";
-        var existing = $("#" + styleId);
-        if (existing.length) existing.remove();
-        $("<style id='" + styleId + "'>" + css + "</style>").appendTo("head");
+    function saveCss() {
+        var css = $("#customCss").val();
+        $.post("/Settings/UpdateCustomCss", { customCss: css }, function(data) {
+            if (data.success) alert("CSS сохранен!");
+        });
     }
-    
-    // Применить сохраненную тему при загрузке
-    $.get("/Settings/GetTheme", function(data) {
-        if (data.theme) {
-            applyTheme(data.theme);
-        }
-    });
-    
-    // Применить сохраненный CSS при загрузке
-    @if (!string.IsNullOrEmpty(Model.CustomCss))
-    {
-        @:applyCustomCss(`@Html.Raw(Model.CustomCss)`);
-    }
+  
 </script>
