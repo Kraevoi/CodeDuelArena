@@ -22,13 +22,13 @@
                     <td>@c.UserName</td
                     <td>@c.Message</td
                     <td>@c.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td
-                    <td>@(c.IsRead ? "✅ Прочитано" : "🆕 Новое")</td
+                    <td>@(c.IsRead ? "✅" : "🆕")</td
                     <td>
                         @if (!c.IsRead)
                         {
-                            <button class="btn btn-sm btn-success" onclick="markRead(@c.Id)">✓ Прочитано</button>
+                            <button class="btn btn-sm btn-success" onclick="markRead(@c.Id)">✓</button>
                         }
-                        <button class="btn btn-sm btn-danger" onclick="deleteComplaint(@c.Id)">🗑 Удалить</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteComplaint(@c.Id)">🗑</button>
                      </td
                 </tr>
             }

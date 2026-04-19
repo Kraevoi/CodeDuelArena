@@ -26,6 +26,8 @@ namespace CodeDuelArena.Controllers
             return View(users);
         }
 
+        
+
         [HttpPost]
         public async Task<IActionResult> ReportBug(string bugText)
         {
@@ -47,7 +49,7 @@ namespace CodeDuelArena.Controllers
                 // Логируем действие
                 await LogActivity(username, "Отправил жалобу", bugText);
                 
-                TempData["ReportMessage"] = "Жалоба отправлена";
+                //TempData["ReportMessage"] = "Жалоба отправлена";
             }
             return RedirectToAction("Index");
         }

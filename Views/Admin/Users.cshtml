@@ -33,10 +33,7 @@
                     <td>@u.Wins</td
                     <td>@u.Losses</td
                     <td>
-                        @if (!u.IsAdmin)
-                        {
-                            <a href="/Admin/Impersonate?id=@u.Id" class="btn btn-sm btn-warning">Войти</a>
-                        }
+                        <a href="/Admin/Impersonate?id=@u.Id" class="btn btn-sm btn-warning">Войти</a>
                      </td
                 </tr>
             }

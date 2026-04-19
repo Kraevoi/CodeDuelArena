@@ -52,30 +52,23 @@ namespace CodeDuelArena.Controllers
             }
         }
         
-        [HttpPost]
-        public async Task<IActionResult> Login(string username, string password, bool rememberMe)
-        {
-            try
-            {
-                var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == username);
-                
-                if (user == null)
-                    return Json(new { success = false, error = "Пользователь не найден" });
-                
-                if (!VerifyPassword(password, user.PasswordHash))
-                    return Json(new { success = false, error = "Неверный пароль" });
-                
-                user.LastLogin = DateTime.UtcNow;
-                await _db.SaveChangesAsync();
-                
-                SetCookie(username, rememberMe);
-                return Json(new { success = true, username = user.Username, score = user.Score });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, error = ex.Message });
-            }
-        }
+      [HttpPost]
+public async Task<IActionResult> Login(string username, string password, bool rememberMe)
+{
+    var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == username);
+    
+    if (user == null)
+        return Json(new { success = false, error = "Пользователь не найден" });
+    
+    if (!VerifyPassword(password, user.PasswordHash))
+        return Json(new { success = false, error = "Неверный пароль" });
+    
+    user.LastLogin = DateTime.UtcNow;
+    await _db.SaveChangesAsync();
+    
+    SetCookie(username, rememberMe);
+    return Json(new { success = true, username = user.Username, score = user.Score }); // ← БЕЗ СООБЩЕНИЯ
+}
         
         [HttpPost]
         public IActionResult Logout()

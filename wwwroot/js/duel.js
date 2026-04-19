@@ -15,7 +15,7 @@ $(function() {
         $("#userNameDisplay").text(user.username);
         $("#userScoreDisplay").text(`⭐ ${user.score}`);
         updateUserStats(user);
-        showNotification(`Добро пожаловать, ${user.username}!`, "success");
+        //showNotification(`Добро пожаловать, ${user.username}!`, "success");
     });
     
     connection.on("UpdateLeaderboard", (users) => {
