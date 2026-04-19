@@ -3,18 +3,75 @@
     var originalUser = Context.Request.Cookies["original_user"];
 }
 
-<h2 class="text-danger">Admin Dashboard</h2>
+<h2 class="text-danger">👑 Админ-панель</h2>
 
-<a href="/Admin/Users" class="btn btn-outline-danger">👥 Users</a>
-<a href="/Admin/Quests" class="btn btn-outline-danger">📋 Quests</a>
-<a href="/Admin/Complaints" class="btn btn-outline-danger">📢 Complaints</a>
-<a href="/Admin/ActivityLogs" class="btn btn-outline-danger">📜 Logs</a>
-<a href="/Admin/Logout" class="btn btn-danger">🚪 Logout</a>
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <a href="/Admin/Users" class="text-decoration-none">
+            <div class="card bg-dark border-danger text-center">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-danger"></i>
+                    <h4 class="mt-2">Пользователи</h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="/Admin/Quests" class="text-decoration-none">
+            <div class="card bg-dark border-danger text-center">
+                <div class="card-body">
+                    <i class="fas fa-tasks fa-3x text-danger"></i>
+                    <h4 class="mt-2">Квесты</h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="/Admin/AddQuest" class="text-decoration-none">
+            <div class="card bg-dark border-danger text-center">
+                <div class="card-body">
+                    <i class="fas fa-plus-circle fa-3x text-danger"></i>
+                    <h4 class="mt-2">Добавить квест</h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="/Admin/Complaints" class="text-decoration-none">
+            <div class="card bg-dark border-danger text-center">
+                <div class="card-body">
+                    <i class="fas fa-bug fa-3x text-danger"></i>
+                    <h4 class="mt-2">Жалобы</h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="/Admin/ActivityLogs" class="text-decoration-none">
+            <div class="card bg-dark border-danger text-center">
+                <div class="card-body">
+                    <i class="fas fa-history fa-3x text-danger"></i>
+                    <h4 class="mt-2">Логи</h4>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="/Admin/Logout" class="text-decoration-none">
+            <div class="card bg-dark border-danger text-center">
+                <div class="card-body">
+                    <i class="fas fa-sign-out-alt fa-3x text-danger"></i>
+                    <h4 class="mt-2">Выход</h4>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
 
 @if (!string.IsNullOrEmpty(originalUser))
 {
     <div class="alert alert-warning mt-3">
-        Вы вошли как пользователь. 
+        ⚠️ Вы вошли как пользователь. 
         <a href="/Admin/ReturnToAdmin" class="btn btn-sm btn-danger">Вернуться в админку</a>
     </div>
 }

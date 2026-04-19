@@ -1,0 +1,35 @@
+@model List<CodeDuelArena.Models.QuestModel>
+@{
+    ViewData["Title"] = "Quests";
+}
+
+<h2 class="text-danger">📋 Управление квестами</h2>
+
+<div class="mb-3">
+    <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a>
+    <a href="/Admin/AddQuest" class="btn btn-danger">➕ Добавить квест</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-dark table-striped">
+        <thead class="bg-danger text-white">
+            <tr><th>ID</th><th>Название</th><th>Тип</th><th>⭐ Очки</th><th>Действие</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var q in Model)
+            {
+                <tr>
+                    <td>@q.Id</td
+                    <td>@q.Title</td
+                    <td><span class="badge @(q.Type == "LegacyFix" ? "bg-danger" : "bg-primary")">@q.Type</span></td
+                    <td>@q.Points</td
+                    <td>
+                        <form method="post" asp-action="DeleteQuest" asp-route-id="@q.Id" onsubmit="return confirm('Удалить квест?')">
+                            <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                        </form>
+                     </td
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
