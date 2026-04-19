@@ -1,7 +1,20 @@
 ﻿@{
     ViewData["Title"] = "Dashboard";
+    var originalUser = Context.Request.Cookies["original_user"];
 }
 
-<h2>Dashboard</h2>
-<p>Welcome to admin panel!</p>
-<a href="/Admin/Logout">Logout</a>
+<h2 class="text-danger">Admin Dashboard</h2>
+
+<a href="/Admin/Users" class="btn btn-outline-danger">👥 Users</a>
+<a href="/Admin/Quests" class="btn btn-outline-danger">📋 Quests</a>
+<a href="/Admin/Complaints" class="btn btn-outline-danger">📢 Complaints</a>
+<a href="/Admin/ActivityLogs" class="btn btn-outline-danger">📜 Logs</a>
+<a href="/Admin/Logout" class="btn btn-danger">🚪 Logout</a>
+
+@if (!string.IsNullOrEmpty(originalUser))
+{
+    <div class="alert alert-warning mt-3">
+        Вы вошли как пользователь. 
+        <a href="/Admin/ReturnToAdmin" class="btn btn-sm btn-danger">Вернуться в админку</a>
+    </div>
+}
