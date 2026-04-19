@@ -139,10 +139,7 @@
                 <a href="/Profile/Index" class="btn btn-outline-danger me-2">👤 Профиль</a>
                 <a href="/Settings/Index" class="btn btn-outline-danger me-2">⚙️ Настройки</a>
                 
-                @if (Context.Request.Cookies["admin_auth"] == "true")
-                {
-                    <a href="/Admin/Dashboard" class="btn btn-outline-warning me-2">👑 Admin</a>
-                }
+
                 
                 <span id="userInfo" class="text-white me-2 d-none">
                     <span id="userNameDisplay" class="text-danger"></span>

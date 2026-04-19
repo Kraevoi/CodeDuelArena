@@ -37,6 +37,24 @@ namespace CodeDuelArena.Controllers
             return View();
         }
         
+[HttpPost]
+public IActionResult DeleteQuest(int id)
+{
+    if (Request.Cookies["admin_auth"] != "true")
+        return Json(new { success = false });
+    
+    var quests = DataStorage.GetQuests();
+    var quest = quests.FirstOrDefault(q => q.Id == id);
+    if (quest != null)
+    {
+        quests.Remove(quest);
+        var json = Newtonsoft.Json.JsonConvert.SerializeObject(quests, Newtonsoft.Json.Formatting.Indented);
+        System.IO.File.WriteAllText("quests.json", json);
+        return Json(new { success = true });
+    }
+    return Json(new { success = false });
+}
+
         [HttpGet]
         public IActionResult Dashboard()
         {

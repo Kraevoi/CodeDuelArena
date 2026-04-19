@@ -3,7 +3,7 @@
     ViewData["Title"] = "Quests";
 }
 
-<h2 class="text-danger">📋 Управление квестами</h2>
+<h2 class="text-danger">📋 Квесты</h2>
 
 <div class="mb-3">
     <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a>
@@ -24,12 +24,18 @@
                     <td><span class="badge @(q.Type == "LegacyFix" ? "bg-danger" : "bg-primary")">@q.Type</span></td
                     <td>@q.Points</td
                     <td>
-                        <form method="post" asp-action="DeleteQuest" asp-route-id="@q.Id" onsubmit="return confirm('Удалить квест?')">
-                            <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
-                        </form>
+                        <button class="btn btn-sm btn-danger" onclick="deleteQuest(@q.Id)">Удалить</button>
                      </td
                 </tr>
             }
         </tbody>
     </table>
 </div>
+
+<script>
+    function deleteQuest(id) {
+        if (confirm("Удалить квест?")) {
+            $.post("/Admin/DeleteQuest", { id: id }, function() { location.reload(); });
+        }
+    }
+</script>
