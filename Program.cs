@@ -25,7 +25,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    db.Database.ExecuteSqlRaw("ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"IsAdmin\" BOOLEAN DEFAULT FALSE;");
+    
     var dailyService = scope.ServiceProvider.GetRequiredService<DailyQuestService>();
     await dailyService.InitializeDailyQuests();
 }
