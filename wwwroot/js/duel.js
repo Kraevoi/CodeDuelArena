@@ -15,7 +15,6 @@ $(function() {
         $("#userNameDisplay").text(user.username);
         $("#userScoreDisplay").text(`⭐ ${user.score}`);
         updateUserStats(user);
-        //showNotification(`Добро пожаловать, ${user.username}!`, "success");
     });
     
     connection.on("UpdateLeaderboard", (users) => {
@@ -102,7 +101,15 @@ $(function() {
             success: function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
-                    location.reload();
+                    // ОБНОВЛЯЕМ UI БЕЗ ПЕРЕЗАГРУЗКИ
+                    window.currentUser = { username: data.username, score: data.score };
+                    $("#userInfo").removeClass("d-none");
+                    $("#showAuthBtn").addClass("d-none");
+                    $("#userNameDisplay").text(data.username);
+                    $("#userScoreDisplay").text(`⭐ ${data.score}`);
+                    updateUserStats(window.currentUser);
+                    // Регистрируем в SignalR
+                    connection.invoke("RegisterUser", data.username);
                 } else {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
@@ -126,7 +133,15 @@ $(function() {
             success: function(data) {
                 if(data.success) {
                     $("#authModal").modal("hide");
-                    location.reload();
+                    // ОБНОВЛЯЕМ UI БЕЗ ПЕРЕЗАГРУЗКИ
+                    window.currentUser = { username: data.username, score: data.score };
+                    $("#userInfo").removeClass("d-none");
+                    $("#showAuthBtn").addClass("d-none");
+                    $("#userNameDisplay").text(data.username);
+                    $("#userScoreDisplay").text(`⭐ ${data.score}`);
+                    updateUserStats(window.currentUser);
+                    // Регистрируем в SignalR
+                    connection.invoke("RegisterUser", data.username);
                 } else {
                     $("#authError").text(data.error).removeClass("d-none");
                 }
@@ -138,7 +153,12 @@ $(function() {
     });
     
     $("#logoutBtn").click(() => {
-        $.post("/Auth/Logout", () => location.reload());
+        $.post("/Auth/Logout", () => {
+            window.currentUser = null;
+            $("#userInfo").addClass("d-none");
+            $("#showAuthBtn").removeClass("d-none");
+            location.reload();
+        });
     });
     
     $("#sendChatBtn").click(() => {
@@ -260,7 +280,6 @@ window.submitQuest = function(questId) {
         alert("Напиши решение!");
     }
 };
-
 
 window.applyTheme = function(theme) {
     var themes = {

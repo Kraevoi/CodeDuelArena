@@ -5,37 +5,29 @@
 
 <h2 class="text-danger">📋 Квесты</h2>
 
-<div class="mb-3">
-    <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a>
-    <a href="/Admin/AddQuest" class="btn btn-danger">➕ Добавить квест</a>
-</div>
+<a href="/Admin/Dashboard" class="btn btn-outline-danger mb-3">← Назад</a>
+<a href="/Admin/AddQuest" class="btn btn-danger mb-3">➕ Добавить</a>
 
-<div class="table-responsive">
-    <table class="table table-dark table-striped">
-        <thead class="bg-danger text-white">
-            <tr><th>ID</th><th>Название</th><th>Тип</th><th>⭐ Очки</th><th>Действие</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var q in Model)
-            {
-                <tr>
-                    <td>@q.Id</td
-                    <td>@q.Title</td
-                    <td><span class="badge @(q.Type == "LegacyFix" ? "bg-danger" : "bg-primary")">@q.Type</span></td
-                    <td>@q.Points</td
-                    <td>
-                        <button class="btn btn-sm btn-danger" onclick="deleteQuest(@q.Id)">🗑</button>
-                     </td
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+<table class="table table-dark">
+    <thead class="bg-danger">
+        <tr><th>ID</th><th>Название</th><th>Тип</th><th>Очки</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var q in Model)
+        {
+            <tr>
+                <td>@q.Id</td
+                <td>@q.Title</td
+                <td>@q.Type</td
+                <td>@q.Points</td
+                <td><button class="btn btn-sm btn-danger" onclick="deleteQuest(@q.Id)">🗑</button></td
+            </tr>
+        }
+    </tbody>
+</table>
 
 <script>
-    function deleteQuest(id) {
-        if (confirm("Удалить квест?")) {
-            $.post("/Admin/DeleteQuest", { id: id }, function() { location.reload(); });
-        }
-    }
+function deleteQuest(id) {
+    if(confirm("Удалить?")) $.post("/Admin/DeleteQuest", { id: id }, () => location.reload());
+}
 </script>

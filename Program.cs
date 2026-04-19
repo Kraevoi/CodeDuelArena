@@ -15,6 +15,21 @@ builder.Services.AddSignalR();
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
 
+// НАСТРОЙКИ АУТЕНТИФИКАЦИИ ДЛЯ COOKIE
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Cookies";
+})
+.AddCookie("Cookies", options =>
+{
+    options.Cookie.Name = "auth_user";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.MaxAge = TimeSpan.FromDays(30);
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
+});
+
 builder.Services.AddScoped<DailyQuestService>();
 builder.Services.AddScoped<AchievementService>();
 builder.Services.AddScoped<LeagueService>();
@@ -39,6 +54,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
+app.UseAuthentication();  
 app.UseAuthorization();
 
 app.MapControllerRoute(

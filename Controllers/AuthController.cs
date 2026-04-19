@@ -91,14 +91,16 @@ public async Task<IActionResult> Login(string username, string password, bool re
         }
         
         private void SetCookie(string username, bool remember)
-        {
-            Response.Cookies.Append("auth_user", username, new CookieOptions
-            {
-                HttpOnly = true,
-                SameSite = SameSiteMode.Lax,
-                Expires = remember ? DateTime.Now.AddDays(30) : DateTime.Now.AddHours(8)
-            });
-        }
+{
+    var options = new CookieOptions
+    {
+        HttpOnly = true,
+        SameSite = SameSiteMode.Lax,
+        Path = "/",
+        Expires = remember ? DateTime.Now.AddDays(30) : DateTime.Now.AddHours(8)
+    };
+    Response.Cookies.Append("auth_user", username, options);
+}
         
         private static string HashPassword(string password)
         {
@@ -106,6 +108,8 @@ public async Task<IActionResult> Login(string username, string password, bool re
             var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
             return Convert.ToBase64String(bytes);
         }
+        
+
         
         private static bool VerifyPassword(string password, string hash)
         {

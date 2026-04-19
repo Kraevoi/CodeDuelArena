@@ -5,38 +5,24 @@
 
 <h2 class="text-danger">👥 Пользователи</h2>
 
-<div class="mb-3">
-    <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a>
-</div>
+<a href="/Admin/Dashboard" class="btn btn-outline-danger mb-3">← Назад</a>
 
-<div class="table-responsive">
-    <table class="table table-dark table-striped">
-        <thead class="bg-danger text-white">
+<table class="table table-dark">
+    <thead class="bg-danger">
+        <tr><th>ID</th><th>Имя</th><th>Email</th><th>Очки</th><th>Победы</th><th>Поражения</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
             <tr>
-                <th>ID</th>
-                <th>Имя</th>
-                <th>Email</th>
-                <th>⭐ Очки</th>
-                <th>🏆 Победы</th>
-                <th>💀 Поражения</th>
-                <th>Действие</th>
+                <td>@u.Id</td
+                <td>@u.Username</td
+                <td>@u.Email</td
+                <td class="text-danger">@u.Score</td
+                <td>@u.Wins</td
+                <td>@u.Losses</td
+                <td><a href="/Admin/Impersonate?id=@u.Id" class="btn btn-sm btn-warning">Войти</a></td
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var u in Model)
-            {
-                <tr>
-                    <td>@u.Id</td
-                    <td>@u.Username</td
-                    <td>@u.Email</td
-                    <td class="text-danger fw-bold">@u.Score</td
-                    <td>@u.Wins</td
-                    <td>@u.Losses</td
-                    <td>
-                        <a href="/Admin/Impersonate?id=@u.Id" class="btn btn-sm btn-warning">Войти</a>
-                     </td
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+        }
+    </tbody>
+</table>
