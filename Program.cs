@@ -1,4 +1,4 @@
-using CodeDuelArena.Data;
+﻿using CodeDuelArena.Data;
 using CodeDuelArena.Hubs;
 using CodeDuelArena.Services;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +18,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<DailyQuestService>();
 builder.Services.AddScoped<AchievementService>();
 builder.Services.AddScoped<LeagueService>();
-// builder.Services.AddHostedService<TelegramBotService>();
 
 var app = builder.Build();
 
@@ -26,9 +25,15 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    
+
     var dailyService = scope.ServiceProvider.GetRequiredService<DailyQuestService>();
     await dailyService.InitializeDailyQuests();
+}
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
 
 app.UseStaticFiles();
@@ -39,6 +44,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapHub<DuelHub>("/duelHub");
 app.MapRazorPages();
+app.MapHub<DuelHub>("/duelHub");
+
 app.Run();
