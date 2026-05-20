@@ -1,0 +1,185 @@
+@model CodeDuelArena.Models.QuestModel
+@{
+    ViewData["Title"] = "Add Quest";
+}
+
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="background: linear-gradient(135deg, #ff6b6b, #ff4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <i class="fas fa-plus-circle me-2"></i>Add New Quest
+        </h2>
+        <a href="/Admin/Quests" class="btn btn-outline-light btn-hover">
+            <i class="fas fa-arrow-left me-2"></i>Back to Quests
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <i class="fas fa-scroll me-2"></i>Quest Details
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/Admin/AddQuest">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label-custom">Title</label>
+                                <input type="text" name="Title" class="form-control-custom" placeholder="Quest title..." required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Type</label>
+                                <select name="Type" class="form-control-custom" required>
+                                    <option value="LegacyFix">Legacy Fix</option>
+                                    <option value="Hack">Hack</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Points</label>
+                                <input type="number" name="Points" class="form-control-custom" value="100" min="10" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-custom">Description</label>
+                                <textarea name="Description" class="form-control-custom" rows="3" placeholder="Describe the quest..." required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-custom">Legacy Code (the broken code users will see)</label>
+                                <textarea name="LegacyCode" class="form-control-custom code-textarea" rows="6" placeholder="Paste the broken code here..." required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-custom">Solution Code (the correct answer)</label>
+                                <textarea name="SolutionCode" class="form-control-custom code-textarea" rows="6" placeholder="Paste the correct solution here..." required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn-send-message">
+                                    <i class="fas fa-plus-circle me-2"></i>Create Quest
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-2"></i>Tips
+                </div>
+                <div class="card-body">
+                    <div class="info-item">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        <span>LegacyFix — users need to fix broken code</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-skull text-danger"></i>
+                        <span>Hack — users need to bypass or exploit the code</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-star text-gold"></i>
+                        <span>Higher points = harder quest. Recommended: 100-300</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success-custom mt-3">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Message"]
+    </div>
+}
+
+<style>
+    .premium-card {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
+        border: 1px solid rgba(255, 107, 107, 0.2);
+        border-radius: 16px;
+    }
+    .premium-card .card-header {
+        background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 68, 68, 0.1));
+        border-bottom: 1px solid rgba(255, 107, 107, 0.3);
+        color: #fff;
+        font-weight: 600;
+        border-radius: 16px 16px 0 0;
+        padding: 14px 20px;
+    }
+    .form-label-custom {
+        display: block;
+        color: #c0c0c0;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+    .form-control-custom {
+        width: 100%;
+        padding: 12px 16px;
+        background: #0a0a1a;
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 10px;
+        color: #fff;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #ff6b6b;
+        box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.08);
+    }
+    select.form-control-custom option {
+        background: #1a1a2e;
+        color: #fff;
+    }
+    .code-textarea {
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+    }
+    .btn-send-message {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #ff6b6b, #ff4444);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .btn-send-message:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.35);
+    }
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 0;
+        color: #c0c0c0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .info-item:last-child { border-bottom: none; }
+    .info-item i { margin-top: 3px; flex-shrink: 0; }
+    .text-gold { color: #ffd700 !important; }
+    .alert-success-custom {
+        background: rgba(40, 167, 69, 0.15);
+        border: 1px solid rgba(40, 167, 69, 0.4);
+        color: #28a745;
+        padding: 14px 18px;
+        border-radius: 12px;
+    }
+    .btn-outline-light.btn-hover {
+        border: 1px solid rgba(255,255,255,0.25);
+        color: #c0c0c0;
+        background: transparent;
+        padding: 10px 18px;
+        border-radius: 10px;
+        transition: all 0.3s;
+    }
+    .btn-outline-light.btn-hover:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.4);
+        color: #fff;
+    }
+</style>
