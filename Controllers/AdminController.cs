@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CodeDuelArena.Data;
-using CodeDuelArena.Models; 
+using CodeDuelArena.Models;
 using Newtonsoft.Json;
 
 namespace CodeDuelArena.Controllers
@@ -9,18 +9,18 @@ namespace CodeDuelArena.Controllers
     public class AdminController : Controller
     {
         private readonly AppDbContext _db;
-        
+
         public AdminController(AppDbContext db)
         {
             _db = db;
         }
-        
+
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
-        
+
         [HttpPost]
         public IActionResult Login(string password, bool rememberMe)
         {
@@ -36,24 +36,24 @@ namespace CodeDuelArena.Controllers
             ViewBag.Error = "Wrong password";
             return View();
         }
-        
-[HttpPost]
-public IActionResult DeleteQuest(int id)
-{
-    if (Request.Cookies["admin_auth"] != "true")
-        return Json(new { success = false });
-    
-    var quests = DataStorage.GetQuests();
-    var quest = quests.FirstOrDefault(q => q.Id == id);
-    if (quest != null)
-    {
-        quests.Remove(quest);
-        var json = Newtonsoft.Json.JsonConvert.SerializeObject(quests, Newtonsoft.Json.Formatting.Indented);
-        System.IO.File.WriteAllText("quests.json", json);
-        return Json(new { success = true });
-    }
-    return Json(new { success = false });
-}
+
+        [HttpPost]
+        public IActionResult DeleteQuest(int id)
+        {
+            if (Request.Cookies["admin_auth"] != "true")
+                return Json(new { success = false });
+
+            var quests = DataStorage.GetQuests();
+            var quest = quests.FirstOrDefault(q => q.Id == id);
+            if (quest != null)
+            {
+                quests.Remove(quest);
+                var json = JsonConvert.SerializeObject(quests, Formatting.Indented);
+                System.IO.File.WriteAllText("quests.json", json);
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
+        }
 
         [HttpGet]
         public IActionResult Dashboard()
@@ -62,32 +62,32 @@ public IActionResult DeleteQuest(int id)
                 return RedirectToAction("Login");
             return View();
         }
-        
+
         [HttpGet]
         public IActionResult Logout()
         {
             Response.Cookies.Delete("admin_auth");
             return RedirectToAction("Login");
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Users()
         {
             if (Request.Cookies["admin_auth"] != "true")
                 return RedirectToAction("Login");
-            var users = await _db.Users.ToListAsync();
+            var users = await _db.Users.OrderByDescending(u => u.Score).ToListAsync();
             return View(users);
         }
-        
+
         [HttpGet]
-        public async Task<IActionResult> Quests()
+        public IActionResult Quests()
         {
             if (Request.Cookies["admin_auth"] != "true")
                 return RedirectToAction("Login");
             var quests = DataStorage.GetQuests();
             return View(quests);
         }
-        
+
         [HttpGet]
         public IActionResult AddQuest()
         {
@@ -95,22 +95,22 @@ public IActionResult DeleteQuest(int id)
                 return RedirectToAction("Login");
             return View(new QuestModel());
         }
-        
+
         [HttpPost]
         public IActionResult AddQuest(QuestModel model)
         {
             if (Request.Cookies["admin_auth"] != "true")
                 return RedirectToAction("Login");
-            
+
             var quests = DataStorage.GetQuests();
             model.Id = quests.Any() ? quests.Max(q => q.Id) + 1 : 1;
             quests.Add(model);
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(quests, Newtonsoft.Json.Formatting.Indented);
+            var json = JsonConvert.SerializeObject(quests, Formatting.Indented);
             System.IO.File.WriteAllText("quests.json", json);
-            TempData["Message"] = "Квест добавлен!";
+            TempData["Message"] = "Quest added successfully!";
             return RedirectToAction("Quests");
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Complaints()
         {
@@ -119,13 +119,13 @@ public IActionResult DeleteQuest(int id)
             var complaints = await _db.Complaints.OrderByDescending(c => c.CreatedAt).ToListAsync();
             return View(complaints);
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> MarkRead(int id)
         {
             if (Request.Cookies["admin_auth"] != "true")
                 return Json(new { success = false });
-            
+
             var complaint = await _db.Complaints.FindAsync(id);
             if (complaint != null)
             {
@@ -135,13 +135,13 @@ public IActionResult DeleteQuest(int id)
             }
             return Json(new { success = false });
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> DeleteComplaint(int id)
         {
             if (Request.Cookies["admin_auth"] != "true")
                 return Json(new { success = false });
-            
+
             var complaint = await _db.Complaints.FindAsync(id);
             if (complaint != null)
             {
@@ -151,33 +151,33 @@ public IActionResult DeleteQuest(int id)
             }
             return Json(new { success = false });
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> ActivityLogs()
         {
             if (Request.Cookies["admin_auth"] != "true")
                 return RedirectToAction("Login");
-            var logs = await _db.ActivityLogs.OrderByDescending(l => l.Timestamp).Take(200).ToListAsync();
+            var logs = await _db.ActivityLogs.OrderByDescending(l => l.Timestamp).Take(500).ToListAsync();
             return View(logs);
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Impersonate(int id)
         {
             if (Request.Cookies["admin_auth"] != "true")
                 return RedirectToAction("Login");
-            
+
             var user = await _db.Users.FindAsync(id);
             if (user == null)
                 return NotFound();
-            
+
             Response.Cookies.Append("original_user", Request.Cookies["auth_user"] ?? "");
             Response.Cookies.Append("auth_user", user.Username);
             Response.Cookies.Delete("admin_auth");
-            
+
             return RedirectToAction("Index", "Home");
         }
-        
+
         [HttpGet]
         public IActionResult ReturnToAdmin()
         {

@@ -1,33 +1,63 @@
 @model List<CodeDuelArena.Models.QuestModel>
 @{
-    ViewData["Title"] = "Quests";
+    ViewData["Title"] = "Quest Management";
 }
 
-<h2 class="text-danger">📋 Квесты</h2>
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="background: linear-gradient(135deg, #ff6b6b, #ff4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <i class="fas fa-scroll me-2"></i>Quest Management
+        </h2>
+        <div>
+            <a href="/Admin/Dashboard" class="btn btn-outline-light btn-hover me-2">
+                <i class="fas fa-arrow-left me-2"></i>Dashboard
+            </a>
+            <a href="/Admin/AddQuest" class="btn btn-gradient-pink">
+                <i class="fas fa-plus-circle me-2"></i>Add New Quest
+            </a>
+        </div>
+    </div>
 
-<a href="/Admin/Dashboard" class="btn btn-outline-danger mb-3">← Назад</a>
-<a href="/Admin/AddQuest" class="btn btn-danger mb-3">➕ Добавить</a>
-
-<table class="table table-dark">
-    <thead class="bg-danger">
-        <tr><th>ID</th><th>Название</th><th>Тип</th><th>Очки</th><th></th></tr>
-    </thead>
-    <tbody>
+    <div class="row">
         @foreach (var q in Model)
         {
-            <tr>
-                <td>@q.Id</td
-                <td>@q.Title</td
-                <td>@q.Type</td
-                <td>@q.Points</td
-                <td><button class="btn btn-sm btn-danger" onclick="deleteQuest(@q.Id)">🗑</button></td
-            </tr>
+            <div class="col-md-6 mb-4">
+                <div class="card premium-card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="quest-type-badge @(q.Type == "Hack" ? "hack" : "legacy")">@q.Type</span>
+                            <span class="ms-2">@q.Title</span>
+                        </div>
+                        <span class="badge bg-gradient-gold">@q.Points pts</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">@q.Description</p>
+                        <div class="code-block mb-3">
+                            <div class="code-label">Legacy Code</div>
+                            <pre>@q.LegacyCode</pre>
+                        </div>
+                        <div class="code-block">
+                            <div class="code-label">Solution</div>
+                            <pre>@q.SolutionCode</pre>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-pink btn-sm" onclick="deleteQuest(@q.Id)">
+                            <i class="fas fa-trash-alt me-1"></i>Remove Quest
+                        </button>
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+</div>
 
 <script>
 function deleteQuest(id) {
-    if(confirm("Удалить?")) $.post("/Admin/DeleteQuest", { id: id }, () => location.reload());
+    if(confirm('Are you sure you want to delete this quest?')) {
+        $.post("/Admin/DeleteQuest", { id: id }, function(res) {
+            if(res.success) location.reload();
+        });
+    }
 }
 </script>

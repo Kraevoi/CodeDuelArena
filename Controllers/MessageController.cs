@@ -47,6 +47,35 @@ namespace CodeDuelArena.Controllers
         {
             return View();
         }
+
+        [HttpGet]
+public async Task<IActionResult> GetContacts()
+{
+    var username = Request.Cookies["auth_user"];
+    if (string.IsNullOrEmpty(username)) return Json(new List<object>());
+    
+    var contacts = await _db.PrivateMessages
+        .Where(m => m.ToUser == username || m.FromUser == username)
+        .Select(m => m.FromUser == username ? m.ToUser : m.FromUser)
+        .Distinct()
+        .Take(10)
+        .ToListAsync();
+    
+    return Json(contacts);
+}
+
+[HttpGet]
+public async Task<IActionResult> GetAllUsers()
+{
+    var username = Request.Cookies["auth_user"];
+    var users = await _db.Users
+        .Where(u => u.Username != username)
+        .OrderBy(u => u.Username)
+        .Select(u => new { u.Username, u.IsAdmin })
+        .ToListAsync();
+    
+    return Json(users);
+}
         
         [HttpPost]
         public async Task<IActionResult> Send(string toUser, string message)

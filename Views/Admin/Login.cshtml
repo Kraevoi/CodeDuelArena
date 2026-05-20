@@ -1,25 +1,40 @@
 ﻿@{
-    ViewData["Title"] = "Admin Login";
+    ViewData["Title"] = "Administrator Access";
 }
 
-<div class="row justify-content-center mt-5">
-    <div class="col-md-4">
-        <div class="card bg-dark border-danger">
-            <div class="card-header bg-danger text-center">🔐 ADMIN PANEL</div>
-            <div class="card-body">
-                @if (ViewBag.Error != null)
-                {
-                    <div class="alert alert-danger">@ViewBag.Error</div>
-                }
-                <form method="post">
-                    <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" name="rememberMe" class="form-check-input" id="remember">
-                        <label class="form-check-label" for="remember">Запомнить меня</label>
-                    </div>
-                    <button type="submit" class="btn btn-danger w-100">Войти</button>
-                </form>
+<div class="admin-login-container">
+    <div class="admin-login-card">
+        <div class="login-header">
+            <div class="login-icon">
+                <i class="fas fa-shield-haltered"></i>
             </div>
+            <h2>Administrator Access</h2>
+            <p>Secure authentication required</p>
+        </div>
+        <div class="login-body">
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-custom">
+                    <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+                </div>
+            }
+            <form method="post">
+                <div class="input-group-custom">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" class="form-control-custom" placeholder="Enter administrator password" required autofocus>
+                </div>
+                <div class="remember-me">
+                    <label class="checkbox-custom">
+                        <input type="checkbox" name="rememberMe" value="true">
+                        <span class="checkmark"></span>
+                        Remember this device
+                    </label>
+                </div>
+                <button type="submit" class="btn-login">
+                    <span>Access Panel</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
         </div>
     </div>
 </div>

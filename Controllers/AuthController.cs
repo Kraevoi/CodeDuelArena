@@ -51,23 +51,35 @@ namespace CodeDuelArena.Controllers
                 return Json(new { success = false, error = ex.InnerException?.Message ?? ex.Message });
             }
         }
-        
-      [HttpPost]
+     [HttpPost]
 public async Task<IActionResult> Login(string username, string password, bool rememberMe)
 {
     var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == username);
-    
+
     if (user == null)
-        return Json(new { success = false, error = "Пользователь не найден" });
-    
+        return Json(new { success = false, error = "User not found" });
+
     if (!VerifyPassword(password, user.PasswordHash))
-        return Json(new { success = false, error = "Неверный пароль" });
-    
+        return Json(new { success = false, error = "Incorrect password" });
+
     user.LastLogin = DateTime.UtcNow;
     await _db.SaveChangesAsync();
-    
+
     SetCookie(username, rememberMe);
-    return Json(new { success = true, username = user.Username, score = user.Score }); // ← БЕЗ СООБЩЕНИЯ
+
+    // Если админ — ставим куку и возвращаем флаг
+    if (user.IsAdmin)
+    {
+        Response.Cookies.Append("admin_auth", "true", new CookieOptions
+        {
+            HttpOnly = true,
+            Expires = rememberMe ? DateTime.Now.AddDays(30) : DateTime.Now.AddHours(8),
+            SameSite = SameSiteMode.Lax,
+            Path = "/"
+        });
+    }
+
+    return Json(new { success = true, username = user.Username, score = user.Score, isAdmin = user.IsAdmin });
 }
         
         [HttpPost]

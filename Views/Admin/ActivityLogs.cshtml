@@ -3,29 +3,53 @@
     ViewData["Title"] = "Activity Logs";
 }
 
-<h2 class="text-danger">📜 Логи активности</h2>
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="background: linear-gradient(135deg, #ff6b6b, #ff4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <i class="fas fa-history me-2"></i>Activity Logs
+        </h2>
+        <a href="/Admin/Dashboard" class="btn btn-outline-light btn-hover">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
 
-<div class="mb-3">
-    <a href="/Admin/Dashboard" class="btn btn-outline-danger">← Назад</a>
-</div>
-
-<div class="table-responsive">
-    <table class="table table-dark table-striped">
-        <thead class="bg-danger text-white">
-            <tr><th>ID</th><th>Пользователь</th><th>Действие</th><th>Детали</th><th>Время</th><th>IP</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var log in Model)
-            {
-                <tr>
-                    <td>@log.Id</td
-                    <td>@log.UserName</td
-                    <td>@log.Action</td
-                    <td>@log.Details</td
-                    <td>@log.Timestamp.ToString("dd.MM.yyyy HH:mm:ss")</td
-                    <td>@log.IpAddress</td
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="card premium-card">
+        <div class="card-header">
+            <i class="fas fa-terminal me-2"></i>System Events
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table premium-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                            <th>Timestamp</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <td><span class="id-badge">#@log.Id</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-2">@(log.UserName.Length > 0 ? log.UserName[0] : '?')</div>
+                                        @log.UserName
+                                    </div>
+                                </td>
+                                <td><span class="action-badge">@log.Action</span></td>
+                                <td class="text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">@log.Details</td>
+                                <td>@log.Timestamp.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                <td><code>@log.IpAddress</code></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>

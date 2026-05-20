@@ -14,8 +14,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<TelegramBotService>();
 
-// НАСТРОЙКИ АУТЕНТИФИКАЦИИ ДЛЯ COOKIE
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = "Cookies";
@@ -40,7 +40,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    
+
     var dailyService = scope.ServiceProvider.GetRequiredService<DailyQuestService>();
     await dailyService.InitializeDailyQuests();
 }
@@ -54,7 +54,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
-app.UseAuthentication();  
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

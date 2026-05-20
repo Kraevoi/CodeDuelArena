@@ -1,28 +1,80 @@
 @model List<CodeDuelArena.Models.UserDb>
 @{
-    ViewData["Title"] = "Users";
+    ViewData["Title"] = "User Management";
 }
 
-<h2 class="text-danger">👥 Пользователи</h2>
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="background: linear-gradient(135deg, #ff6b6b, #ff4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <i class="fas fa-users-cog me-2"></i>User Management
+        </h2>
+        <a href="/Admin/Dashboard" class="btn btn-outline-light btn-hover">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
 
-<a href="/Admin/Dashboard" class="btn btn-outline-danger mb-3">← Назад</a>
-
-<table class="table table-dark">
-    <thead class="bg-danger">
-        <tr><th>ID</th><th>Имя</th><th>Email</th><th>Очки</th><th>Победы</th><th>Поражения</th><th></th></tr>
-    </thead>
-    <tbody>
-        @foreach (var u in Model)
-        {
-            <tr>
-                <td>@u.Id</td
-                <td>@u.Username</td
-                <td>@u.Email</td
-                <td class="text-danger">@u.Score</td
-                <td>@u.Wins</td
-                <td>@u.Losses</td
-                <td><a href="/Admin/Impersonate?id=@u.Id" class="btn btn-sm btn-warning">Войти</a></td
-            </tr>
-        }
-    </tbody>
-</table>
+    <div class="card premium-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-list me-2"></i>Registered Users</span>
+            <span class="badge bg-gradient-pink">@Model.Count Total</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table premium-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Score</th>
+                            <th>Wins</th>
+                            <th>Losses</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in Model)
+                        {
+                            <tr>
+                                <td><span class="id-badge">#@u.Id</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-2">@u.Username[0]</div>
+                                        @u.Username
+                                        @if (u.IsAdmin)
+                                        {
+                                            <span class="badge bg-gradient-gold ms-2" style="font-size: 0.7rem;">ADM</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>@(string.IsNullOrEmpty(u.Email) ? "—" : u.Email)</td>
+                                <td><span class="score-badge">@u.Score.ToString("N0")</span></td>
+                                <td><span class="text-success">@u.Wins</span></td>
+                                <td><span class="text-pink">@u.Losses</span></td>
+                                <td>
+                                    @if (u.IsAdmin)
+                                    {
+                                        <span class="badge bg-gradient-gold">Administrator</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-gradient-dark">Player</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="/Admin/Impersonate?id=@u.Id" class="btn btn-sm btn-impersonate" title="Login as this user">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                    </a>
+                                    <a href="/Profile/Index?username=@u.Username" class="btn btn-sm btn-view" title="View Profile">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

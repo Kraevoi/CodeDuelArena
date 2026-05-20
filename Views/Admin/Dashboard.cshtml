@@ -1,77 +1,115 @@
 ﻿@{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Admin Dashboard";
     var originalUser = Context.Request.Cookies["original_user"];
 }
 
-<h2 class="text-danger">👑 Админ-панель</h2>
+<div class="container-fluid px-0">
+    <div class="admin-welcome mb-5">
+        <h1 class="display-4 fw-bold" style="background: linear-gradient(135deg, #ff6b6b, #ffd700, #ff4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <i class="fas fa-crown me-3"></i>Control Panel
+        </h1>
+        <p class="lead text-muted">System administration and management dashboard</p>
+    </div>
 
-<div class="row">
-    <div class="col-md-3 mb-3">
-        <a href="/Admin/Users" class="text-decoration-none">
-            <div class="card bg-dark border-danger text-center">
-                <div class="card-body">
-                    <i class="fas fa-users fa-3x text-danger"></i>
-                    <h4 class="mt-2">Пользователи</h4>
+    @if (!string.IsNullOrEmpty(originalUser))
+    {
+        <div class="alert premium-alert mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-user-secret fa-2x me-3"></i>
+                <div>
+                    <strong>Impersonation Active</strong>
+                    <p class="mb-0">You are currently logged in as another user.</p>
                 </div>
+                <a href="/Admin/ReturnToAdmin" class="btn btn-gradient-pink ms-auto">
+                    <i class="fas fa-undo me-2"></i>Return to Admin
+                </a>
             </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="/Admin/Quests" class="text-decoration-none">
-            <div class="card bg-dark border-danger text-center">
-                <div class="card-body">
-                    <i class="fas fa-tasks fa-3x text-danger"></i>
-                    <h4 class="mt-2">Квесты</h4>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+            <a href="/Admin/Users" class="text-decoration-none">
+                <div class="premium-stat-card">
+                    <div class="stat-icon users-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Users</h4>
+                        <p>Manage accounts</p>
+                    </div>
                 </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="/Admin/AddQuest" class="text-decoration-none">
-            <div class="card bg-dark border-danger text-center">
-                <div class="card-body">
-                    <i class="fas fa-plus-circle fa-3x text-danger"></i>
-                    <h4 class="mt-2">Добавить квест</h4>
+            </a>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <a href="/Admin/Quests" class="text-decoration-none">
+                <div class="premium-stat-card">
+                    <div class="stat-icon quests-icon">
+                        <i class="fas fa-scroll"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Quests</h4>
+                        <p>Manage challenges</p>
+                    </div>
                 </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="/Admin/Complaints" class="text-decoration-none">
-            <div class="card bg-dark border-danger text-center">
-                <div class="card-body">
-                    <i class="fas fa-bug fa-3x text-danger"></i>
-                    <h4 class="mt-2">Жалобы</h4>
+            </a>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <a href="/Admin/AddQuest" class="text-decoration-none">
+                <div class="premium-stat-card">
+                    <div class="stat-icon add-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Add Quest</h4>
+                        <p>Create new challenge</p>
+                    </div>
                 </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="/Admin/ActivityLogs" class="text-decoration-none">
-            <div class="card bg-dark border-danger text-center">
-                <div class="card-body">
-                    <i class="fas fa-history fa-3x text-danger"></i>
-                    <h4 class="mt-2">Логи</h4>
+            </a>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <a href="/Admin/Complaints" class="text-decoration-none">
+                <div class="premium-stat-card">
+                    <div class="stat-icon complaints-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Complaints</h4>
+                        <p>Review reports</p>
+                    </div>
                 </div>
-            </div>
-        </a>
-    </div>
-    <div class="col-md-3 mb-3">
-        <a href="/Admin/Logout" class="text-decoration-none">
-            <div class="card bg-dark border-danger text-center">
-                <div class="card-body">
-                    <i class="fas fa-sign-out-alt fa-3x text-danger"></i>
-                    <h4 class="mt-2">Выход</h4>
+            </a>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <a href="/Admin/ActivityLogs" class="text-decoration-none">
+                <div class="premium-stat-card">
+                    <div class="stat-icon logs-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Logs</h4>
+                        <p>System activity</p>
+                    </div>
                 </div>
-            </div>
-        </a>
+            </a>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <a href="/Admin/Logout" class="text-decoration-none">
+                <div class="premium-stat-card logout-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Logout</h4>
+                        <p>Exit admin panel</p>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 </div>
-
-@if (!string.IsNullOrEmpty(originalUser))
-{
-    <div class="alert alert-warning mt-3">
-        ⚠️ Вы вошли как пользователь. 
-        <a href="/Admin/ReturnToAdmin" class="btn btn-sm btn-danger">Вернуться в админку</a>
-    </div>
-}

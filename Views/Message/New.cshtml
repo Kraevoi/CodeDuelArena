@@ -1,40 +1,524 @@
 @{
-    ViewData["Title"] = "Новое сообщение";
+    ViewData["Title"] = "New Message";
 }
 
-<h2 class="text-danger">✉️ Новое сообщение</h2>
+<div class="message-container">
+    <div class="message-header mb-4">
+        <h2 class="fw-bold" style="background: linear-gradient(135deg, #ff6b6b, #ff4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <i class="fas fa-pen-to-square me-2"></i>Compose Message
+        </h2>
+        <div>
+            <a href="/Message/Inbox" class="btn btn-outline-light btn-hover me-2">
+                <i class="fas fa-inbox me-2"></i>Inbox
+            </a>
+            <a href="/Message/Sent" class="btn btn-outline-light btn-hover">
+                <i class="fas fa-paper-plane me-2"></i>Sent
+            </a>
+        </div>
+    </div>
 
-<div class="card bg-dark border-danger">
-    <div class="card-body">
-        <div class="mb-3">
-            <label class="form-label text-danger">Кому</label>
-            <input type="text" id="toUser" class="form-control bg-black text-white border-danger" placeholder="Имя пользователя">
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card message-compose-card">
+                <div class="card-header">
+                    <i class="fas fa-edit me-2"></i>New Message
+                </div>
+                <div class="card-body">
+                    <form id="sendMessageForm">
+                        <div class="mb-4">
+                            <label class="form-label-custom">
+                                <i class="fas fa-user me-2"></i>Recipient
+                            </label>
+                            <div class="recipient-input-wrapper">
+                                <input type="text" id="toUser" class="form-control-custom" placeholder="Enter username..." autocomplete="off">
+                                <div class="recipient-suggestions" id="contactSuggestions" style="display: none;"></div>
+                            </div>
+                            <div class="recent-contacts mt-2" id="recentContacts">
+                                <span class="recent-label">Recent Contacts:</span>
+                                <div class="contacts-list" id="contactsList">
+                                    <span class="text-muted">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label-custom">
+                                <i class="fas fa-message me-2"></i>Message
+                            </label>
+                            <textarea id="message" class="form-control-custom message-textarea" rows="7" placeholder="Write your message here..."></textarea>
+                            <div class="message-counter">
+                                <span id="charCount">0</span> / 500 characters
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="sendBtn" class="btn-send-message">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            <span>Send Message</span>
+                        </button>
+                    </form>
+                    
+                    <div id="sendResult" class="mt-3" style="display: none;"></div>
+                </div>
+            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label text-danger">Сообщение</label>
-            <textarea id="message" class="form-control bg-black text-white border-danger" rows="5" placeholder="Введите сообщение..."></textarea>
+        
+        <div class="col-lg-5">
+            <div class="card message-info-card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-2"></i>Info
+                </div>
+                <div class="card-body">
+                    <div class="info-item">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Messages are delivered instantly</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-lock text-warning"></i>
+                        <span>Private and secure communication</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-bell text-info"></i>
+                        <span>Recipient will be notified</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card message-info-card mt-3">
+                <div class="card-header">
+                    <i class="fas fa-users me-2"></i>All Users
+                </div>
+                <div class="card-body p-0">
+                    <div class="users-list" id="allUsersList">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-spinner fa-spin me-2"></i>Loading users...
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <button id="sendBtn" class="btn btn-danger w-100">✉️ Отправить</button>
     </div>
 </div>
 
 <script>
-    $("#sendBtn").click(function() {
-        var toUser = $("#toUser").val().trim();
-        var message = $("#message").val().trim();
+    $(function() {
+        // Load recent contacts
+        loadRecentContacts();
         
-        if (!toUser || !message) {
-            alert("Заполните все поля");
-            return;
-        }
+        // Load all users for selection
+        loadAllUsers();
         
-        $.post("/Message/Send", { toUser: toUser, message: message }, function(data) {
-            if (data.success) {
-                alert("Сообщение отправлено!");
-                window.location.href = "/Message/Inbox";
+        // Character counter
+        $("#message").on("input", function() {
+            var len = $(this).val().length;
+            $("#charCount").text(len);
+            if (len > 500) {
+                $("#charCount").css("color", "#dc3545");
             } else {
-                alert(data.error);
+                $("#charCount").css("color", "#888");
+            }
+        });
+        
+        // Recipient input - show suggestions
+        $("#toUser").on("input", function() {
+            var query = $(this).val().trim();
+            if (query.length > 0) {
+                filterContacts(query);
+            } else {
+                $("#contactSuggestions").hide();
+            }
+        });
+        
+        // Click on suggestion
+        $(document).on("click", ".suggestion-item", function() {
+            $("#toUser").val($(this).data("username"));
+            $("#contactSuggestions").hide();
+        });
+        
+        // Click on recent contact
+        $(document).on("click", ".contact-chip", function() {
+            $("#toUser").val($(this).data("username"));
+        });
+        
+        // Hide suggestions on click outside
+        $(document).click(function(e) {
+            if (!$(e.target).closest(".recipient-input-wrapper").length) {
+                $("#contactSuggestions").hide();
+            }
+        });
+        
+        // Send button
+        $("#sendBtn").click(function() {
+            var toUser = $("#toUser").val().trim();
+            var message = $("#message").val().trim();
+            
+            if (!toUser) {
+                showResult("Please select a recipient.", "error");
+                return;
+            }
+            
+            if (!message) {
+                showResult("Please enter a message.", "error");
+                return;
+            }
+            
+            if (message.length > 500) {
+                showResult("Message is too long. Maximum 500 characters.", "error");
+                return;
+            }
+            
+            $(this).prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-2"></i>Sending...');
+            
+            $.post("/Message/Send", { toUser: toUser, message: message }, function(data) {
+                if (data.success) {
+                    showResult('<i class="fas fa-check-circle me-2"></i>Message sent successfully!', "success");
+                    $("#message").val("");
+                    $("#toUser").val("");
+                    $("#charCount").text("0");
+                    loadRecentContacts();
+                } else {
+                    showResult('<i class="fas fa-exclamation-circle me-2"></i>' + (data.error || "Failed to send message."), "error");
+                }
+                $("#sendBtn").prop("disabled", false).html('<i class="fas fa-paper-plane me-2"></i><span>Send Message</span>');
+            }).fail(function() {
+                showResult('<i class="fas fa-exclamation-circle me-2"></i>Connection error. Please try again.', "error");
+                $("#sendBtn").prop("disabled", false).html('<i class="fas fa-paper-plane me-2"></i><span>Send Message</span>');
+            });
+        });
+        
+        // Enter to send (Ctrl+Enter for new line in textarea)
+        $("#message").keydown(function(e) {
+            if (e.key === "Enter" && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault();
+                $("#sendBtn").click();
             }
         });
     });
+    
+    function loadRecentContacts() {
+        $.get("/Message/GetContacts", function(data) {
+            if (data && data.length > 0) {
+                var html = '';
+                data.forEach(function(contact) {
+                    html += `<span class="contact-chip" data-username="${escapeHtml(contact)}" title="Click to select">
+                        <i class="fas fa-user-circle me-1"></i>${escapeHtml(contact)}
+                    </span>`;
+                });
+                $("#contactsList").html(html);
+            } else {
+                $("#contactsList").html('<span class="text-muted">No recent contacts</span>');
+            }
+        }).fail(function() {
+            $("#contactsList").html('<span class="text-muted">Unable to load contacts</span>');
+        });
+    }
+    
+    function loadAllUsers() {
+        $.get("/Message/GetAllUsers", function(data) {
+            if (data && data.length > 0) {
+                var html = '';
+                data.forEach(function(user) {
+                    html += `<div class="user-list-item" data-username="${escapeHtml(user.username)}" onclick="$('#toUser').val('${escapeHtml(user.username)}'); $('#contactSuggestions').hide();">
+                        <div class="user-avatar-sm">${(user.username || '?')[0].toUpperCase()}</div>
+                        <span>${escapeHtml(user.username)}</span>
+                        ${user.isAdmin ? '<span class="admin-tag">ADM</span>' : ''}
+                    </div>`;
+                });
+                $("#allUsersList").html(html);
+            } else {
+                $("#allUsersList").html('<div class="text-center text-muted py-4">No users found</div>');
+            }
+        }).fail(function() {
+            $("#allUsersList").html('<div class="text-center text-muted py-4">Unable to load users</div>');
+        });
+    }
+    
+    var allUsersData = [];
+    
+    function filterContacts(query) {
+        var filtered = allUsersData.filter(function(user) {
+            return user.username.toLowerCase().includes(query.toLowerCase());
+        });
+        
+        if (filtered.length > 0) {
+            var html = '';
+            filtered.slice(0, 5).forEach(function(user) {
+                html += `<div class="suggestion-item" data-username="${escapeHtml(user.username)}">
+                    <div class="user-avatar-sm">${user.username[0].toUpperCase()}</div>
+                    <span>${escapeHtml(user.username)}</span>
+                </div>`;
+            });
+            $("#contactSuggestions").html(html).show();
+        } else {
+            $("#contactSuggestions").hide();
+        }
+    }
+    
+    function showResult(message, type) {
+        var cls = type === "success" ? "alert-success-custom" : "alert-error-custom";
+        $("#sendResult").attr("class", cls).html(message).fadeIn().delay(3000).fadeOut();
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/[&<>"']/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            if (m === '"') return '&quot;';
+            if (m === "'") return '&#039;';
+            return m;
+        });
+    }
 </script>
+
+<style>
+    .message-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px 0;
+    }
+    
+    .message-compose-card, .message-info-card {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
+        border: 1px solid rgba(255, 107, 107, 0.2);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    
+    .message-compose-card .card-header,
+    .message-info-card .card-header {
+        background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 68, 68, 0.1));
+        border-bottom: 1px solid rgba(255, 107, 107, 0.3);
+        color: #fff;
+        font-weight: 600;
+        padding: 14px 20px;
+    }
+    
+    .form-label-custom {
+        display: block;
+        color: #c0c0c0;
+        font-weight: 600;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .recipient-input-wrapper {
+        position: relative;
+    }
+    
+    .form-control-custom {
+        width: 100%;
+        padding: 14px 16px;
+        background: #0a0a1a;
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 12px;
+        color: #fff;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #ff6b6b;
+        box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.08);
+    }
+    
+    .message-textarea {
+        resize: vertical;
+        min-height: 180px;
+        font-family: 'Courier New', monospace;
+        line-height: 1.6;
+    }
+    
+    .message-counter {
+        text-align: right;
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 6px;
+    }
+    
+    .recipient-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #1a1a2e;
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 10px;
+        margin-top: 4px;
+        z-index: 1000;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .suggestion-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        color: #c0c0c0;
+        transition: all 0.2s;
+    }
+    
+    .suggestion-item:hover {
+        background: rgba(255, 107, 107, 0.1);
+        color: #fff;
+    }
+    
+    .recent-contacts {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .recent-label {
+        color: #888;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+    
+    .contacts-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .contact-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 12px;
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.25);
+        border-radius: 20px;
+        color: #ff6b6b;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .contact-chip:hover {
+        background: rgba(255, 107, 107, 0.2);
+        border-color: #ff6b6b;
+    }
+    
+    .btn-send-message {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #ff6b6b, #ff4444);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-send-message:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.35);
+    }
+    
+    .btn-send-message:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .alert-success-custom {
+        background: rgba(40, 167, 69, 0.15);
+        border: 1px solid rgba(40, 167, 69, 0.4);
+        color: #28a745;
+        padding: 14px 18px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+    
+    .alert-error-custom {
+        background: rgba(220, 53, 69, 0.15);
+        border: 1px solid rgba(220, 53, 69, 0.4);
+        color: #dc3545;
+        padding: 14px 18px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        color: #c0c0c0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .info-item:last-child { border-bottom: none; }
+    
+    .users-list {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+    
+    .user-list-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        cursor: pointer;
+        color: #c0c0c0;
+        transition: all 0.2s;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    
+    .user-list-item:hover {
+        background: rgba(255, 107, 107, 0.08);
+        color: #fff;
+    }
+    
+    .user-avatar-sm {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ff6b6b, #ff4444);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #fff;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    
+    .admin-tag {
+        background: linear-gradient(135deg, #ffd700, #ff8c00);
+        color: #000;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.6rem;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        margin-left: auto;
+    }
+    
+    .btn-outline-light.btn-hover {
+        border: 1px solid rgba(255,255,255,0.25);
+        color: #c0c0c0;
+        background: transparent;
+        padding: 10px 18px;
+        border-radius: 10px;
+        transition: all 0.3s;
+    }
+    
+    .btn-outline-light.btn-hover:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.4);
+        color: #fff;
+    }
+</style>

@@ -200,56 +200,81 @@ function updateUserStats(user) {
 
 function showDuelModal(data) {
     let modalHtml = `
-        <div class="modal fade" id="duelModal" tabindex="-1">
+        <div class="modal fade" id="duelModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content bg-dark text-white border-danger">
                     <div class="modal-header border-danger">
-                        <h5 class="modal-title">⚔️ ДУЭЛЬ С ${escapeHtml(data.opponent)}</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">⚔️ DUEL vs ${escapeHtml(data.opponent)}</h5>
+                        <div>
+                            <span class="badge bg-warning me-2" id="duelTimer">${data.timeLimit || 60}s</span>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="cancelDuel(${data.duelId})"></button>
+                        </div>
                     </div>
                     <div class="modal-body">
-                        <div class="alert alert-danger text-center">
-                            <h3>⏱️ <span id="duelTimer">${data.timeLimit || 60}</span> секунд</h3>
+                        <div class="alert alert-danger text-center mb-3">
+                            <i class="fas fa-hourglass-half me-2"></i>
+                            <strong>First correct answer wins!</strong> Time limit: 60 seconds
                         </div>
                         <div class="card bg-black border-danger mb-3">
-                            <div class="card-header bg-danger">ЗАДАНИЕ</div>
+                            <div class="card-header bg-danger">TASK</div>
                             <div class="card-body">
                                 <p class="text-info">${escapeHtml(data.taskDescription || data.task)}</p>
                                 ${data.testCode ? `<pre class="bg-black text-warning p-2">${escapeHtml(data.testCode)}</pre>` : ''}
-                                ${data.expectedOutput ? `<p><strong>Ожидаемый вывод:</strong> ${escapeHtml(data.expectedOutput)}</p>` : ''}
+                                ${data.expectedOutput ? `<p><strong>Expected Output:</strong> ${escapeHtml(data.expectedOutput)}</p>` : ''}
                             </div>
                         </div>
-                        <textarea id="duelSolution" class="form-control bg-black text-white border-danger" rows="6" placeholder="Напиши решение..."></textarea>
-                        <button id="submitDuelBtn" class="btn btn-danger w-100 mt-3">⚔️ ОТПРАВИТЬ РЕШЕНИЕ</button>
+                        <textarea id="duelSolution" class="form-control bg-black text-white border-danger" rows="6" placeholder="Write your solution here..."></textarea>
+                        <div class="d-flex gap-2 mt-3">
+                            <button id="submitDuelBtn" class="btn btn-danger flex-grow-1">
+                                ⚔️ SUBMIT SOLUTION
+                            </button>
+                            <button class="btn btn-outline-warning" onclick="cancelDuel(${data.duelId})">
+                                <i class="fas fa-door-open me-1"></i> LEAVE DUEL
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     `;
-    
+
     $("body").append(modalHtml);
     $("#duelModal").modal("show");
-    
+
     let timeLeft = data.timeLimit || 60;
     let timer = setInterval(() => {
         timeLeft--;
-        $("#duelTimer").text(timeLeft);
-        if(timeLeft <= 0) clearInterval(timer);
+        $("#duelTimer").text(timeLeft + "s");
+        if(timeLeft <= 0) {
+            clearInterval(timer);
+            $("#submitDuelBtn").prop("disabled", true).text("TIME EXPIRED");
+        }
     }, 1000);
-    
+
     $("#submitDuelBtn").click(function() {
         let solution = $("#duelSolution").val();
         if(solution && window.connection && data.duelId) {
             window.connection.invoke("SubmitDuelSolution", solution, data.duelId);
-            $("#submitDuelBtn").prop("disabled", true).text("Решение отправлено...");
-            clearInterval(timer);
+            $("#submitDuelBtn").prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-2"></i>SUBMITTED...');
         }
     });
-    
+
+    window.duelTimer = timer;
+    window.currentDuelId = data.duelId;
+
     $("#duelModal").on("hidden.bs.modal", () => {
         $("#duelModal").remove();
-        clearInterval(timer);
+        if(window.duelTimer) clearInterval(window.duelTimer);
     });
+}
+
+function cancelDuel(duelId) {
+    if(confirm("Are you sure you want to leave this duel? Your opponent will win automatically.")) {
+        if(window.connection) {
+            window.connection.invoke("CancelDuel", duelId);
+        }
+        $("#duelModal").modal("hide");
+    }
 }
 
 function showNotification(message, type) {
