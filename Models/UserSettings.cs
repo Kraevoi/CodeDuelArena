@@ -8,5 +8,8 @@ namespace CodeDuelArena.Models
         public string AvatarUrl { get; set; } = string.Empty;
         public string CustomCss { get; set; } = string.Empty;
         public bool NotificationsEnabled { get; set; } = true;
+        public string TelegramChatId { get; set; } = string.Empty; 
+        public bool NotifyTournaments { get; set; } = false; 
+        public bool NotifyTechUpdates { get; set; } = false; 
     }
 }

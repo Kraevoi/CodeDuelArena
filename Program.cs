@@ -39,10 +39,30 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
-
+    
+    // Обеспечиваем создание базы
+    await db.Database.EnsureCreatedAsync();
+    
+    // Добавляем колонки для Telegram, если их нет
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            @"ALTER TABLE ""UserSettings"" 
+              ADD COLUMN IF NOT EXISTS ""TelegramChatId"" text NOT NULL DEFAULT '',
+              ADD COLUMN IF NOT EXISTS ""NotifyTournaments"" boolean NOT NULL DEFAULT false,
+              ADD COLUMN IF NOT EXISTS ""NotifyTechUpdates"" boolean NOT NULL DEFAULT false;");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Migration warning (can be ignored if columns exist): {ex.Message}");
+    }
+    
     var dailyService = scope.ServiceProvider.GetRequiredService<DailyQuestService>();
     await dailyService.InitializeDailyQuests();
+    
+    // Установка вебхука Telegram
+    var botService = scope.ServiceProvider.GetRequiredService<TelegramBotService>();
+    await botService.SetWebhook();
 }
 
 if (!app.Environment.IsDevelopment())
