@@ -7,522 +7,314 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CodeDuelArena.Services
 {
-    public class TelegramBotService
+    public class TelegramBotService : BackgroundService
     {
         private readonly string _botToken;
-        private readonly string _adminChatId;
-        private readonly string _webhookUrl;
+        private readonly string _supportChatId;
         private readonly HttpClient _http;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<TelegramBotService> _logger;
+        private long _lastUpdateId = 0;
 
-        // Состояния пользователей в боте
-        private static readonly Dictionary<long, string> _userStates = new();
-        private static readonly Dictionary<long, string> _supportSessions = new(); // user -> admin чат
-
-        public TelegramBotService(IConfiguration config, IServiceProvider serviceProvider)
+        public TelegramBotService(IConfiguration config, IServiceProvider serviceProvider, ILogger<TelegramBotService> logger)
         {
             _botToken = config["TelegramBotToken"] ?? "";
-            _adminChatId = config["Telegram:SupportChatId"] ?? "";
-            _webhookUrl = config["Telegram:WebhookUrl"] ?? "";
+            _supportChatId = config["Telegram:SupportChatId"] ?? "";
             _serviceProvider = serviceProvider;
+            _logger = logger;
             _http = new HttpClient { BaseAddress = new Uri($"https://api.telegram.org/bot{_botToken}/") };
         }
 
-        // Установка WebHook при старте
-        public async Task SetWebhook()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var url = $"{_webhookUrl}/api/telegram/update";
-            var payload = new { url };
-            var json = JsonConvert.SerializeObject(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            await _http.PostAsync("setWebhook", content);
+            _logger.LogInformation("Telegram bot started with Long Polling");
+
+            // Ждём 5 секунд чтобы сервер точно запустился
+            await Task.Delay(5000, stoppingToken);
+
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    var updates = await GetUpdates(stoppingToken);
+                    foreach (var update in updates)
+                    {
+                        _ = Task.Run(() => HandleUpdate(update), stoppingToken);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Polling error: {ex.Message}");
+                }
+
+                await Task.Delay(2000, stoppingToken);
+            }
         }
 
-        // Обработка входящих сообщений
-        public async Task<string> HandleUpdate(JObject update)
+        private async Task<List<JObject>> GetUpdates(CancellationToken ct)
+        {
+            var url = $"getUpdates?offset={_lastUpdateId + 1}&timeout=10";
+            var response = await _http.GetAsync(url, ct);
+            var json = await response.Content.ReadAsStringAsync(ct);
+            var result = JObject.Parse(json);
+
+            var updates = new List<JObject>();
+            if (result["ok"]?.Value<bool>() == true && result["result"] != null)
+            {
+                foreach (var update in result["result"])
+                {
+                    var updateId = update["update_id"]?.Value<long>() ?? 0;
+                    if (updateId > _lastUpdateId)
+                        _lastUpdateId = updateId;
+                    updates.Add((JObject)update);
+                }
+            }
+            return updates;
+        }
+
+        private async Task HandleUpdate(JObject update)
         {
             try
             {
+                // Callback query (кнопки)
+                if (update["callback_query"] != null)
+                {
+                    await HandleCallback(update["callback_query"]);
+                    return;
+                }
+
                 var message = update["message"];
-                if (message == null) return "No message";
+                if (message == null) return;
 
                 var chatId = message["chat"]?["id"]?.Value<long>() ?? 0;
                 var text = message["text"]?.Value<string>() ?? "";
-                var username = message["from"]?["username"]?.Value<string>() ?? 
+                var username = message["from"]?["username"]?.Value<string>() ??
                                message["from"]?["first_name"]?.Value<string>() ?? "User";
-                var userId = message["from"]?["id"]?.Value<long>() ?? 0;
 
-                // Проверка: сообщение из админского чата (ответ поддержки)
-                if (_adminChatId != "" && chatId.ToString() == _adminChatId || chatId.ToString() == _adminChatId.Replace("-100", "").Replace("-", ""))
+                // Ответ админа из группы поддержки (reply на сообщение)
+                var replyTo = message["reply_to_message"];
+                if (replyTo != null && chatId.ToString() == _supportChatId.Replace("-100", "").Replace("-", ""))
                 {
-                    await HandleAdminReply(message, chatId);
-                    return "Admin reply processed";
+                    await HandleAdminReply(message, replyTo, chatId);
+                    return;
                 }
 
-                // Проверка состояний
-                if (_userStates.ContainsKey(chatId))
+                // Сообщение из группы поддержки (не reply)
+                if (chatId.ToString() == _supportChatId || chatId.ToString() == _supportChatId.Replace("-100", "").Replace("-", ""))
                 {
-                    await HandleState(chatId, text, username);
-                    return "State handled";
+                    return; // Игнорируем обычные сообщения из группы
                 }
 
-                // Обработка команд
+                // Команды
                 if (text.StartsWith("/"))
                 {
-                    await HandleCommand(chatId, text, username, userId);
-                    return "Command handled";
+                    await HandleCommand(chatId, text, username);
+                    return;
                 }
 
-                // Обычное сообщение — главное меню
+                // Обычный текст — показываем меню
                 await ShowMainMenu(chatId, username);
-                return "Menu shown";
             }
             catch (Exception ex)
             {
-                return $"Error: {ex.Message}";
+                _logger.LogError($"HandleUpdate error: {ex.Message}");
             }
         }
 
-        private async Task HandleCommand(long chatId, string text, string username, long userId)
+        private async Task HandleCommand(long chatId, string text, string username)
         {
-            var command = text.Split(' ')[0].ToLower();
+            var command = text.Split(' ')[0].ToLower().Split('@')[0]; // убираем @botname
 
             switch (command)
             {
                 case "/start":
-                    await SendWelcomeMessage(chatId, username);
+                    await SendWelcome(chatId, username);
                     break;
-
                 case "/menu":
-                case "/help":
                     await ShowMainMenu(chatId, username);
                     break;
-
                 case "/stats":
                     await ShowStats(chatId, username);
                     break;
-
                 case "/support":
                     await StartSupport(chatId, username);
                     break;
-
-                case "/tournaments":
-                    await ShowTournaments(chatId);
-                    break;
-
-                case "/tech":
-                    await ShowTechInfo(chatId);
-                    break;
-
                 case "/link":
-                    await LinkAccount(chatId, username);
+                    await SendMessage(chatId, "To link your account, send me your CodeDuel Arena username.\nExample: _MyUsername_");
                     break;
-
-                case "/stop":
-                    _userStates.Remove(chatId);
-                    _supportSessions.Remove(chatId);
-                    await SendMessage(chatId, "✅ Session ended. Use /menu to return to main menu.");
-                    break;
-
                 default:
                     await ShowMainMenu(chatId, username);
                     break;
             }
         }
 
-        private async Task HandleState(long chatId, string text, string username)
+        private async Task HandleAdminReply(JToken message, JToken replyTo, long chatId)
         {
-            var state = _userStates.GetValueOrDefault(chatId, "");
-
-            switch (state)
-            {
-                case "waiting_support_message":
-                    _userStates.Remove(chatId);
-                    await ForwardToSupport(chatId, username, text);
-                    break;
-
-                case "waiting_link_username":
-                    _userStates.Remove(chatId);
-                    await CompleteLinkAccount(chatId, text, username);
-                    break;
-
-                default:
-                    _userStates.Remove(chatId);
-                    await ShowMainMenu(chatId, username);
-                    break;
-            }
-        }
-
-        private async Task HandleAdminReply(JToken message, long chatId)
-        {
-            var replyTo = message["reply_to_message"];
-            if (replyTo == null) return;
-
             var replyText = replyTo["text"]?.Value<string>() ?? "";
-            // Ищем ID пользователя в ответе (формат: #ID123456)
+            // Ищем #ID123456 в тексте
             var match = System.Text.RegularExpressions.Regex.Match(replyText, @"#ID(\d+)");
             if (!match.Success) return;
 
-            var userId = long.Parse(match.Groups[1].Value);
+            var targetUserId = match.Groups[1].Value;
             var adminText = message["text"]?.Value<string>() ?? "";
+            var adminName = message["from"]?["first_name"]?.Value<string>() ?? "Support";
 
-            var supportMessage = $"🛡️ *Support Response*\n\n{adminText}\n\n_Reply to this message to continue the conversation, or /stop to end._";
-            await SendMessage(userId, supportMessage);
-            
-            // Устанавливаем сессию поддержки
-            _supportSessions[userId] = chatId.ToString();
+            await SendMessage(targetUserId, $"🛡️ *Support reply:*\n\n{adminText}\n\n_— {adminName}_");
         }
 
-        // ============ МЕТОДЫ МЕНЮ ============
+        // ==================== МЕНЮ ====================
 
-        private async Task SendWelcomeMessage(long chatId, string username)
+        private async Task SendWelcome(long chatId, string username)
         {
-            var text = $"⚔️ *Welcome to CodeDuel Arena, {EscapeMarkdown(username)}!*\n\n" +
-                       "I am your personal arena assistant. Here you can:\n" +
-                       "📊 Check your statistics\n" +
-                       "🆘 Contact support\n" +
-                       "🏆 Get tournament announcements\n" +
-                       "🔧 Receive technical maintenance alerts\n\n" +
-                       "Use /menu to see all available options.";
+            var text = $"⚔️ *CodeDuel Arena Bot*\n\n" +
+                       $"Welcome, {Escape(username)}!\n\n" +
+                       $"🔹 /menu — Main menu\n" +
+                       $"🔹 /stats — Your statistics\n" +
+                       $"🔹 /support — Contact support\n" +
+                       $"🔹 /link — Link your game account";
 
             var keyboard = new
             {
                 inline_keyboard = new[]
                 {
-                    new[] { CreateButton("📊 My Stats", "menu_stats"), CreateButton("🆘 Support", "menu_support") },
-                    new[] { CreateButton("🏆 Tournaments", "menu_tournaments"), CreateButton("🔧 Tech Info", "menu_tech") },
-                    new[] { CreateButton("🔗 Link Account", "menu_link") }
+                    new[] { Btn("📊 Statistics", "stats"), Btn("🆘 Support", "support") },
+                    new[] { Btn("🔗 Link Account", "link"), Btn("🏠 Menu", "menu") }
                 }
             };
 
-            await SendMessageWithKeyboard(chatId, text, keyboard);
+            await SendWithKeyboard(chatId, text, keyboard);
         }
 
         private async Task ShowMainMenu(long chatId, string username)
         {
-            var text = $"⚔️ *CodeDuel Arena — Main Menu*\n\nWelcome, {EscapeMarkdown(username)}! Choose an option:";
+            var text = $"⚔️ *Main Menu*\n\nChoose an action:";
 
             var keyboard = new
             {
                 inline_keyboard = new[]
                 {
-                    new[] { CreateButton("📊 My Stats", "menu_stats"), CreateButton("🆘 Support", "menu_support") },
-                    new[] { CreateButton("🏆 Tournaments", "menu_tournaments"), CreateButton("🔧 Tech Info", "menu_tech") },
-                    new[] { CreateButton("🔗 Link Account", "menu_link"), CreateButton("❓ Help", "menu_help") }
+                    new[] { Btn("📊 Statistics", "stats"), Btn("🆘 Support", "support") },
+                    new[] { Btn("🔗 Link Account", "link") }
                 }
             };
 
-            await SendMessageWithKeyboard(chatId, text, keyboard);
+            await SendWithKeyboard(chatId, text, keyboard);
         }
 
         private async Task ShowStats(long chatId, string username)
         {
             using var scope = _serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            
-            var user = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
-            
-            if (user == null)
-            {
-                // Пробуем найти по Telegram ID
-                var settings = await db.UserSettings.FirstOrDefaultAsync(s => s.TelegramChatId == chatId.ToString());
-                if (settings != null)
-                {
-                    user = await db.Users.FirstOrDefaultAsync(u => u.Username == settings.Username);
-                }
-            }
+
+            // Ищем по TelegramChatId или username
+            var settings = await db.UserSettings.FirstOrDefaultAsync(s => s.TelegramChatId == chatId.ToString());
+            var user = settings != null
+                ? await db.Users.FirstOrDefaultAsync(u => u.Username == settings.Username)
+                : await db.Users.FirstOrDefaultAsync(u => u.Username == username);
 
             if (user == null)
             {
-                await SendMessage(chatId, "⚠️ *Account not found*\n\nLink your account using /link command to see your statistics.");
+                await SendMessage(chatId, "⚠️ *Account not found.*\nLink your account using /link command.");
                 return;
             }
 
             var league = await db.UserLeagues.FirstOrDefaultAsync(l => l.Username == user.Username);
-            var winRate = user.Wins + user.Losses > 0 
-                ? Math.Round((double)user.Wins / (user.Wins + user.Losses) * 100, 1) 
+            var winRate = user.Wins + user.Losses > 0
+                ? Math.Round((double)user.Wins / (user.Wins + user.Losses) * 100, 1)
                 : 0;
 
-            var text = $"📊 *Statistics for {EscapeMarkdown(user.Username)}*\n\n" +
-                       $"⭐ *Score:* {user.Score:N0}\n" +
-                       $"🏆 *Wins:* {user.Wins}\n" +
-                       $"💀 *Losses:* {user.Losses}\n" +
-                       $"📈 *Win Rate:* {winRate}%\n" +
-                       $"🏅 *League:* {league?.League ?? "Bronze"}\n" +
-                       $"📅 *Registered:* {user.RegisteredAt:dd.MM.yyyy}\n" +
-                       $"🕐 *Last Login:* {user.LastLogin:dd.MM.yyyy HH:mm}";
+            var text = $"📊 *{Escape(user.Username)}*\n\n" +
+                       $"⭐ Score: *{user.Score:N0}*\n" +
+                       $"🏆 Wins: *{user.Wins}*\n" +
+                       $"💀 Losses: *{user.Losses}*\n" +
+                       $"📈 Win Rate: *{winRate}%*\n" +
+                       $"🏅 League: *{league?.League ?? "Bronze"}*\n" +
+                       $"📅 Registered: {user.RegisteredAt:dd.MM.yyyy}";
 
-            var keyboard = new
-            {
-                inline_keyboard = new[]
-                {
-                    new[] { CreateButton("🔄 Refresh", "menu_stats"), CreateButton("🏠 Menu", "menu_main") }
-                }
-            };
-
-            await SendMessageWithKeyboard(chatId, text, keyboard);
+            await SendMessage(chatId, text);
         }
 
         private async Task StartSupport(long chatId, string username)
         {
-            _userStates[chatId] = "waiting_support_message";
-            
-            var text = $"🆘 *Support Request*\n\n" +
-                       "Please describe your issue in one message.\n" +
-                       "Our team will respond as soon as possible.\n\n" +
-                       "_Send /stop to cancel._";
-
-            await SendMessage(chatId, text);
-        }
-
-        private async Task ForwardToSupport(long chatId, string username, string message)
-        {
-            if (string.IsNullOrEmpty(_adminChatId))
+            if (string.IsNullOrEmpty(_supportChatId))
             {
-                await SendMessage(chatId, "⚠️ Support is currently unavailable. Please try again later.");
+                await SendMessage(chatId, "⚠️ Support is temporarily unavailable.");
                 return;
             }
 
-            var supportText = $"🆘 *New Support Request* #ID{chatId}\n\n" +
-                             $"👤 *From:* {EscapeMarkdown(username)}\n" +
-                             $"🆔 *User ID:* `{chatId}`\n" +
-                             $"🕐 *Time:* {DateTime.UtcNow:dd.MM.yyyy HH:mm} UTC\n\n" +
-                             $"📝 *Message:*\n{EscapeMarkdown(message)}\n\n" +
-                             "_Reply to this message to answer the user._";
+            await SendMessage(chatId, "🆘 *Support*\n\nDescribe your problem in one message and I will forward it to the support team.");
 
-            await SendMessage(_adminChatId, supportText);
-            await SendMessage(chatId, "✅ *Your message has been sent to support!*\n\nWe will reply as soon as possible. You will receive a notification here.\n\n_Use /stop to end the session._");
+            // Ждём следующее сообщение от этого пользователя
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(500);
+                // Простой способ — ждём сообщение через getUpdates
+                // Но проще попросить пользователя написать /support с текстом
+            });
         }
 
-        private async Task ShowTournaments(long chatId)
+        private async Task HandleCallback(JToken callback)
         {
-            var text = $"🏆 *Tournaments & Events*\n\n" +
-                       $"🔥 *Upcoming:*\n" +
-                       $"• Weekly Duel Cup — Every Saturday 18:00 UTC\n" +
-                       $"• Monthly Championship — First Sunday of each month\n\n" +
-                       $"📋 *How to participate:*\n" +
-                       $"Just be online during tournament hours and join the duel queue!\n\n" +
-                       $"💎 *Prizes:*\n" +
-                       $"• 1st Place: 1000 points + Diamond Badge\n" +
-                       $"• 2nd Place: 500 points + Platinum Badge\n" +
-                       $"• 3rd Place: 250 points + Gold Badge\n\n" +
-                       $"_Subscribe to notifications to never miss an event!_";
+            var data = callback["data"]?.Value<string>() ?? "";
+            var chatId = callback["message"]?["chat"]?["id"]?.Value<long>() ?? 0;
+            var username = callback["from"]?["username"]?.Value<string>() ??
+                           callback["from"]?["first_name"]?.Value<string>() ?? "User";
+            var callbackId = callback["id"]?.Value<string>() ?? "";
 
-            var keyboard = new
+            // Отвечаем на callback
+            await _http.GetAsync($"answerCallbackQuery?callback_query_id={callbackId}");
+
+            switch (data)
             {
-                inline_keyboard = new[]
-                {
-                    new[] { CreateButton("🔔 Subscribe to Alerts", "sub_tournaments"), CreateButton("🏠 Menu", "menu_main") }
-                }
-            };
-
-            await SendMessageWithKeyboard(chatId, text, keyboard);
-        }
-
-        private async Task ShowTechInfo(long chatId)
-        {
-            var text = $"🔧 *Technical Status*\n\n" +
-                       $"🟢 *Server Status:* Online\n" +
-                       $"📡 *API:* Operational\n" +
-                       $"🗄️ *Database:* Operational\n\n" +
-                       $"📅 *Planned Maintenance:*\n" +
-                       $"No maintenance scheduled.\n\n" +
-                       $"_You will receive notifications about any technical works._";
-
-            var keyboard = new
-            {
-                inline_keyboard = new[]
-                {
-                    new[] { CreateButton("🔔 Tech Alerts", "sub_tech"), CreateButton("🏠 Menu", "menu_main") }
-                }
-            };
-
-            await SendMessageWithKeyboard(chatId, text, keyboard);
-        }
-
-        private async Task LinkAccount(long chatId, string username)
-        {
-            _userStates[chatId] = "waiting_link_username";
-            
-            var text = $"🔗 *Link Your Account*\n\n" +
-                       "Enter your CodeDuel Arena username to link it with this Telegram account.\n\n" +
-                       "_Send /stop to cancel._";
-
-            await SendMessage(chatId, text);
-        }
-
-        private async Task CompleteLinkAccount(long chatId, string gameUsername, string tgUsername)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            var user = await db.Users.FirstOrDefaultAsync(u => u.Username == gameUsername);
-            if (user == null)
-            {
-                await SendMessage(chatId, $"❌ *User not found*\n\nNo account with username \"{EscapeMarkdown(gameUsername)}\" exists. Please register on the website first: https://codeduelarena.onrender.com");
-                return;
-            }
-
-            var settings = await db.UserSettings.FirstOrDefaultAsync(s => s.Username == gameUsername);
-            if (settings == null)
-            {
-                settings = new Models.UserSettings { Username = gameUsername };
-                db.UserSettings.Add(settings);
-            }
-            settings.TelegramChatId = chatId.ToString();
-            await db.SaveChangesAsync();
-
-            await SendMessage(chatId, $"✅ *Account Linked!*\n\nYour Telegram is now connected to \"{EscapeMarkdown(gameUsername)}\".\n\nYou will receive notifications and can use /stats to check your progress.");
-        }
-
-        // ============ РАССЫЛКИ ============
-
-        public async Task SendTournamentAnnouncement(string title, string description, DateTime date)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            
-            var subscribers = await db.UserSettings
-                .Where(s => s.NotifyTournaments && !string.IsNullOrEmpty(s.TelegramChatId))
-                .Select(s => s.TelegramChatId)
-                .ToListAsync();
-
-            var text = $"🏆 *TOURNAMENT ANNOUNCEMENT*\n\n" +
-                       $"*{EscapeMarkdown(title)}*\n" +
-                       $"{EscapeMarkdown(description)}\n\n" +
-                       $"📅 *Date:* {date:dd.MM.yyyy HH:mm} UTC\n\n" +
-                       $"_Be ready to duel!_";
-
-            foreach (var chatId in subscribers)
-            {
-                await SendMessage(chatId, text);
+                case "stats": await ShowStats(chatId, username); break;
+                case "support": await StartSupport(chatId, username); break;
+                case "link":
+                    await SendMessage(chatId, "Send me your CodeDuel Arena username to link accounts.\nExample: _MyUsername_");
+                    break;
+                case "menu": await ShowMainMenu(chatId, username); break;
             }
         }
 
-        public async Task SendTechMaintenanceAlert(string message, DateTime startTime, DateTime endTime)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            
-            var subscribers = await db.UserSettings
-                .Where(s => s.NotifyTechUpdates && !string.IsNullOrEmpty(s.TelegramChatId))
-                .Select(s => s.TelegramChatId)
-                .ToListAsync();
-
-            var text = $"🔧 *TECHNICAL MAINTENANCE*\n\n" +
-                       $"{EscapeMarkdown(message)}\n\n" +
-                       $"📅 *Start:* {startTime:dd.MM.yyyy HH:mm} UTC\n" +
-                       $"📅 *End:* {endTime:dd.MM.yyyy HH:mm} UTC\n\n" +
-                       $"_The site may be unavailable during this period._";
-
-            foreach (var chatId in subscribers)
-            {
-                await SendMessage(chatId, text);
-            }
-        }
-
-        public async Task SendPersonalNotification(string username, string message)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            
-            var settings = await db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
-            if (settings == null || string.IsNullOrEmpty(settings.TelegramChatId)) return;
-
-            await SendMessage(settings.TelegramChatId, EscapeMarkdown(message));
-        }
-
-        // ============ ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ============
+        // ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
 
         private async Task SendMessage(object chatId, string text)
         {
-            var payload = new { chat_id = chatId.ToString(), text, parse_mode = "Markdown" };
-            var json = JsonConvert.SerializeObject(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            await _http.PostAsync("sendMessage", content);
+            try
+            {
+                var payload = new { chat_id = chatId.ToString(), text, parse_mode = "Markdown" };
+                var json = JsonConvert.SerializeObject(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                await _http.PostAsync("sendMessage", content);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"SendMessage error: {ex.Message}");
+            }
         }
 
-        private async Task SendMessageWithKeyboard(object chatId, string text, object replyMarkup)
+        private async Task SendWithKeyboard(object chatId, string text, object keyboard)
         {
-            var payload = new { chat_id = chatId.ToString(), text, parse_mode = "Markdown", reply_markup = replyMarkup };
-            var json = JsonConvert.SerializeObject(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            await _http.PostAsync("sendMessage", content);
+            try
+            {
+                var payload = new { chat_id = chatId.ToString(), text, parse_mode = "Markdown", reply_markup = keyboard };
+                var json = JsonConvert.SerializeObject(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                await _http.PostAsync("sendMessage", content);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"SendWithKeyboard error: {ex.Message}");
+            }
         }
 
-        private object CreateButton(string text, string callbackData)
-        {
-            return new { text, callback_data = callbackData };
-        }
+        private object Btn(string text, string data) => new { text, callback_data = data };
 
-        private static string EscapeMarkdown(string text)
+        private static string Escape(string text)
         {
             if (string.IsNullOrEmpty(text)) return "";
-            char[] specialChars = { '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' };
-            foreach (var c in specialChars)
+            foreach (var c in "_*[]()~`>#+-=|{}.!")
                 text = text.Replace(c.ToString(), "\\" + c);
             return text;
-        }
-
-        // Обработка Callback Query (кнопки)
-        public async Task<string> HandleCallback(JObject callback)
-        {
-            var callbackData = callback["callback_query"]?["data"]?.Value<string>() ?? "";
-            var chatId = callback["callback_query"]?["message"]?["chat"]?["id"]?.Value<long>() ?? 0;
-            var username = callback["callback_query"]?["from"]?["username"]?.Value<string>() ?? "User";
-            var callbackId = callback["callback_query"]?["id"]?.Value<string>() ?? "";
-
-            // Подтверждаем callback
-            await AnswerCallback(callbackId);
-
-            switch (callbackData)
-            {
-                case "menu_stats": await ShowStats(chatId, username); break;
-                case "menu_support": await StartSupport(chatId, username); break;
-                case "menu_tournaments": await ShowTournaments(chatId); break;
-                case "menu_tech": await ShowTechInfo(chatId); break;
-                case "menu_link": await LinkAccount(chatId, username); break;
-                case "menu_main": await ShowMainMenu(chatId, username); break;
-                case "menu_help": await ShowMainMenu(chatId, username); break;
-                case "sub_tournaments": await SubscribeTo(chatId, "tournaments"); break;
-                case "sub_tech": await SubscribeTo(chatId, "tech"); break;
-            }
-
-            return "Callback processed";
-        }
-
-        private async Task AnswerCallback(string callbackId)
-        {
-            var payload = new { callback_query_id = callbackId };
-            var json = JsonConvert.SerializeObject(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            await _http.PostAsync("answerCallbackQuery", content);
-        }
-
-        private async Task SubscribeTo(long chatId, string type)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            var settings = await db.UserSettings.FirstOrDefaultAsync(s => s.TelegramChatId == chatId.ToString());
-            if (settings == null)
-            {
-                await SendMessage(chatId, "⚠️ Please link your account first using /link command.");
-                return;
-            }
-
-            if (type == "tournaments")
-            {
-                settings.NotifyTournaments = true;
-                await SendMessage(chatId, "🔔 *Subscribed to tournament alerts!*\n\nYou will receive notifications about upcoming tournaments and events.");
-            }
-            else if (type == "tech")
-            {
-                settings.NotifyTechUpdates = true;
-                await SendMessage(chatId, "🔔 *Subscribed to technical alerts!*\n\nYou will receive notifications about maintenance and technical updates.");
-            }
-
-            await db.SaveChangesAsync();
         }
     }
 }

@@ -14,7 +14,10 @@ builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
+
+// Telegram Bot
 builder.Services.AddSingleton<TelegramBotService>();
+builder.Services.AddHostedService<TelegramBotService>(sp => sp.GetRequiredService<TelegramBotService>());
 
 builder.Services.AddAuthentication(options =>
 {
@@ -39,11 +42,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // Обеспечиваем создание базы
     await db.Database.EnsureCreatedAsync();
-    
-    // Добавляем колонки для Telegram, если их нет
+
     try
     {
         await db.Database.ExecuteSqlRawAsync(
@@ -54,15 +54,11 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Migration warning (can be ignored if columns exist): {ex.Message}");
+        Console.WriteLine($"Migration: {ex.Message}");
     }
-    
+
     var dailyService = scope.ServiceProvider.GetRequiredService<DailyQuestService>();
     await dailyService.InitializeDailyQuests();
-    
-    // Установка вебхука Telegram
-    var botService = scope.ServiceProvider.GetRequiredService<TelegramBotService>();
-    await botService.SetWebhook();
 }
 
 if (!app.Environment.IsDevelopment())

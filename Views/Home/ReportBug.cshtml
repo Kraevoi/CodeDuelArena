@@ -1,0 +1,163 @@
+@{
+    ViewData["Title"] = "Report Bug";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card premium-card">
+                <div class="card-header">
+                    <i class="fas fa-bug me-2"></i>Report a Bug
+                </div>
+                <div class="card-body">
+                    @if (TempData["ReportMessage"] != null)
+                    {
+                        <div class="alert alert-success-custom mb-4">
+                            <i class="fas fa-check-circle me-2"></i>@TempData["ReportMessage"]
+                        </div>
+                    }
+
+                    <form method="post" action="/Home/ReportBug">
+                        <div class="mb-3">
+                            <label class="form-label-custom">What happened?</label>
+                            <textarea name="bugText" class="form-control-custom" rows="6" placeholder="Describe the bug in detail. What did you expect? What happened instead?" required></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label-custom">Contact (optional)</label>
+                            <input type="text" class="form-control-custom" placeholder="Telegram or email for follow-up">
+                        </div>
+                        <button type="submit" class="btn btn-gradient-pink w-100">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Report
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card premium-card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-2"></i>Other Ways to Reach Us
+                </div>
+                <div class="card-body">
+                    <div class="contact-methods">
+                        <a href="https://t.me/CodeDuelArena_bot" target="_blank" class="contact-card">
+                            <i class="fab fa-telegram-plane"></i>
+                            <div>
+                                <strong>Telegram Bot</strong>
+                                <span>@@CodeDuelArena_bot</span>
+                            </div>
+                        </a>
+                        <a href="https://t.me/CodeDuelArena_support" target="_blank" class="contact-card">
+                            <i class="fas fa-headset"></i>
+                            <div>
+                                <strong>Support Group</strong>
+                                <span>@@CodeDuelArena_support</span>
+                            </div>
+                        </a>
+                        <a href="mailto:admin@codeduel.com" class="contact-card">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <strong>Email</strong>
+                                <span>admin@codeduel.com</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .premium-card {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
+        border: 1px solid rgba(255, 107, 107, 0.2);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .premium-card .card-header {
+        background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 68, 68, 0.1));
+        border-bottom: 1px solid rgba(255, 107, 107, 0.3);
+        color: #fff;
+        font-weight: 600;
+        padding: 14px 20px;
+    }
+    .form-label-custom {
+        color: #c0c0c0;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+    .form-control-custom {
+        width: 100%;
+        padding: 12px 16px;
+        background: #0a0a1a;
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 10px;
+        color: #fff;
+        font-size: 0.95rem;
+        resize: vertical;
+    }
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #ff6b6b;
+        box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.08);
+    }
+    .btn-gradient-pink {
+        background: linear-gradient(135deg, #ff6b6b, #ff4444);
+        border: none;
+        color: #fff;
+        padding: 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .btn-gradient-pink:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.35);
+        color: #fff;
+    }
+    .alert-success-custom {
+        background: rgba(40, 167, 69, 0.15);
+        border: 1px solid rgba(40, 167, 69, 0.4);
+        color: #28a745;
+        padding: 14px 18px;
+        border-radius: 12px;
+    }
+    .contact-methods {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .contact-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        background: rgba(0,0,0,0.2);
+        border-radius: 12px;
+        text-decoration: none;
+        color: #c0c0c0;
+        transition: all 0.3s;
+        border: 1px solid transparent;
+    }
+    .contact-card:hover {
+        border-color: rgba(255, 107, 107, 0.3);
+        color: #fff;
+    }
+    .contact-card i {
+        font-size: 1.5rem;
+        color: #ff6b6b;
+        width: 40px;
+        text-align: center;
+    }
+    .contact-card strong {
+        display: block;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+    .contact-card span {
+        font-size: 0.8rem;
+        color: #888;
+    }
+</style>
