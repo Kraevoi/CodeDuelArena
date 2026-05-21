@@ -1,0 +1,521 @@
+<footer class="site-footer">
+    <div class="footer-container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h5 class="footer-title">
+                    <i class="fas fa-code me-2"></i>CodeDuel Arena
+                </h5>
+                <p class="footer-desc">
+                    Online coding battle platform. Fix legacy code, hack challenges, duel opponents in real-time.
+                </p>
+                <div class="footer-social">
+                    <a href="https://t.me/CodeDuelArena_bot" target="_blank" class="social-btn telegram" title="Official Bot">
+                        <i class="fab fa-telegram-plane"></i>
+                    </a>
+                    <a href="https://t.me/CodeDuelArena_bot" target="_blank" class="social-btn support" title="Support Bot">
+                        <i class="fas fa-headset"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h5 class="footer-title">Quick Links</h5>
+                <ul class="footer-links">
+                    <li><a href="/"><i class="fas fa-home me-2"></i>Home</a></li>
+                    <li><a href="/Home/Quests"><i class="fas fa-scroll me-2"></i>Quests</a></li>
+                    <li><a href="/Home/Leaderboard"><i class="fas fa-trophy me-2"></i>Leaderboard</a></li>
+                    <li><a href="/Profile/Index"><i class="fas fa-user me-2"></i>Profile</a></li>
+                    <li><a href="/Settings/Index"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5 class="footer-title">Support</h5>
+                <ul class="footer-links">
+                    <li>
+                        <a href="https://t.me/CodeDuelArena_bot" target="_blank" class="support-link">
+                            <i class="fab fa-telegram-plane me-2"></i>Support Bot
+                            <span class="online-badge">Online</span>
+                        </a>
+                    </li>
+                    <li><a href="#" onclick="openSupportChat(); return false;"><i class="fas fa-question-circle me-2"></i>FAQ</a></li>
+                    <li><a href="/Home/ReportBug"><i class="fas fa-bug me-2"></i>Report Bug</a></li>
+                    <li><a href="mailto:admin@codeduel.com"><i class="fas fa-envelope me-2"></i>Email Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h5 class="footer-title">Legal</h5>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="showPolicy('privacy'); return false;"><i class="fas fa-shield-alt me-2"></i>Privacy Policy</a></li>
+                    <li><a href="#" onclick="showPolicy('terms'); return false;"><i class="fas fa-file-contract me-2"></i>Terms of Service</a></li>
+                    <li><a href="#" onclick="showPolicy('cookies'); return false;"><i class="fas fa-cookie-bite me-2"></i>Cookie Policy</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-copy">
+                &copy; @DateTime.Now.Year CodeDuel Arena. All rights reserved.
+            </div>
+            <div class="footer-status">
+                <span class="status-dot"></span> Servers Online
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Support Chat Widget -->
+<div class="support-widget" id="supportWidget">
+    <button class="support-toggle" onclick="toggleSupportWidget()">
+        <i class="fas fa-headset"></i>
+        <span>Support</span>
+    </button>
+    <div class="support-panel" id="supportPanel" style="display: none;">
+        <div class="support-header">
+            <i class="fas fa-robot me-2"></i>Support Assistant
+            <button class="support-close" onclick="toggleSupportWidget()">&times;</button>
+        </div>
+        <div class="support-messages" id="supportMessages">
+            <div class="support-bot-msg">
+                <i class="fas fa-robot"></i>
+                <div class="msg-text">
+                    Hello! I'm the support bot. How can I help you?<br><br>
+                    <b>Common questions:</b><br>
+                    • How to register?<br>
+                    • How duels work?<br>
+                    • How to earn points?<br>
+                    • Report a bug<br>
+                    • Contact operator
+                </div>
+            </div>
+        </div>
+        <div class="support-input">
+            <input type="text" id="supportInput" placeholder="Type your question..." onkeypress="if(event.key==='Enter')sendSupportMessage()">
+            <button onclick="sendSupportMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- Policy Modals -->
+<div class="modal fade" id="policyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content premium-card">
+            <div class="modal-header">
+                <h5 class="modal-title" id="policyTitle"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="policyBody"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .site-footer {
+        background: linear-gradient(180deg, #0a0a1a 0%, #06060f 100%);
+        border-top: 2px solid rgba(255, 107, 107, 0.3);
+        margin-top: 60px;
+        padding: 50px 0 0;
+    }
+    
+    .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+    
+    .footer-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr;
+        gap: 40px;
+        padding-bottom: 40px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .footer-title {
+        color: #ff6b6b;
+        font-weight: 700;
+        font-size: 1.05rem;
+        margin-bottom: 16px;
+        letter-spacing: 0.5px;
+    }
+    
+    .footer-desc {
+        color: #888;
+        font-size: 0.88rem;
+        line-height: 1.6;
+        margin-bottom: 16px;
+    }
+    
+    .footer-social {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .social-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    
+    .social-btn.telegram {
+        background: rgba(0, 136, 204, 0.2);
+        color: #08c;
+        border: 1px solid rgba(0, 136, 204, 0.3);
+    }
+    
+    .social-btn.telegram:hover {
+        background: rgba(0, 136, 204, 0.35);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 136, 204, 0.25);
+    }
+    
+    .social-btn.support {
+        background: rgba(255, 107, 107, 0.2);
+        color: #ff6b6b;
+        border: 1px solid rgba(255, 107, 107, 0.3);
+    }
+    
+    .social-btn.support:hover {
+        background: rgba(255, 107, 107, 0.35);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.25);
+    }
+    
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .footer-links li {
+        margin-bottom: 10px;
+    }
+    
+    .footer-links a {
+        color: #999;
+        text-decoration: none;
+        font-size: 0.88rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .footer-links a:hover {
+        color: #ff6b6b;
+        padding-left: 4px;
+    }
+    
+    .support-link {
+        position: relative;
+    }
+    
+    .online-badge {
+        background: #28a745;
+        color: #fff;
+        font-size: 0.6rem;
+        padding: 2px 7px;
+        border-radius: 10px;
+        margin-left: 6px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        animation: pulse-badge 2s infinite;
+    }
+    
+    @@keyframes pulse-badge {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    .footer-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .footer-copy {
+        color: #666;
+        font-size: 0.8rem;
+    }
+    
+    .footer-status {
+        color: #28a745;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #28a745;
+        animation: pulse-dot 2s infinite;
+    }
+    
+    @@keyframes pulse-dot {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.6); }
+        50% { box-shadow: 0 0 0 8px rgba(40, 167, 69, 0); }
+    }
+    
+    .support-widget {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9998;
+    }
+    
+    .support-toggle {
+        background: linear-gradient(135deg, #ff6b6b, #ff4444);
+        border: none;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 30px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4);
+        transition: all 0.3s;
+    }
+    
+    .support-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(255, 68, 68, 0.5);
+    }
+    
+    .support-panel {
+        position: absolute;
+        bottom: 60px;
+        right: 0;
+        width: 350px;
+        background: #1a1a2e;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+    }
+    
+    .support-header {
+        background: linear-gradient(135deg, #ff6b6b, #ff4444);
+        color: #fff;
+        padding: 14px 18px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .support-close {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.3rem;
+        cursor: pointer;
+    }
+    
+    .support-messages {
+        height: 300px;
+        overflow-y: auto;
+        padding: 16px;
+        background: #0a0a1a;
+    }
+    
+    .support-bot-msg {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    
+    .support-bot-msg i {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 107, 107, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ff6b6b;
+        flex-shrink: 0;
+        font-size: 0.85rem;
+    }
+    
+    .support-bot-msg .msg-text {
+        background: rgba(255, 107, 107, 0.1);
+        padding: 10px 14px;
+        border-radius: 12px;
+        color: #c0c0c0;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        max-width: 85%;
+    }
+    
+    .support-user-msg {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 12px;
+    }
+    
+    .support-user-msg .msg-text {
+        background: rgba(255, 255, 255, 0.08);
+        padding: 10px 14px;
+        border-radius: 12px;
+        color: #fff;
+        font-size: 0.85rem;
+        max-width: 80%;
+    }
+    
+    .support-input {
+        display: flex;
+        padding: 12px;
+        gap: 8px;
+        background: #1a1a2e;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .support-input input {
+        flex-grow: 1;
+        padding: 10px 14px;
+        background: #0a0a1a;
+        border: 1px solid rgba(255, 107, 107, 0.2);
+        border-radius: 20px;
+        color: #fff;
+        font-size: 0.85rem;
+    }
+    
+    .support-input button {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #ff6b6b;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .support-input button:hover {
+        background: #ff4444;
+    }
+    
+    .premium-card {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
+        border: 1px solid rgba(255, 107, 107, 0.2);
+        color: #c0c0c0;
+    }
+    
+    .premium-card .modal-header {
+        border-bottom: 1px solid rgba(255, 107, 107, 0.2);
+    }
+    
+    @@media (max-width: 768px) {
+        .footer-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .support-panel {
+            width: 300px;
+            right: -10px;
+        }
+    }
+    
+    @@media (max-width: 480px) {
+        .footer-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .support-panel {
+            width: 280px;
+        }
+    }
+</style>
+
+<script>
+    function toggleSupportWidget() {
+        var panel = document.getElementById("supportPanel");
+        if (panel.style.display === "none") {
+            panel.style.display = "block";
+        } else {
+            panel.style.display = "none";
+        }
+    }
+    
+    function sendSupportMessage() {
+        var input = document.getElementById("supportInput");
+        var msg = input.value.trim();
+        if (!msg) return;
+        
+        var messagesDiv = document.getElementById("supportMessages");
+        messagesDiv.innerHTML += '<div class="support-user-msg"><div class="msg-text">' + escapeHtml(msg) + '</div></div>';
+        
+        input.value = "";
+        
+        setTimeout(function() {
+            var response = getBotResponse(msg.toLowerCase());
+            messagesDiv.innerHTML += '<div class="support-bot-msg"><i class="fas fa-robot"></i><div class="msg-text">' + response + '</div></div>';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }, 500);
+        
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    
+    function getBotResponse(msg) {
+        if (msg.includes("register") || msg.includes("регистрац")) {
+            return 'To register, click the <b>Login</b> button in the top right corner and switch to the <b>Registration</b> tab. Choose a username (min 3 characters) and password (min 4 characters).';
+        }
+        if (msg.includes("duel") || msg.includes("дуэл")) {
+            return 'Duels are real-time coding battles! Click <b>Join Duel Queue</b> on the main page. You will be matched with an opponent. Both get the same task — first correct answer wins! Time limit: 60 seconds.';
+        }
+        if (msg.includes("point") || msg.includes("очк") || msg.includes("score")) {
+            return 'You earn points by:<br>• Completing quests (100-300 pts each)<br>• Winning duels (+100 pts)<br>• Completing daily quests<br>• Unlocking achievements';
+        }
+        if (msg.includes("bug") || msg.includes("баг") || msg.includes("report") || msg.includes("жалоб")) {
+            return 'To report a bug, use the <b>Report Bug</b> form on the main page, or contact our support bot on Telegram.';
+        }
+        if (msg.includes("operator") || msg.includes("оператор") || msg.includes("human") || msg.includes("человек")) {
+            return 'I will connect you with a human operator. Please contact us via Telegram bot and use the <b>/support</b> command. An operator will respond shortly.';
+        }
+        if (msg.includes("contact") || msg.includes("контакт") || msg.includes("support") || msg.includes("поддержк")) {
+            return 'You can reach us via:<br>• Telegram bot<br>• Email: admin@codeduel.com<br>• Support widget (you are using it now!)';
+        }
+        
+        return 'I am not sure I understand. Try asking about:<br>• <b>How to register</b><br>• <b>How duels work</b><br>• <b>How to earn points</b><br>• <b>Report a bug</b><br>• <b>Contact operator</b><br><br>Or type <b>operator</b> to speak with a human.';
+    }
+    
+    function showPolicy(type) {
+        var title, body;
+        
+        if (type === 'privacy') {
+            title = 'Privacy Policy';
+            body = '<h5>1. Information We Collect</h5><p>We collect username, email (optional), and game statistics (scores, wins, losses). Avatar images are stored on our servers.</p><h5>2. How We Use Information</h5><p>Your data is used to provide game services, display leaderboards, and send notifications (if subscribed).</p><h5>3. Data Storage</h5><p>Data is stored on secure servers provided by Render. We use PostgreSQL databases with encrypted connections.</p><h5>4. Third Parties</h5><p>We do not sell or share your data with third parties.</p><h5>5. Contact</h5><p>For privacy concerns, contact admin@codeduel.com.</p>';
+        } else if (type === 'terms') {
+            title = 'Terms of Service';
+            body = '<h5>1. Acceptance</h5><p>By using CodeDuel Arena, you agree to these terms.</p><h5>2. User Conduct</h5><p>No cheating, exploiting bugs, or harassing other users. Violations result in account suspension.</p><h5>3. Intellectual Property</h5><p>Code submitted in quests and duels remains your property. Platform code is protected.</p><h5>4. Service Availability</h5><p>We strive for 99% uptime but do not guarantee uninterrupted service.</p><h5>5. Changes</h5><p>Terms may be updated. Continued use constitutes acceptance.</p>';
+        } else {
+            title = 'Cookie Policy';
+            body = '<h5>1. What Are Cookies</h5><p>Cookies are small text files stored on your device to remember preferences.</p><h5>2. Cookies We Use</h5><p>• <b>auth_user</b> — keeps you logged in<br>• <b>user_theme</b> — remembers your theme preference<br>• <b>admin_auth</b> — admin session</p><h5>3. Managing Cookies</h5><p>You can disable cookies in browser settings, but some features may not work.</p>';
+        }
+        
+        document.getElementById("policyTitle").textContent = title;
+        document.getElementById("policyBody").innerHTML = body;
+        var modal = new bootstrap.Modal(document.getElementById("policyModal"));
+        modal.show();
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+</script>
