@@ -15,9 +15,6 @@ builder.Services.AddSignalR();
 builder.Services.AddSession();
 builder.Services.AddHttpContextAccessor();
 
-// Telegram Bot
-builder.Services.AddSingleton<TelegramBotService>();
-builder.Services.AddHostedService<TelegramBotService>(sp => sp.GetRequiredService<TelegramBotService>());
 
 builder.Services.AddAuthentication(options =>
 {
