@@ -11,16 +11,30 @@
     <div class="profile-header mb-4">
         <div class="profile-cover"></div>
         <div class="profile-info">
-            <div class="profile-avatar-wrapper">
-                @if (!string.IsNullOrEmpty(settings?.AvatarUrl))
-                {
-                    <img src="@settings.AvatarUrl" 
-                         class="profile-avatar" 
-                         alt="@Model.Username"
-                         onerror="this.onerror=null; this.src='/images/default-avatar.png'; this.nextElementSibling.style.display='flex';">
-                    <div class="profile-avatar-fallback" style="display:none;">@Model.Username[0]</div>
-                }
-                else
+           <div class="profile-avatar-wrapper">
+    @if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
+    {
+        <img src="/Profile/Avatar?username=@Model.Username" 
+             class="profile-avatar" 
+             alt="@Model.Username"
+             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="profile-avatar-fallback" style="display:none;">@Model.Username[0]</div>
+    }
+    else
+    {
+        <div class="profile-avatar-fallback">@Model.Username[0]</div>
+    }
+    
+    @if (isOwnProfile)
+    {
+        <form method="post" enctype="multipart/form-data" action="/Profile/UploadAvatar" class="avatar-upload-form">
+            <label for="avatarUpload" class="avatar-upload-btn">
+                <i class="fas fa-camera"></i>
+            </label>
+            <input type="file" id="avatarUpload" name="avatar" accept="image/*" onchange="this.form.submit()" hidden>
+        </form>
+    }
+</div>
                 {
                     <div class="profile-avatar-fallback">@Model.Username[0]</div>
                 }

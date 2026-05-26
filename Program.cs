@@ -45,7 +45,9 @@ using (var scope = app.Services.CreateScope())
 {
     await db.Database.ExecuteSqlRawAsync(
         @"ALTER TABLE ""Users"" ADD COLUMN IF NOT EXISTS ""Tag"" text NOT NULL DEFAULT '';
-         CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Users_Tag"" ON ""Users"" (""Tag"");");
+         CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Users_Tag"" ON ""Users"" (""Tag"");
+         ALTER TABLE ""UserSettings"" ADD COLUMN IF NOT EXISTS ""AvatarData"" bytea NULL;
+         ALTER TABLE ""UserSettings"" ADD COLUMN IF NOT EXISTS ""AvatarContentType"" text NOT NULL DEFAULT '';");
 }
 catch (Exception ex)
 {

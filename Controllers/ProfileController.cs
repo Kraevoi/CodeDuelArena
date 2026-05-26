@@ -15,41 +15,6 @@ namespace CodeDuelArena.Controllers
             _db = db;
             _env = env;
         }
-        [HttpPost]
-public async Task<IActionResult> ChangeUsername(string newUsername)
-{
-    var currentUsername = Request.Cookies["auth_user"];
-    if (string.IsNullOrEmpty(currentUsername))
-        return Json(new { success = false, error = "Not authenticated" });
-    
-    if (string.IsNullOrWhiteSpace(newUsername) || newUsername.Length < 3)
-        return Json(new { success = false, error = "Username must be at least 3 characters" });
-    
-    if (newUsername == currentUsername)
-        return Json(new { success = false, error = "This is already your username" });
-    
-    var exists = await _db.Users.AnyAsync(u => u.Username == newUsername);
-    if (exists)
-        return Json(new { success = false, error = "Username already taken" });
-    
-    var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == currentUsername);
-    if (user == null)
-        return Json(new { success = false, error = "User not found" });
-    
-    user.Username = newUsername;
-    await _db.SaveChangesAsync();
-    
-    // Обновляем куку
-    Response.Cookies.Append("auth_user", newUsername, new CookieOptions
-    {
-        HttpOnly = true,
-        SameSite = SameSiteMode.Lax,
-        Path = "/",
-        Expires = DateTime.Now.AddDays(30)
-    });
-    
-    return Json(new { success = true, newUsername = newUsername });
-}
         
         [HttpGet]
         public async Task<IActionResult> Index(string username)
@@ -87,18 +52,19 @@ public async Task<IActionResult> ChangeUsername(string newUsername)
             var username = Request.Cookies["auth_user"];
             if (string.IsNullOrEmpty(username)) return RedirectToAction("Index", "Home");
             
-            if (avatar != null && avatar.Length > 0 && avatar.Length < 1024 * 1024)
+            if (avatar != null && avatar.Length > 0 && avatar.Length < 2 * 1024 * 1024) // Максимум 2MB
             {
-                var uploadsFolder = Path.Combine(_env.WebRootPath, "avatars");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                
-                var fileName = $"{username}_{DateTime.Now.Ticks}{Path.GetExtension(avatar.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                // Проверяем что это картинка
+                var contentType = avatar.ContentType.ToLower();
+                if (contentType != "image/png" && contentType != "image/jpeg" && contentType != "image/jpg" && contentType != "image/gif")
                 {
-                    await avatar.CopyToAsync(stream);
+                    TempData["Error"] = "Only PNG, JPG, GIF allowed.";
+                    return RedirectToAction("Index");
                 }
+                
+                using var ms = new MemoryStream();
+                await avatar.CopyToAsync(ms);
+                var avatarData = ms.ToArray();
                 
                 var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
                 if (settings == null)
@@ -106,11 +72,75 @@ public async Task<IActionResult> ChangeUsername(string newUsername)
                     settings = new UserSettings { Username = username };
                     _db.UserSettings.Add(settings);
                 }
-                settings.AvatarUrl = $"/avatars/{fileName}";
+                
+                settings.AvatarData = avatarData;
+                settings.AvatarContentType = contentType;
+                settings.AvatarUrl = ""; // Больше не используем URL
+                
                 await _db.SaveChangesAsync();
+                TempData["Message"] = "Avatar updated!";
+            }
+            else
+            {
+                TempData["Error"] = "File too large. Maximum 2MB.";
             }
             
             return RedirectToAction("Index");
+        }
+        
+        [HttpGet]
+        public async Task<IActionResult> Avatar(string username)
+        {
+            var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
+            if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
+            {
+                return File(settings.AvatarData, settings.AvatarContentType);
+            }
+            
+            // Возвращаем дефолтный аватар
+            var defaultPath = Path.Combine(_env.WebRootPath, "images", "default-avatar.png");
+            if (System.IO.File.Exists(defaultPath))
+            {
+                var bytes = await System.IO.File.ReadAllBytesAsync(defaultPath);
+                return File(bytes, "image/png");
+            }
+            
+            return NotFound();
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> ChangeUsername(string newUsername)
+        {
+            var currentUsername = Request.Cookies["auth_user"];
+            if (string.IsNullOrEmpty(currentUsername))
+                return Json(new { success = false, error = "Not authenticated" });
+            
+            if (string.IsNullOrWhiteSpace(newUsername) || newUsername.Length < 3)
+                return Json(new { success = false, error = "Username must be at least 3 characters" });
+            
+            if (newUsername == currentUsername)
+                return Json(new { success = false, error = "This is already your username" });
+            
+            var exists = await _db.Users.AnyAsync(u => u.Username == newUsername);
+            if (exists)
+                return Json(new { success = false, error = "Username already taken" });
+            
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == currentUsername);
+            if (user == null)
+                return Json(new { success = false, error = "User not found" });
+            
+            user.Username = newUsername;
+            await _db.SaveChangesAsync();
+            
+            Response.Cookies.Append("auth_user", newUsername, new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax,
+                Path = "/",
+                Expires = DateTime.Now.AddDays(30)
+            });
+            
+            return Json(new { success = true, newUsername = newUsername });
         }
     }
 }
