@@ -1,0 +1,10 @@
+[33m2679faa[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix navbar buttons color
+[33mda10f8e[m Revert layout to working version
+[33md3f9989[m Rewrite layout from scratch
+[33m2ca5cb6[m Fix themes - remove conflicting inline styles
+[33m30acec1[m Complete theme system - 5 themes, changes all elements
+[33mfddd992[m fuckin head
+[33mb5a66d9[m Fix avatar upload - store in database
+[33m58f1960[m drop my head
+[33m1198912[m Add Python Telegram bot
+[33md3404f5[m Final working bot with full functionality
