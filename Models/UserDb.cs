@@ -12,6 +12,9 @@ namespace CodeDuelArena.Models
         [Required, MaxLength(50)]
         public string Username { get; set; } = string.Empty;
         
+        [Required, MaxLength(30)]
+        public string Tag { get; set; } = string.Empty; // Уникальный тег, задаётся один раз
+        
         [Required, MaxLength(255)]
         public string PasswordHash { get; set; } = string.Empty;
         

@@ -26,7 +26,7 @@ namespace CodeDuelArena.Data
             modelBuilder.Entity<PrivateMessage>().HasIndex(p => p.FromUser);
             modelBuilder.Entity<UserSettings>().HasIndex(u => u.Username).IsUnique();
             modelBuilder.Entity<UserLeague>().HasIndex(u => u.Username).IsUnique();
-            
+            modelBuilder.Entity<UserDb>().HasIndex(u => u.Tag).IsUnique();
             modelBuilder.Entity<Achievement>().HasData(
                 new Achievement { Id = 1, Name = "Первая победа", Description = "Выиграть первую дуэль", Icon = "🏆", RequiredValue = 1, Condition = "win_duel", RewardPoints = 50 },
                 new Achievement { Id = 2, Name = "Воин", Description = "Выиграть 10 дуэлей", Icon = "⚔️", RequiredValue = 10, Condition = "win_duel", RewardPoints = 200 },

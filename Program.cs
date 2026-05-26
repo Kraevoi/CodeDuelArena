@@ -42,17 +42,15 @@ using (var scope = app.Services.CreateScope())
     await db.Database.EnsureCreatedAsync();
 
     try
-    {
-        await db.Database.ExecuteSqlRawAsync(
-            @"ALTER TABLE ""UserSettings"" 
-              ADD COLUMN IF NOT EXISTS ""TelegramChatId"" text NOT NULL DEFAULT '',
-              ADD COLUMN IF NOT EXISTS ""NotifyTournaments"" boolean NOT NULL DEFAULT false,
-              ADD COLUMN IF NOT EXISTS ""NotifyTechUpdates"" boolean NOT NULL DEFAULT false;");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Migration: {ex.Message}");
-    }
+{
+    await db.Database.ExecuteSqlRawAsync(
+        @"ALTER TABLE ""Users"" ADD COLUMN IF NOT EXISTS ""Tag"" text NOT NULL DEFAULT '';
+         CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Users_Tag"" ON ""Users"" (""Tag"");");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Migration: {ex.Message}");
+}
 
     var dailyService = scope.ServiceProvider.GetRequiredService<DailyQuestService>();
     await dailyService.InitializeDailyQuests();

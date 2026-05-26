@@ -1,20 +1,21 @@
 @model List<CodeDuelArena.Models.UserDb>
 @{
-    ViewData["Title"] = "Таблица лидеров";
+    ViewData["Title"] = "Leaderboard";
 }
 
-<h2 class="text-danger">🏆 ТАБЛИЦА ЛИДЕРОВ</h2>
+<h2 class="text-danger">🏆 LEADERBOARD</h2>
 
 <div class="table-responsive">
     <table class="table table-dark table-striped">
         <thead class="bg-danger text-white">
             <tr>
                 <th>#</th>
-                <th>ИГРОК</th>
-                <th>⭐ ОЧКИ</th>
-                <th>🏆 ПОБЕДЫ</th>
-                <th>💀 ПОРАЖЕНИЯ</th>
-                <th>📅 РЕГИСТРАЦИЯ</th>
+                <th>PLAYER</th>
+                <th>TAG</th>
+                <th>⭐ SCORE</th>
+                <th>🏆 WINS</th>
+                <th>💀 LOSSES</th>
+                <th>📅 REGISTERED</th>
             </tr>
         </thead>
         <tbody>
@@ -24,7 +25,14 @@
                 {
                     <tr>
                         <td class="fw-bold">@(i + 1)</td>
-                        <td>@Model[i].Username</td>
+                        <td>
+                            <a href="/Profile/Index?username=@Model[i].Username" class="text-danger fw-bold text-decoration-none">
+                                @Model[i].Username
+                            </a>
+                        </td>
+                        <td>
+                            <span class="text-warning">@@@Model[i].Tag</span>
+                        </td>
                         <td class="text-danger fw-bold">@Model[i].Score</td>
                         <td>@Model[i].Wins</td>
                         <td>@Model[i].Losses</td>
@@ -35,7 +43,7 @@
             else
             {
                 <tr>
-                    <td colspan="6" class="text-center text-muted">Нет игроков</td>
+                    <td colspan="7" class="text-center text-muted">No players yet</td>
                 </tr>
             }
         </tbody>

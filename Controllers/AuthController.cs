@@ -81,6 +81,52 @@ public async Task<IActionResult> Login(string username, string password, bool re
 
     return Json(new { success = true, username = user.Username, score = user.Score, isAdmin = user.IsAdmin });
 }
+[HttpPost]
+public async Task<IActionResult> Register(string username, string tag, string password, string email, bool rememberMe)
+{
+    try
+    {
+        if (string.IsNullOrWhiteSpace(username) || username.Length < 3)
+            return Json(new { success = false, error = "Username must be at least 3 characters" });
+        
+        if (string.IsNullOrWhiteSpace(tag) || tag.Length < 3 || tag.Length > 20)
+            return Json(new { success = false, error = "Tag must be 3-20 characters" });
+        
+        if (!System.Text.RegularExpressions.Regex.IsMatch(tag, @"^[a-zA-Z0-9_]+$"))
+            return Json(new { success = false, error = "Tag can only contain letters, numbers, and underscores" });
+        
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 4)
+            return Json(new { success = false, error = "Password must be at least 4 characters" });
+        
+        var usernameExists = await _db.Users.AnyAsync(u => u.Username == username);
+        if (usernameExists)
+            return Json(new { success = false, error = "Username already taken" });
+        
+        var tagExists = await _db.Users.AnyAsync(u => u.Tag == tag);
+        if (tagExists)
+            return Json(new { success = false, error = "Tag already taken" });
+        
+        var user = new UserDb
+        {
+            Username = username,
+            Tag = tag,
+            PasswordHash = HashPassword(password),
+            Email = email ?? "",
+            RegisteredAt = DateTime.UtcNow,
+            LastLogin = DateTime.UtcNow
+        };
+        
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync();
+        
+        SetCookie(username, rememberMe);
+        return Json(new { success = true, username = username, tag = tag, score = 0 });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, error = ex.InnerException?.Message ?? ex.Message });
+    }
+}
         
         [HttpPost]
         public IActionResult Logout()
