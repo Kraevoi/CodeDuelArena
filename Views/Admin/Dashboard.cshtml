@@ -91,8 +91,8 @@
                         <i class="fas fa-history"></i>
                     </div>
                     <div class="stat-info">
-                        <h4>Logs</h4>
-                        <p>System activity</p>
+                        <h4>Activity Logs</h4>
+                        <p>System events</p>
                     </div>
                 </div>
             </a>
@@ -101,7 +101,7 @@
         <div class="col-lg-3 col-md-6">
             <a href="/Admin/Logout" class="text-decoration-none">
                 <div class="premium-stat-card logout-card">
-                    <div class="stat-icon">
+                    <div class="stat-icon logout-icon">
                         <i class="fas fa-sign-out-alt"></i>
                     </div>
                     <div class="stat-info">
@@ -113,3 +113,89 @@
         </div>
     </div>
 </div>
+
+<style>
+    .admin-welcome {
+        text-align: center;
+    }
+    
+    .premium-alert {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1));
+        border: 1px solid rgba(255, 193, 7, 0.4);
+        border-radius: 14px;
+        padding: 20px;
+        color: #fff;
+    }
+    
+    .btn-gradient-pink {
+        background: linear-gradient(135deg, #ff6b6b, #ff4444);
+        border: none;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        white-space: nowrap;
+    }
+    
+    .btn-gradient-pink:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        color: #fff;
+    }
+    
+    .premium-stat-card {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
+        border: 1px solid rgba(255, 107, 107, 0.2);
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: #fff;
+        height: 100%;
+    }
+    
+    .premium-stat-card:hover {
+        border-color: rgba(255, 107, 107, 0.6);
+        box-shadow: 0 8px 32px rgba(255, 107, 107, 0.15);
+        transform: translateY(-3px);
+    }
+    
+    .premium-stat-card .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #fff;
+        flex-shrink: 0;
+    }
+    
+    .users-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .quests-icon { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    .add-icon { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .complaints-icon { background: linear-gradient(135deg, #fa709a, #fee140); }
+    .logs-icon { background: linear-gradient(135deg, #a18cd1, #fbc2eb); }
+    .logout-icon { background: linear-gradient(135deg, #ff6b6b, #ff4444); }
+    
+    .premium-stat-card .stat-info h4 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: #fff;
+    }
+    
+    .premium-stat-card .stat-info p {
+        margin: 4px 0 0;
+        color: #888;
+        font-size: 0.85rem;
+    }
+</style>
