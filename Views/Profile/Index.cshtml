@@ -12,15 +12,18 @@
         <div class="profile-cover"></div>
         <div class="profile-info">
             <div class="profile-avatar-wrapper">
-                <img src="/Profile/Avatar?username=@Model.Username" class="profile-avatar" alt="@Model.Username" />
+                <img src="/Profile/Avatar?username=@Model.Username" 
+                    class="profile-avatar" 
+                    alt="@Model.Username" 
+                    style="width:120px;height:120px;border-radius:20px;object-fit:cover;border:4px solid #1a1a2e;" />
                 @if (isOwnProfile)
                 {
                     <form method="post" enctype="multipart/form-data" action="/Profile/UploadAvatar" class="avatar-upload-form">
-                        <label for="avatarUpload" class="avatar-upload-btn">
-                            <i class="fas fa-camera"></i>
-                        </label>
-                        <input type="file" id="avatarUpload" name="avatar" accept="image/*" onchange="this.form.submit()" hidden />
-                    </form>
+                    <label for="avatarUpload" class="avatar-upload-btn">
+                    <i class="fas fa-camera"></i>
+                </label>
+                <input type="file" id="avatarUpload" name="avatar" accept="image/*" onchange="this.form.submit()" hidden />
+                </form>
                 }
             </div>
 

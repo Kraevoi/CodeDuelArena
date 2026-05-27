@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CodeDuelArena.Data;
 using CodeDuelArena.Models;
-using SkiaSharp;
+using System.Text;
 
 namespace CodeDuelArena.Controllers
 {
@@ -69,41 +69,7 @@ namespace CodeDuelArena.Controllers
             
             using var ms = new MemoryStream();
             await avatar.CopyToAsync(ms);
-            var originalData = ms.ToArray();
-            
-            // Конвертируем в PNG 300x300
-            using var inputStream = new SKMemoryStream(originalData);
-            using var codec = SKCodec.Create(inputStream);
-            if (codec == null)
-            {
-                TempData["Error"] = "Invalid image file.";
-                return RedirectToAction("Index");
-            }
-            
-            using var originalBitmap = SKBitmap.Decode(codec);
-            if (originalBitmap == null)
-            {
-                TempData["Error"] = "Cannot decode image.";
-                return RedirectToAction("Index");
-            }
-            
-            // Ресайз в квадрат 300x300
-            int size = 300;
-            using var squareBitmap = new SKBitmap(size, size);
-            using var canvas = new SKCanvas(squareBitmap);
-            
-            // Считаем размеры чтобы вписать с обрезкой (cover)
-            float scale = Math.Max((float)size / originalBitmap.Width, (float)size / originalBitmap.Height);
-            float scaledWidth = originalBitmap.Width * scale;
-            float scaledHeight = originalBitmap.Height * scale;
-            float left = (size - scaledWidth) / 2f;
-            float top = (size - scaledHeight) / 2f;
-            
-            canvas.DrawBitmap(originalBitmap, new SKRect(left, top, left + scaledWidth, top + scaledHeight));
-            
-            using var image = SKImage.FromBitmap(squareBitmap);
-            using var pngData = image.Encode(SKEncodedImageFormat.Png, 95);
-            var avatarData = pngData.ToArray();
+            var avatarData = ms.ToArray();
             
             var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
             if (settings == null)
@@ -113,7 +79,7 @@ namespace CodeDuelArena.Controllers
             }
             
             settings.AvatarData = avatarData;
-            settings.AvatarContentType = "image/png";
+            settings.AvatarContentType = contentType;
             settings.AvatarUrl = "";
             
             await _db.SaveChangesAsync();
@@ -126,48 +92,31 @@ namespace CodeDuelArena.Controllers
         [Route("/Profile/Avatar")]
         public async Task<IActionResult> Avatar(string username)
         {
-            byte[] png;
-            
+            // Если есть загруженный аватар в БД
             if (!string.IsNullOrEmpty(username))
             {
                 var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
                 if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
                 {
-                    return File(settings.AvatarData, "image/png");
+                    var ct = string.IsNullOrEmpty(settings.AvatarContentType) ? "image/png" : settings.AvatarContentType;
+                    return File(settings.AvatarData, ct);
                 }
             }
             
-            png = GenerateDefaultAvatar(string.IsNullOrEmpty(username) ? "?" : username[0].ToString().ToUpper());
-            return File(png, "image/png");
+            // Дефолтный SVG с первой буквой
+            var letter = string.IsNullOrEmpty(username) ? "?" : username[0].ToString().ToUpper();
+            var svg = GenerateDefaultAvatarSvg(letter);
+            return Content(svg, "image/svg+xml");
         }
         
-        private byte[] GenerateDefaultAvatar(string letter)
+        private string GenerateDefaultAvatarSvg(string letter)
         {
-            int size = 300;
-            using var bitmap = new SKBitmap(size, size);
-            using var canvas = new SKCanvas(bitmap);
-            
-            // Красный фон
-            var bgColor = new SKColor(220, 53, 69);
-            canvas.Clear(bgColor);
-            
-            // Белая буква по центру
-            using var paint = new SKPaint
-            {
-                Color = SKColors.White,
-                IsAntialias = true,
-                TextSize = 160,
-                TextAlign = SKTextAlign.Center,
-                Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
-            };
-            
-            // Центрируем текст
-            float textY = size / 2f + paint.TextSize / 3f;
-            canvas.DrawText(letter, size / 2f, textY, paint);
-            
-            using var image = SKImage.FromBitmap(bitmap);
-            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-            return data.ToArray();
+            var sb = new StringBuilder();
+            sb.Append("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 300\" width=\"300\" height=\"300\">");
+            sb.Append("<rect width=\"300\" height=\"300\" rx=\"40\" fill=\"#dc3545\"/>");
+            sb.Append($"<text x=\"150\" y=\"195\" text-anchor=\"middle\" font-size=\"140\" fill=\"white\" font-family=\"Arial,Helvetica,sans-serif\" font-weight=\"bold\">{System.Net.WebUtility.HtmlEncode(letter)}</text>");
+            sb.Append("</svg>");
+            return sb.ToString();
         }
         
         [HttpPost]
