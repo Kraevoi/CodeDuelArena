@@ -88,36 +88,28 @@ namespace CodeDuelArena.Controllers
             return RedirectToAction("Index");
         }
         
-        [HttpGet]
-        [Route("/Profile/Avatar")]
-        public async Task<IActionResult> Avatar(string username)
+      [HttpGet]
+public async Task<IActionResult> Avatar(string username)
+{
+    if (!string.IsNullOrEmpty(username))
+    {
+        var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
+        if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
         {
-            // Если есть загруженный аватар в БД
-            if (!string.IsNullOrEmpty(username))
-            {
-                var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
-                if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
-                {
-                    var ct = string.IsNullOrEmpty(settings.AvatarContentType) ? "image/png" : settings.AvatarContentType;
-                    return File(settings.AvatarData, ct);
-                }
-            }
-            
-            // Дефолтный SVG с первой буквой
-            var letter = string.IsNullOrEmpty(username) ? "?" : username[0].ToString().ToUpper();
-            var svg = GenerateDefaultAvatarSvg(letter);
-            return Content(svg, "image/svg+xml");
+            var ct = string.IsNullOrEmpty(settings.AvatarContentType) ? "image/png" : settings.AvatarContentType;
+            return File(settings.AvatarData, ct);
         }
-        
-        private string GenerateDefaultAvatarSvg(string letter)
-        {
-            var sb = new StringBuilder();
-            sb.Append("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 300\" width=\"300\" height=\"300\">");
-            sb.Append("<rect width=\"300\" height=\"300\" rx=\"40\" fill=\"#dc3545\"/>");
-            sb.Append($"<text x=\"150\" y=\"195\" text-anchor=\"middle\" font-size=\"140\" fill=\"white\" font-family=\"Arial,Helvetica,sans-serif\" font-weight=\"bold\">{System.Net.WebUtility.HtmlEncode(letter)}</text>");
-            sb.Append("</svg>");
-            return sb.ToString();
-        }
+    }
+    
+    var letter = string.IsNullOrEmpty(username) ? "?" : username[0].ToString().ToUpper();
+    var svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 300 300\" width=\"300\" height=\"300\">" +
+              "<rect width=\"300\" height=\"300\" rx=\"40\" fill=\"#dc3545\"/>" +
+              "<text x=\"150\" y=\"195\" text-anchor=\"middle\" font-size=\"140\" fill=\"white\" font-family=\"Arial,Helvetica,sans-serif\" font-weight=\"bold\">" +
+              System.Net.WebUtility.HtmlEncode(letter) +
+              "</text></svg>";
+    
+    return Content(svg, "image/svg+xml");
+}
         
         [HttpPost]
         public async Task<IActionResult> ChangeUsername(string newUsername)
