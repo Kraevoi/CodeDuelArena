@@ -2,18 +2,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CodeDuelArena.Data;
 using CodeDuelArena.Models;
+using SkiaSharp;
 
 namespace CodeDuelArena.Controllers
 {
     public class ProfileController : Controller
     {
         private readonly AppDbContext _db;
-        private readonly IWebHostEnvironment _env;
         
-        public ProfileController(AppDbContext db, IWebHostEnvironment env)
+        public ProfileController(AppDbContext db)
         {
             _db = db;
-            _env = env;
         }
         
         [HttpGet]
@@ -52,9 +51,8 @@ namespace CodeDuelArena.Controllers
             var username = Request.Cookies["auth_user"];
             if (string.IsNullOrEmpty(username)) return RedirectToAction("Index", "Home");
             
-            if (avatar != null && avatar.Length > 0 && avatar.Length < 2 * 1024 * 1024) // Максимум 2MB
+            if (avatar != null && avatar.Length > 0 && avatar.Length < 2 * 1024 * 1024)
             {
-                // Проверяем что это картинка
                 var contentType = avatar.ContentType.ToLower();
                 if (contentType != "image/png" && contentType != "image/jpeg" && contentType != "image/jpg" && contentType != "image/gif")
                 {
@@ -66,6 +64,30 @@ namespace CodeDuelArena.Controllers
                 await avatar.CopyToAsync(ms);
                 var avatarData = ms.ToArray();
                 
+                // Конвертируем в PNG через SkiaSharp
+                using var inputStream = new SKMemoryStream(avatarData);
+                using var codec = SKCodec.Create(inputStream);
+                using var bitmap = SKBitmap.Decode(codec);
+                
+                // Ресайз до 300x300 максимум
+                var maxSize = 300;
+                if (bitmap.Width > maxSize || bitmap.Height > maxSize)
+                {
+                    var scale = Math.Min((float)maxSize / bitmap.Width, (float)maxSize / bitmap.Height);
+                    var newWidth = (int)(bitmap.Width * scale);
+                    var newHeight = (int)(bitmap.Height * scale);
+                    using var resized = bitmap.Resize(new SKImageInfo(newWidth, newHeight), SKFilterQuality.High);
+                    using var image = SKImage.FromBitmap(resized);
+                    using var pngData = image.Encode(SKEncodedImageFormat.Png, 90);
+                    avatarData = pngData.ToArray();
+                }
+                else
+                {
+                    using var image = SKImage.FromBitmap(bitmap);
+                    using var pngData = image.Encode(SKEncodedImageFormat.Png, 90);
+                    avatarData = pngData.ToArray();
+                }
+                
                 var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
                 if (settings == null)
                 {
@@ -74,8 +96,8 @@ namespace CodeDuelArena.Controllers
                 }
                 
                 settings.AvatarData = avatarData;
-                settings.AvatarContentType = contentType;
-                settings.AvatarUrl = ""; // Больше не используем URL
+                settings.AvatarContentType = "image/png";
+                settings.AvatarUrl = "";
                 
                 await _db.SaveChangesAsync();
                 TempData["Message"] = "Avatar updated!";
@@ -88,26 +110,52 @@ namespace CodeDuelArena.Controllers
             return RedirectToAction("Index");
         }
         
-       [HttpGet]
-[Route("/Profile/Avatar")]
-public async Task<IActionResult> Avatar(string username)
-{
-    // Если есть загруженный аватар в БД — отдаём его
-    if (!string.IsNullOrEmpty(username))
-    {
-        var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
-        if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
+        [HttpGet]
+        [Route("/Profile/Avatar")]
+        public async Task<IActionResult> Avatar(string username)
         {
-            var contentType = string.IsNullOrEmpty(settings.AvatarContentType) ? "image/png" : settings.AvatarContentType;
-            return File(settings.AvatarData, contentType);
+            // Пробуем из БД
+            if (!string.IsNullOrEmpty(username))
+            {
+                var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
+                if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
+                {
+                    return File(settings.AvatarData, "image/png");
+                }
+            }
+            
+            // Генерируем дефолтный
+            var letter = string.IsNullOrEmpty(username) ? "?" : username[0].ToString().ToUpper();
+            var png = GenerateDefaultAvatar(letter);
+            return File(png, "image/png");
         }
-    }
-    
-    // Иначе генерируем дефолтный аватар с первой буквой
-    var letter = (string.IsNullOrEmpty(username) ? "?" : username[0].ToString()).ToUpper();
-    var svg = $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"150\" height=\"150\"><rect width=\"150\" height=\"150\" rx=\"20\" fill=\"#dc3545\"/><text x=\"75\" y=\"105\" text-anchor=\"middle\" font-size=\"80\" fill=\"white\" font-family=\"Arial,sans-serif\" font-weight=\"bold\">{letter}</text></svg>";
-    return Content(svg, "image/svg+xml");
-}
+        
+        private byte[] GenerateDefaultAvatar(string letter)
+        {
+            int size = 300;
+            using var surface = SKSurface.Create(new SKImageInfo(size, size));
+            var canvas = surface.Canvas;
+            
+            // Красный фон с круглыми углами
+            using var bgPaint = new SKPaint { Color = new SKColor(220, 53, 69), IsAntialias = true };
+            canvas.DrawRoundRect(new SKRoundRect(new SKRect(0, 0, size, size), 40), bgPaint);
+            
+            // Белая буква
+            using var textPaint = new SKPaint
+            {
+                Color = SKColors.White,
+                IsAntialias = true,
+                TextSize = size * 0.55f,
+                TextAlign = SKTextAlign.Center,
+                Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+            };
+            
+            canvas.DrawText(letter, size / 2f, size * 0.7f, textPaint);
+            
+            using var image = surface.Snapshot();
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            return data.ToArray();
+        }
         
         [HttpPost]
         public async Task<IActionResult> ChangeUsername(string newUsername)
