@@ -269,11 +269,24 @@
     }
 
     .support-widget {
-        position: fixed;
-        bottom: 20px;
-        right: 380px;
-        z-index: 9999;
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    z-index: 9999;
+}
+
+@@media (max-width: 768px) {
+    .support-widget {
+        bottom: 60px;
+        right: 10px;
     }
+    
+    #chatPanel {
+        width: 300px !important;
+        right: 10px !important;
+        bottom: 10px !important;
+    }
+}
     
     .support-toggle {
         background: linear-gradient(135deg, #ff6b6b, #ff4444);

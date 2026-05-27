@@ -41,7 +41,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.EnsureCreatedAsync();
 
-    try
+   try
 {
     await db.Database.ExecuteSqlRawAsync(
         @"ALTER TABLE ""Users"" ADD COLUMN IF NOT EXISTS ""Tag"" text NOT NULL DEFAULT '';
@@ -53,7 +53,6 @@ catch (Exception ex)
 {
     Console.WriteLine($"Migration: {ex.Message}");
 }
-
     var dailyService = scope.ServiceProvider.GetRequiredService<DailyQuestService>();
     await dailyService.InitializeDailyQuests();
 }
