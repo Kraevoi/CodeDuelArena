@@ -88,25 +88,26 @@ namespace CodeDuelArena.Controllers
             return RedirectToAction("Index");
         }
         
-        [HttpGet]
-        public async Task<IActionResult> Avatar(string username)
+       [HttpGet]
+[Route("/Profile/Avatar")]
+public async Task<IActionResult> Avatar(string username)
+{
+    // Если есть загруженный аватар в БД — отдаём его
+    if (!string.IsNullOrEmpty(username))
+    {
+        var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
+        if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
         {
-            var settings = await _db.UserSettings.FirstOrDefaultAsync(s => s.Username == username);
-            if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
-            {
-                return File(settings.AvatarData, settings.AvatarContentType);
-            }
-            
-            // Возвращаем дефолтный аватар
-            var defaultPath = Path.Combine(_env.WebRootPath, "images", "default-avatar.png");
-            if (System.IO.File.Exists(defaultPath))
-            {
-                var bytes = await System.IO.File.ReadAllBytesAsync(defaultPath);
-                return File(bytes, "image/png");
-            }
-            
-            return NotFound();
+            var contentType = string.IsNullOrEmpty(settings.AvatarContentType) ? "image/png" : settings.AvatarContentType;
+            return File(settings.AvatarData, contentType);
         }
+    }
+    
+    // Иначе генерируем дефолтный аватар с первой буквой
+    var letter = (string.IsNullOrEmpty(username) ? "?" : username[0].ToString()).ToUpper();
+    var svg = $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"150\" height=\"150\"><rect width=\"150\" height=\"150\" rx=\"20\" fill=\"#dc3545\"/><text x=\"75\" y=\"105\" text-anchor=\"middle\" font-size=\"80\" fill=\"white\" font-family=\"Arial,sans-serif\" font-weight=\"bold\">{letter}</text></svg>";
+    return Content(svg, "image/svg+xml");
+}
         
         [HttpPost]
         public async Task<IActionResult> ChangeUsername(string newUsername)

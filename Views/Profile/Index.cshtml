@@ -12,14 +12,7 @@
         <div class="profile-cover"></div>
         <div class="profile-info">
             <div class="profile-avatar-wrapper">
-                @if (settings?.AvatarData != null && settings.AvatarData.Length > 0)
-                {
-                    <img src="/Profile/Avatar?username=@Model.Username" class="profile-avatar" alt="@Model.Username" />
-                }
-                else
-                {
-                    <div class="profile-avatar-fallback">@Model.Username[0]</div>
-                }
+                <img src="/Profile/Avatar?username=@Model.Username" class="profile-avatar" alt="@Model.Username" />
                 @if (isOwnProfile)
                 {
                     <form method="post" enctype="multipart/form-data" action="/Profile/UploadAvatar" class="avatar-upload-form">
@@ -41,9 +34,7 @@
                         }
                     </h1>
                     <span class="league-badge @(league?.League?.ToLower() ?? "bronze")">
-                        <span class="league-icon">
-                            @(league?.League switch { "Diamond" => "💎", "Platinum" => "🔮", "Gold" => "🥇", "Silver" => "⚪", _ => "🪙" })
-                        </span>
+                        @(league?.League switch { "Diamond" => "💎", "Platinum" => "🔮", "Gold" => "🥇", "Silver" => "⚪", _ => "🪙" })
                         @(league?.League ?? "Bronze") League
                     </span>
                 </div>
@@ -79,6 +70,7 @@
                 <div class="card-header"><i class="fas fa-user-circle me-2"></i>Account Info</div>
                 <div class="card-body">
                     <ul class="info-list">
+                        <li><i class="fas fa-tag"></i><span>Tag: @@@Model.Tag</span></li>
                         <li><i class="fas fa-envelope"></i><span>@(string.IsNullOrEmpty(Model.Email) ? "Email not set" : Model.Email)</span></li>
                         <li><i class="fas fa-calendar-alt"></i><span>Registered: @Model.RegisteredAt.ToString("dd.MM.yyyy")</span></li>
                         <li><i class="fas fa-clock"></i><span>Last Login: @Model.LastLogin.ToString("dd.MM.yyyy HH:mm")</span></li>
@@ -149,8 +141,7 @@
     .profile-cover { height: 140px; background: linear-gradient(135deg, #ff6b6b 0%, #ff4444 50%, #ffd700 100%); }
     .profile-info { display: flex; align-items: flex-end; padding: 0 30px 30px; margin-top: -60px; gap: 25px; }
     .profile-avatar-wrapper { position: relative; flex-shrink: 0; }
-    .profile-avatar { width: 120px; height: 120px; border-radius: 20px; object-fit: cover; border: 4px solid #1a1a2e; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .profile-avatar-fallback { width: 120px; height: 120px; border-radius: 20px; background: linear-gradient(135deg, #ff6b6b, #ff4444); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; color: #fff; border: 4px solid #1a1a2e; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .profile-avatar { width: 120px; height: 120px; border-radius: 20px; object-fit: cover; border: 4px solid #1a1a2e; box-shadow: 0 4px 20px rgba(0,0,0,0.3); background: #dc3545; }
     .avatar-upload-form { position: absolute; bottom: -5px; right: -5px; }
     .avatar-upload-btn { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #ff6b6b, #ff4444); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; border: 3px solid #1a1a2e; color: #fff; font-size: 0.85rem; }
     .avatar-upload-btn:hover { transform: scale(1.1); box-shadow: 0 0 15px rgba(255, 107, 107, 0.5); }
@@ -163,13 +154,13 @@
     .league-badge.gold { background: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid rgba(255, 215, 0, 0.4); }
     .league-badge.platinum { background: rgba(0, 255, 255, 0.2); color: #0ff; border: 1px solid rgba(0, 255, 255, 0.4); }
     .league-badge.diamond { background: rgba(185, 55, 255, 0.2); color: #b937ff; border: 1px solid rgba(185, 55, 255, 0.4); }
-    .profile-stats { display: flex; align-items: center; gap: 20px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 15px 20px; border-radius: 14px; }
+    .profile-stats { display: flex; align-items: center; gap: 20px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 15px 20px; border-radius: 14px; flex-wrap: wrap; }
     .stat-item { text-align: center; }
     .stat-value { display: block; font-size: 1.3rem; font-weight: 700; color: #fff; }
     .stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
     .stat-divider { width: 1px; height: 30px; background: rgba(255,255,255,0.1); }
-    .profile-sidebar-card, .profile-main-card { background: linear-gradient(145deg, #1a1a2e, #16213e); border: 1px solid rgba(255, 107, 107, 0.2); border-radius: 16px; }
-    .profile-sidebar-card .card-header, .profile-main-card .card-header { background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 68, 68, 0.1)); border-bottom: 1px solid rgba(255, 107, 107, 0.3); color: #fff; font-weight: 600; border-radius: 16px 16px 0 0; padding: 14px 20px; }
+    .profile-sidebar-card, .profile-main-card { background: linear-gradient(145deg, #1a1a2e, #16213e); border: 1px solid rgba(255, 107, 107, 0.2); border-radius: 16px; overflow: hidden; }
+    .profile-sidebar-card .card-header, .profile-main-card .card-header { background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 68, 68, 0.1)); border-bottom: 1px solid rgba(255, 107, 107, 0.3); color: #fff; font-weight: 600; padding: 14px 20px; }
     .info-list { list-style: none; padding: 0; margin: 0; }
     .info-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; color: #c0c0c0; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .info-list li:last-child { border-bottom: none; }
