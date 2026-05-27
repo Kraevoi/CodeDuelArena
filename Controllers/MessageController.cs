@@ -25,6 +25,7 @@ namespace CodeDuelArena.Controllers
                 .OrderByDescending(m => m.SentAt)
                 .ToListAsync();
             
+            ViewBag.UnreadCount = messages.Count(m => !m.IsRead);
             return View(messages);
         }
         
@@ -45,46 +46,53 @@ namespace CodeDuelArena.Controllers
         [HttpGet]
         public IActionResult New()
         {
+            var username = Request.Cookies["auth_user"];
+            if (string.IsNullOrEmpty(username)) return RedirectToAction("Index", "Home");
             return View();
         }
 
         [HttpGet]
-public async Task<IActionResult> GetContacts()
-{
-    var username = Request.Cookies["auth_user"];
-    if (string.IsNullOrEmpty(username)) return Json(new List<object>());
-    
-    var contacts = await _db.PrivateMessages
-        .Where(m => m.ToUser == username || m.FromUser == username)
-        .Select(m => m.FromUser == username ? m.ToUser : m.FromUser)
-        .Distinct()
-        .Take(10)
-        .ToListAsync();
-    
-    return Json(contacts);
-}
+        public async Task<IActionResult> GetContacts()
+        {
+            var username = Request.Cookies["auth_user"];
+            if (string.IsNullOrEmpty(username)) return Json(new List<object>());
+            
+            var contacts = await _db.PrivateMessages
+                .Where(m => m.ToUser == username || m.FromUser == username)
+                .Select(m => m.FromUser == username ? m.ToUser : m.FromUser)
+                .Distinct()
+                .Take(10)
+                .ToListAsync();
+            
+            return Json(contacts);
+        }
 
-[HttpGet]
-public async Task<IActionResult> GetAllUsers()
-{
-    var username = Request.Cookies["auth_user"];
-    var users = await _db.Users
-        .Where(u => u.Username != username)
-        .OrderBy(u => u.Username)
-        .Select(u => new { u.Username, u.IsAdmin })
-        .ToListAsync();
-    
-    return Json(users);
-}
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var username = Request.Cookies["auth_user"];
+            if (string.IsNullOrEmpty(username)) return Json(new List<object>());
+            
+            var users = await _db.Users
+                .Where(u => u.Username != username)
+                .OrderBy(u => u.Username)
+                .Select(u => new { u.Username, u.Tag, u.IsAdmin })
+                .ToListAsync();
+            
+            return Json(users);
+        }
         
         [HttpPost]
         public async Task<IActionResult> Send(string toUser, string message)
         {
             var fromUser = Request.Cookies["auth_user"];
-            if (string.IsNullOrEmpty(fromUser)) return Json(new { success = false, error = "Не авторизован" });
+            if (string.IsNullOrEmpty(fromUser)) return Json(new { success = false, error = "Not authenticated" });
+            
+            if (string.IsNullOrWhiteSpace(message))
+                return Json(new { success = false, error = "Message cannot be empty" });
             
             var toUserExists = await _db.Users.AnyAsync(u => u.Username == toUser);
-            if (!toUserExists) return Json(new { success = false, error = "Пользователь не найден" });
+            if (!toUserExists) return Json(new { success = false, error = "User not found" });
             
             var msg = new PrivateMessage
             {
@@ -109,6 +117,19 @@ public async Task<IActionResult> GetAllUsers()
             if (message != null)
             {
                 message.IsRead = true;
+                await _db.SaveChangesAsync();
+            }
+            return Json(new { success = true });
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var username = Request.Cookies["auth_user"];
+            var message = await _db.PrivateMessages.FirstOrDefaultAsync(m => m.Id == id && (m.ToUser == username || m.FromUser == username));
+            if (message != null)
+            {
+                _db.PrivateMessages.Remove(message);
                 await _db.SaveChangesAsync();
             }
             return Json(new { success = true });

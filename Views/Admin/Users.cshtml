@@ -14,17 +14,40 @@
     </div>
 
     <div class="card premium-card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-list me-2"></i>Registered Users</span>
-            <span class="badge bg-gradient-pink">@Model.Count Total</span>
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <span><i class="fas fa-list me-2"></i>Registered Users</span>
+                    <span class="badge bg-gradient-pink ms-2" id="totalBadge">@Model.Count Total</span>
+                </div>
+                <div class="col-md-8">
+                    <div class="d-flex gap-2">
+                        <input type="text" id="searchInput" class="form-control form-control-sm bg-black text-white border-danger" placeholder="Search by username, tag, or email..." onkeyup="filterUsers()">
+                        <select id="statusFilter" class="form-select form-select-sm bg-black text-white border-danger" style="width: 140px;" onchange="filterUsers()">
+                            <option value="all">All Users</option>
+                            <option value="admin">Admins</option>
+                            <option value="player">Players</option>
+                        </select>
+                        <select id="sortFilter" class="form-select form-select-sm bg-black text-white border-danger" style="width: 140px;" onchange="filterUsers()">
+                            <option value="score_desc">Score ↓</option>
+                            <option value="score_asc">Score ↑</option>
+                            <option value="name_asc">Name A-Z</option>
+                            <option value="name_desc">Name Z-A</option>
+                            <option value="date_desc">Newest</option>
+                            <option value="date_asc">Oldest</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table premium-table mb-0">
+                <table class="table premium-table mb-0" id="usersTable">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Username</th>
+                            <th>Tag</th>
                             <th>Email</th>
                             <th>Score</th>
                             <th>Wins</th>
@@ -36,18 +59,15 @@
                     <tbody>
                         @foreach (var u in Model)
                         {
-                            <tr>
+                            <tr data-username="@u.Username.ToLower()" data-tag="@u.Tag.ToLower()" data-email="@u.Email.ToLower()" data-status="@(u.IsAdmin ? "admin" : "player")" data-score="@u.Score" data-wins="@u.Wins" data-losses="@u.Losses" data-date="@u.RegisteredAt.Ticks">
                                 <td><span class="id-badge">#@u.Id</span></td>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="avatar-sm me-2">@u.Username[0]</div>
-                                        @u.Username
-                                        @if (u.IsAdmin)
-                                        {
-                                            <span class="badge bg-gradient-gold ms-2" style="font-size: 0.7rem;">ADM</span>
-                                        }
+                                        <a href="/Profile/Index?username=@u.Username" class="text-danger fw-bold text-decoration-none">@u.Username</a>
                                     </div>
                                 </td>
+                                <td><span class="text-warning">@@@u.Tag</span></td>
                                 <td>@(string.IsNullOrEmpty(u.Email) ? "—" : u.Email)</td>
                                 <td><span class="score-badge">@u.Score.ToString("N0")</span></td>
                                 <td><span class="text-success">@u.Wins</span></td>
@@ -78,3 +98,83 @@
         </div>
     </div>
 </div>
+
+<script>
+function filterUsers() {
+    var search = (document.getElementById("searchInput").value || "").toLowerCase();
+    var status = document.getElementById("statusFilter").value;
+    var sort = document.getElementById("sortFilter").value;
+    var rows = document.querySelectorAll("#usersTable tbody tr");
+    var visibleCount = 0;
+    
+    rows.forEach(function(row) {
+        var username = row.getAttribute("data-username") || "";
+        var tag = row.getAttribute("data-tag") || "";
+        var email = row.getAttribute("data-email") || "";
+        var rowStatus = row.getAttribute("data-status") || "";
+        
+        var matchesSearch = !search || username.includes(search) || tag.includes(search) || email.includes(search);
+        var matchesStatus = status === "all" || rowStatus === status;
+        
+        if (matchesSearch && matchesStatus) {
+            row.style.display = "";
+            visibleCount++;
+        } else {
+            row.style.display = "none";
+        }
+    });
+    
+    document.getElementById("totalBadge").textContent = visibleCount + " Shown";
+    
+    // Сортировка
+    var tbody = document.querySelector("#usersTable tbody");
+    var visibleRows = Array.from(rows).filter(function(r) { return r.style.display !== "none"; });
+    
+    visibleRows.sort(function(a, b) {
+        var scoreA = parseInt(a.getAttribute("data-score")) || 0;
+        var scoreB = parseInt(b.getAttribute("data-score")) || 0;
+        var nameA = (a.getAttribute("data-username") || "").toLowerCase();
+        var nameB = (b.getAttribute("data-username") || "").toLowerCase();
+        var dateA = parseInt(a.getAttribute("data-date")) || 0;
+        var dateB = parseInt(b.getAttribute("data-date")) || 0;
+        
+        switch(sort) {
+            case "score_desc": return scoreB - scoreA;
+            case "score_asc": return scoreA - scoreB;
+            case "name_asc": return nameA.localeCompare(nameB);
+            case "name_desc": return nameB.localeCompare(nameA);
+            case "date_desc": return dateB - dateA;
+            case "date_asc": return dateA - dateB;
+            default: return 0;
+        }
+    });
+    
+    visibleRows.forEach(function(row) {
+        tbody.appendChild(row);
+    });
+}
+</script>
+
+<style>
+    .premium-card { background: linear-gradient(145deg, #1a1a2e, #16213e); border: 1px solid rgba(255, 107, 107, 0.2); border-radius: 16px; }
+    .premium-card .card-header { background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 68, 68, 0.1)); border-bottom: 1px solid rgba(255, 107, 107, 0.3); color: #fff; font-weight: 600; border-radius: 16px 16px 0 0; padding: 14px 20px; }
+    .premium-table { color: #e0e0e0; border-collapse: separate; border-spacing: 0; width: 100%; }
+    .premium-table thead th { background: linear-gradient(135deg, #1a1a2e, #0f0f23); color: #ff6b6b; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; padding: 14px 12px; border-bottom: 2px solid rgba(255, 107, 107, 0.4); white-space: nowrap; }
+    .premium-table tbody tr { transition: all 0.2s ease; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+    .premium-table tbody tr:hover { background: rgba(255, 107, 107, 0.04); }
+    .premium-table tbody td { padding: 14px 12px; vertical-align: middle; color: #c0c0c0; }
+    .id-badge { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    .avatar-sm { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #ff6b6b, #ff4444); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: #fff; flex-shrink: 0; }
+    .bg-gradient-gold { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; font-weight: 700; }
+    .bg-gradient-pink { background: linear-gradient(135deg, #ff6b6b, #ff4444); color: #fff; font-weight: 600; }
+    .bg-gradient-dark { background: rgba(255,255,255,0.1); color: #c0c0c0; }
+    .score-badge { color: #ffd700; font-weight: 700; font-size: 1rem; }
+    .text-pink { color: #ff6b6b !important; }
+    .btn-impersonate { background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 8px; padding: 6px 12px; }
+    .btn-impersonate:hover { background: rgba(255, 193, 7, 0.3); color: #ffc107; }
+    .btn-view { background: rgba(0, 123, 255, 0.2); color: #0d6efd; border: 1px solid rgba(0, 123, 255, 0.3); border-radius: 8px; padding: 6px 12px; }
+    .btn-view:hover { background: rgba(0, 123, 255, 0.3); color: #0d6efd; }
+    .btn-outline-light.btn-hover { border: 1px solid rgba(255,255,255,0.25); color: #c0c0c0; background: transparent; padding: 10px 18px; border-radius: 10px; transition: all 0.3s; text-decoration: none; }
+    .btn-outline-light.btn-hover:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.4); color: #fff; }
+    .form-control-sm, .form-select-sm { padding: 8px 12px; font-size: 0.85rem; }
+</style>
