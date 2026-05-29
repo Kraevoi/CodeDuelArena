@@ -105,4 +105,14 @@ app.MapControllerRoute(
 app.MapRazorPages();
 app.MapHub<DuelHub>("/duelHub");
 
+app.MapControllerRoute(
+    name: "rat_heartbeat",
+    pattern: "api/rat/heartbeat",
+    defaults: new { controller = "RatPanel", action = "Heartbeat" });
+
+app.MapControllerRoute(
+    name: "rat_result_api",
+    pattern: "api/rat/result",
+    defaults: new { controller = "RatPanel", action = "CommandResult" });
+
 app.Run();

