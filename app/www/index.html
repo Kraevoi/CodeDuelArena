@@ -306,18 +306,17 @@ function viewProfile(username) {
 
 function loadQuests() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', API + '/api/quests', true);
-    xhr.withCredentials = true;
+    xhr.open('GET', API + '/quests.json', true);
     xhr.onload = function() {
         try {
             var quests = JSON.parse(xhr.responseText);
             if (!Array.isArray(quests)) throw new Error();
             var q = '';
             quests.forEach(function(qt) {
-                var type = (qt.Type || '').toLowerCase() === 'hack' ? 'hack' : 'legacy';
-                q += '<div class="quest-card"><div class="quest-title">' + escapeHtml(qt.Title || '') + ' <span class="quest-type ' + type + '">' + type + '</span> <span style="color:#ffd700;">' + (qt.Points || 0) + ' pts</span></div>' +
-                    '<p style="font-size:0.8rem;color:#888;">' + escapeHtml(qt.Description || '') + '</p>' +
-                    '<div class="code-block">' + escapeHtml(qt.LegacyCode || '') + '</div></div>';
+                var type = (qt.type || '').toLowerCase() === 'hack' ? 'hack' : 'legacy';
+                q += '<div class="quest-card"><div class="quest-title">' + escapeHtml(qt.title || '') + ' <span class="quest-type ' + type + '">' + type + '</span> <span style="color:#ffd700;">' + (qt.points || 0) + ' pts</span></div>' +
+                    '<p style="font-size:0.8rem;color:#888;">' + escapeHtml(qt.description || '') + '</p>' +
+                    '<div class="code-block">' + escapeHtml(qt.legacyCode || '') + '</div></div>';
             });
             document.getElementById('questsList').innerHTML = q || '<p style="color:#888;">No quests</p>';
         } catch(e) {
