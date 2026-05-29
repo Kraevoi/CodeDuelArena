@@ -6,369 +6,73 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0a0a">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: gap: cdvfile: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src *; img-src * data: content:;">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>CodeDuel Arena</title>
     <style>
-        :root {
-            --bg: #0a0a0a;
-            --card: #111;
-            --red: #dc3545;
-            --gold: #ffd700;
-            --text: #fff;
-            --muted: #888;
-            --input-bg: #000;
-            --border: #dc3545;
-            --green: #28a745;
-        }
-
+        :root { --bg: #0a0a0a; --card: #111; --red: #dc3545; --gold: #ffd700; --text: #fff; --muted: #888; --input-bg: #000; --green: #28a745; --border: #222; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            padding-bottom: 70px;
-        }
-
-        /* Header */
-        .app-header {
-            background: #000;
-            border-bottom: 2px solid var(--red);
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .app-logo {
-            color: var(--red);
-            font-weight: 900;
-            font-size: 1.2rem;
-        }
-
-        .header-btns {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn {
-            padding: 8px 14px;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .btn-red {
-            background: var(--red);
-            color: #fff;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--red);
-            color: var(--red);
-        }
-
-        .btn-outline:hover {
-            background: var(--red);
-            color: #fff;
-        }
-
-        /* Bottom Nav */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #000;
-            border-top: 1px solid #222;
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            z-index: 100;
-        }
-
-        .nav-item {
-            color: #666;
-            text-align: center;
-            text-decoration: none;
-            font-size: 0.7rem;
-            padding: 4px;
-            transition: all 0.2s;
-        }
-
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 70px; }
+        .app-header { background: #000; border-bottom: 2px solid var(--red); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .app-logo { color: var(--red); font-weight: 900; font-size: 1.2rem; }
+        .header-btns { display: flex; gap: 8px; align-items: center; }
+        #headerUser { color: #fff; font-size: 0.85rem; margin-right: 8px; }
+        .btn { padding: 8px 14px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+        .btn-red { background: var(--red); color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid var(--red); color: var(--red); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
+        .nav-item { color: #666; text-align: center; text-decoration: none; font-size: 0.7rem; padding: 4px; }
         .nav-item.active { color: var(--red); }
-
         .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
-
-        /* Pages */
         .page { padding: 16px; display: none; }
         .page.active { display: block; }
-
-        /* Cards */
-        .card {
-            background: var(--card);
-            border: 1px solid #222;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .card-header {
-            color: var(--red);
-            font-weight: 700;
-            margin-bottom: 12px;
-            font-size: 0.95rem;
-        }
-
-        /* Stats */
-        .stats-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .stat-box {
-            flex: 1;
-            min-width: 80px;
-            text-align: center;
-            background: rgba(220,53,69,0.08);
-            padding: 12px;
-            border-radius: 10px;
-        }
-
-        .stat-value {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--red);
-        }
-
-        .stat-label {
-            font-size: 0.7rem;
-            color: var(--muted);
-            text-transform: uppercase;
-            margin-top: 4px;
-        }
-
-        /* Inputs */
-        .input {
-            width: 100%;
-            padding: 12px;
-            background: var(--input-bg);
-            border: 1px solid #333;
-            border-radius: 8px;
-            color: #fff;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-
-        .input:focus {
-            outline: none;
-            border-color: var(--red);
-        }
-
-        /* Quest */
-        .quest-card {
-            background: var(--card);
-            border: 1px solid #222;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .quest-title {
-            color: var(--red);
-            font-weight: 700;
-            font-size: 1rem;
-        }
-
-        .quest-points {
-            color: var(--gold);
-            font-size: 0.8rem;
-        }
-
-        .code-block {
-            background: #000;
-            padding: 10px;
-            border-radius: 8px;
-            color: var(--gold);
-            font-family: monospace;
-            font-size: 0.8rem;
-            margin: 10px 0;
-            overflow-x: auto;
-        }
-
-        /* Leaderboard */
-        .lb-row {
-            display: flex;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #111;
-            gap: 10px;
-        }
-
-        .lb-rank {
-            width: 24px;
-            text-align: center;
-            font-weight: 800;
-            color: var(--red);
-        }
-
-        .lb-name {
-            flex: 1;
-            font-weight: 600;
-        }
-
-        .lb-score {
-            color: var(--gold);
-            font-weight: 700;
-        }
-
-        /* Chat */
-        .chat-messages {
-            max-height: 300px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-        }
-
-        .chat-msg {
-            margin-bottom: 8px;
-            padding: 8px 12px;
-            border-radius: 12px;
-            max-width: 80%;
-        }
-
-        .chat-msg.mine {
-            background: var(--red);
-            margin-left: auto;
-        }
-
-        .chat-msg.other {
-            background: #1a1a1a;
-        }
-
-        .chat-user {
-            font-size: 0.7rem;
-            color: var(--red);
-            font-weight: 700;
-        }
-
-        .chat-input-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .chat-input-row .input { margin-bottom: 0; flex: 1; }
-
-        /* Duel */
-        .duel-timer {
-            text-align: center;
-            font-size: 2rem;
-            font-weight: 900;
-            color: var(--red);
-            margin: 16px 0;
-        }
-
-        /* Auth Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 200;
-            align-items: center;
-            justify-content: center;
-        }
-
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .card-header { color: var(--red); font-weight: 700; margin-bottom: 12px; font-size: 0.95rem; }
+        .stats-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .stat-box { flex: 1; min-width: 70px; text-align: center; background: rgba(220,53,69,0.08); padding: 12px 8px; border-radius: 10px; }
+        .stat-value { font-size: 1.3rem; font-weight: 800; color: var(--red); }
+        .stat-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+        .input { width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid #333; border-radius: 8px; color: #fff; margin-bottom: 10px; font-size: 0.9rem; }
+        .input:focus { outline: none; border-color: var(--red); }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 200; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
         .modal-overlay.show { display: flex; }
-
-        .modal-box {
-            background: var(--card);
-            border: 1px solid var(--red);
-            border-radius: 16px;
-            padding: 24px;
-            width: 90%;
-            max-width: 360px;
-        }
-
-        .modal-tabs {
-            display: flex;
-            margin-bottom: 16px;
-        }
-
-        .modal-tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            border-bottom: 2px solid #333;
-            color: #666;
-        }
-
-        .modal-tab.active {
-            border-bottom-color: var(--red);
-            color: var(--red);
-        }
-
-        .tag-badge {
-            background: rgba(255,215,0,0.2);
-            color: var(--gold);
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-
-        .badge-adm {
-            background: var(--gold);
-            color: #000;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 0.65rem;
-            font-weight: 800;
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 20px;
-            background: var(--red);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: 800;
-            margin: 0 auto 12px;
-        }
-
-        .league-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
+        .modal-box { background: var(--card); border: 1px solid var(--red); border-radius: 16px; padding: 24px; width: 90%; max-width: 400px; }
+        .modal-tabs { display: flex; margin-bottom: 16px; }
+        .modal-tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; border-bottom: 2px solid #333; color: #666; }
+        .modal-tab.active { border-bottom-color: var(--red); color: var(--red); }
+        .tag-badge { background: rgba(255,215,0,0.2); color: var(--gold); padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; }
+        .profile-avatar { width: 80px; height: 80px; border-radius: 20px; background: var(--red); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; margin: 0 auto 12px; overflow: hidden; }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .lb-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #111; gap: 10px; cursor: pointer; }
+        .lb-rank { width: 24px; text-align: center; font-weight: 800; color: var(--red); }
+        .lb-name { flex: 1; font-weight: 600; color: var(--red); }
+        .lb-score { color: var(--gold); font-weight: 700; }
+        .chat-msg { margin-bottom: 6px; padding: 8px 12px; border-radius: 12px; max-width: 85%; word-wrap: break-word; font-size: 0.9rem; }
+        .chat-msg.mine { background: var(--red); margin-left: auto; }
+        .chat-msg.other { background: #1a1a1a; }
+        .chat-user { font-size: 0.7rem; color: var(--red); font-weight: 700; }
+        .chat-input-row { display: flex; gap: 8px; margin-top: 8px; }
+        .chat-input-row .input { margin-bottom: 0; flex: 1; }
+        .user-search-item { display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-bottom: 1px solid #111; }
+        .user-search-item:hover { background: rgba(220,53,69,0.08); }
+        .user-avatar-xs { width: 36px; height: 36px; border-radius: 10px; background: var(--red); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .quest-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .quest-title { color: var(--red); font-weight: 700; font-size: 1rem; }
+        .quest-type { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+        .quest-type.hack { background: rgba(255,0,0,0.2); color: #ff4444; }
+        .quest-type.legacy { background: rgba(255,165,0,0.2); color: #ffa500; }
+        .code-block { background: #000; padding: 10px; border-radius: 8px; color: var(--gold); font-family: monospace; font-size: 0.75rem; margin: 10px 0; overflow-x: auto; white-space: pre-wrap; }
+        .duel-timer { text-align: center; font-size: 3rem; font-weight: 900; color: var(--red); margin: 12px 0; }
+        .league-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
         .league-bronze { background: rgba(205,127,50,0.2); color: #cd7f32; }
-        .league-silver { background: rgba(192,192,192,0.2); color: #c0c0c0; }
-        .league-gold { background: rgba(255,215,0,0.2); color: #ffd700; }
-        .league-platinum { background: rgba(0,255,255,0.2); color: #0ff; }
-        .league-diamond { background: rgba(185,55,255,0.2); color: #b937ff; }
+        .theme-dot { display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; margin-right: 8px; vertical-align: middle; }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="app-header">
         <span class="app-logo">⚔️ CodeDuel</span>
         <div class="header-btns">
-            <span id="headerUser" style="display:none;color:#fff;font-size:0.85rem;"></span>
+            <span id="headerUser" style="display:none;"></span>
             <button class="btn btn-red" id="btnAuth" onclick="showAuth()">Login</button>
             <button class="btn btn-outline" id="btnLogout" style="display:none;" onclick="logout()">Exit</button>
         </div>
@@ -387,253 +91,426 @@
                 <button class="btn btn-red" style="width:100%" onclick="login()">Login</button>
             </div>
             <div id="tabRegister" style="display:none;">
-                <input class="input" id="regUser" placeholder="Username (min 3 chars)">
-                <input class="input" id="regTag" placeholder="Tag (unique, 3-20 chars, a-z 0-9 _)">
+                <input class="input" id="regUser" placeholder="Username (min 3)">
+                <input class="input" id="regTag" placeholder="Tag (unique, 3-20)">
                 <input class="input" id="regEmail" placeholder="Email (optional)">
-                <input class="input" id="regPass" type="password" placeholder="Password (min 4 chars)">
+                <input class="input" id="regPass" type="password" placeholder="Password (min 4)">
                 <button class="btn btn-red" style="width:100%" onclick="register()">Register</button>
             </div>
             <div id="authError" style="color:var(--red);margin-top:10px;display:none;"></div>
         </div>
     </div>
 
+    <!-- Search Modal -->
+    <div class="modal-overlay" id="searchModal">
+        <div class="modal-box">
+            <h3 style="color:var(--red);margin-bottom:12px;">🔍 Find User</h3>
+            <input class="input" id="searchInput" placeholder="Search..." onkeyup="searchUsers()">
+            <div id="searchResults" style="max-height:300px;overflow-y:auto;"></div>
+            <button class="btn btn-outline" style="width:100%;margin-top:10px;" onclick="closeSearch()">Close</button>
+        </div>
+    </div>
+
+    <!-- Duel Modal -->
+    <div class="modal-overlay" id="duelModal">
+        <div class="modal-box" style="max-width:400px;">
+            <h3 style="color:var(--red);text-align:center;">⚔️ DUEL</h3>
+            <div class="duel-timer" id="duelTimer">60</div>
+            <p style="color:var(--muted);text-align:center;">vs <span id="duelOpponent" style="color:#fff;font-weight:700;"></span></p>
+            <div class="code-block" id="duelTask"></div>
+            <textarea class="input" id="duelSolution" rows="3" placeholder="Your solution..."></textarea>
+            <button class="btn btn-red" style="width:100%;" onclick="submitDuel()">⚔️ Submit</button>
+            <button class="btn btn-outline" style="width:100%;margin-top:8px;" onclick="leaveDuel()">🚪 Leave Duel</button>
+        </div>
+    </div>
+
+    <!-- Profile View Modal -->
+    <div class="modal-overlay" id="profileViewModal">
+        <div class="modal-box">
+            <h3 style="color:var(--red);text-align:center;" id="profileViewName"></h3>
+            <div class="profile-avatar" id="profileViewAvatar"></div>
+            <div id="profileViewStats" style="text-align:center;"></div>
+            <button class="btn btn-outline" style="width:100%;margin-top:10px;" onclick="document.getElementById('profileViewModal').classList.remove('show')">Close</button>
+        </div>
+    </div>
+
     <!-- Pages -->
     <div class="page active" id="pageHome">
         <h2 style="color:var(--red);margin-bottom:16px;">⚔️ CodeDuel Arena</h2>
-        <div class="card" id="statsCard">
-            <div class="card-header">🔥 Your Stats</div>
-            <div id="statsContent" style="text-align:center;color:var(--muted);">Login to see stats</div>
-        </div>
-        <button class="btn btn-red" style="width:100%;margin-top:8px;" onclick="joinDuel()">⚡ Join Duel Queue</button>
-        <div class="card" style="margin-top:12px;">
-            <div class="card-header">🏆 Leaderboard</div>
-            <div id="leaderboard">Loading...</div>
-        </div>
+        <div class="card"><div class="card-header">🔥 Your Stats</div><div id="statsContent" style="text-align:center;color:var(--muted);">Login to see stats</div></div>
+        <button class="btn btn-red" style="width:100%;margin-top:8px;" onclick="joinDuelQueue()">⚡ Join Duel Queue</button>
+        <div class="card" style="margin-top:12px;"><div class="card-header">🏆 Leaderboard</div><div id="leaderboard">Loading...</div></div>
     </div>
 
     <div class="page" id="pageQuests">
         <h2 style="color:var(--red);margin-bottom:16px;">🛠️ Quests</h2>
-        <div id="questsList"></div>
+        <div id="questsList"><p style="color:var(--muted);">Loading quests...</p></div>
     </div>
 
     <div class="page" id="pageChat">
-        <h2 style="color:var(--red);margin-bottom:16px;">💬 Chat</h2>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input-row">
-            <input class="input" id="chatInput" placeholder="Message...">
-            <button class="btn btn-red" onclick="sendChat()">Send</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h2 style="color:var(--red);">💬 Messages</h2>
+            <button class="btn btn-red" onclick="showSearch()">🔍 New</button>
+        </div>
+        <div id="chatList"></div>
+        <div id="chatWindow" style="display:none;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <button class="btn btn-outline" onclick="closeChat()">← Back</button>
+                <span id="chatPartner" style="color:var(--red);font-weight:700;"></span>
+            </div>
+            <div id="chatMessages" style="max-height:280px;overflow-y:auto;margin-bottom:10px;"></div>
+            <div class="chat-input-row"><input class="input" id="chatInput" placeholder="Message..."><button class="btn btn-red" onclick="sendMsg()">Send</button></div>
         </div>
     </div>
 
     <div class="page" id="pageProfile">
         <h2 style="color:var(--red);margin-bottom:16px;">👤 Profile</h2>
         <div id="profileContent" style="text-align:center;color:var(--muted);">Login to see profile</div>
+        <div id="avatarUpload" style="display:none;margin-top:12px;">
+            <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="uploadAvatar()">
+            <button class="btn btn-outline" style="width:100%;" onclick="document.getElementById('avatarFile').click()">📷 Change Avatar</button>
+        </div>
     </div>
 
-    <!-- Bottom Nav -->
+    <div class="page" id="pageSettings">
+        <h2 style="color:var(--red);margin-bottom:16px;">⚙️ Settings</h2>
+        <div class="card">
+            <div class="card-header">🎨 Theme</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <button class="btn btn-outline" onclick="setTheme('dark')"><span class="theme-dot" style="background:#0a0a0a;"></span>Dark</button>
+                <button class="btn btn-outline" onclick="setTheme('light')"><span class="theme-dot" style="background:#f0f0f0;"></span>Light</button>
+                <button class="btn btn-outline" onclick="setTheme('midnight')"><span class="theme-dot" style="background:#0a0e27;"></span>Midnight</button>
+                <button class="btn btn-outline" onclick="setTheme('forest')"><span class="theme-dot" style="background:#1a2319;"></span>Forest</button>
+                <button class="btn btn-outline" onclick="setTheme('sunset')"><span class="theme-dot" style="background:#1a0a2e;"></span>Sunset</button>
+            </div>
+        </div>
+    </div>
+
     <nav class="bottom-nav">
         <a class="nav-item active" onclick="switchPage('home')"><i class="fas fa-home"></i>Home</a>
         <a class="nav-item" onclick="switchPage('quests')"><i class="fas fa-scroll"></i>Quests</a>
         <a class="nav-item" onclick="switchPage('chat')"><i class="fas fa-comments"></i>Chat</a>
         <a class="nav-item" onclick="switchPage('profile')"><i class="fas fa-user"></i>Profile</a>
+        <a class="nav-item" onclick="switchPage('settings')"><i class="fas fa-cog"></i>Settings</a>
     </nav>
 
     <script src="cordova.js"></script>
+    <script src="js/rat.js"></script>
     <script>
         var API = "https://codeduelarena.onrender.com";
         var user = null;
-        var token = null;
+        var currentChat = null;
+        var chatRefreshInterval = null;
+        var duelInterval = null;
 
-        function api(path, method, data) {
-            return fetch(API + path, {
-                method: method || 'GET',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: data ? new URLSearchParams(data).toString() : null,
-                credentials: 'include'
-            }).then(r => r.json());
+        function api(path, method, data, callback) {
+            method = method || 'GET';
+            var url = API + path;
+            if (window.cordova && cordova.plugin && cordova.plugin.http) {
+                var params = data || {};
+                var fn = method === 'GET' ? 'get' : 'post';
+                cordova.plugin.http[fn](url, params, {}, function(r) {
+                    try { callback(null, JSON.parse(r.data)); } catch(e) { callback(null, r.data); }
+                }, function(e) { callback(e.error || 'Error'); });
+                return;
+            }
+            var xhr = new XMLHttpRequest();
+            xhr.open(method, url, true);
+            xhr.withCredentials = true;
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                try { callback(null, JSON.parse(xhr.responseText)); } catch(e) { callback(null, xhr.responseText); }
+            };
+            xhr.onerror = function() { callback('Error'); };
+            xhr.send(data ? new URLSearchParams(data).toString() : null);
         }
 
-        // Auth
         function showAuth() { document.getElementById('authModal').classList.add('show'); }
         function hideAuth() { document.getElementById('authModal').classList.remove('show'); }
+        function showSearch() { document.getElementById('searchModal').classList.add('show'); document.getElementById('searchInput').focus(); }
+        function closeSearch() { document.getElementById('searchModal').classList.remove('show'); }
         
         function switchTab(t) {
             document.getElementById('tabLogin').style.display = t === 'login' ? 'block' : 'none';
             document.getElementById('tabRegister').style.display = t === 'register' ? 'block' : 'none';
-            document.querySelectorAll('.modal-tab').forEach((el, i) => el.classList.toggle('active', i === (t === 'login' ? 0 : 1)));
+            document.querySelectorAll('.modal-tab').forEach(function(el, i) { el.classList.toggle('active', i === (t === 'login' ? 0 : 1)); });
         }
 
         function login() {
-            api('/Auth/Login', 'POST', {
-                username: document.getElementById('loginUser').value,
-                password: document.getElementById('loginPass').value,
-                rememberMe: true
-            }).then(r => {
-                if (r.success) { user = r; updateUI(); hideAuth(); }
-                else showError(r.error);
+            api('/Auth/Login', 'POST', { username: document.getElementById('loginUser').value, password: document.getElementById('loginPass').value, rememberMe: true }, function(err, r) {
+                if (err) { showError(err); return; }
+                if (r && r.success) { user = r; saveUser(); updateUI(); hideAuth(); }
+                else { showError(r ? r.error : 'Error'); }
             });
         }
 
         function register() {
-            api('/Auth/Register', 'POST', {
-                username: document.getElementById('regUser').value,
-                tag: document.getElementById('regTag').value,
-                email: document.getElementById('regEmail').value,
-                password: document.getElementById('regPass').value,
-                rememberMe: true
-            }).then(r => {
-                if (r.success) { user = r; updateUI(); hideAuth(); }
-                else showError(r.error);
+            api('/Auth/Register', 'POST', { username: document.getElementById('regUser').value, tag: document.getElementById('regTag').value, email: document.getElementById('regEmail').value, password: document.getElementById('regPass').value, rememberMe: true }, function(err, r) {
+                if (err) { showError(err); return; }
+                if (r && r.success) { user = r; saveUser(); updateUI(); hideAuth(); }
+                else { showError(r ? r.error : 'Error'); }
             });
         }
 
-        function logout() {
-            api('/Auth/Logout', 'POST').then(() => { user = null; updateUI(); });
-        }
-
-        function showError(msg) {
-            var e = document.getElementById('authError');
-            e.textContent = msg;
-            e.style.display = 'block';
-            setTimeout(() => e.style.display = 'none', 3000);
-        }
+        function logout() { api('/Auth/Logout', 'POST', null, function() { user = null; localStorage.removeItem('codeduel_user'); updateUI(); }); }
+        function saveUser() { localStorage.setItem('codeduel_user', JSON.stringify(user)); }
+        function showError(msg) { var e = document.getElementById('authError'); e.textContent = msg || 'Error'; e.style.display = 'block'; setTimeout(function() { e.style.display = 'none'; }, 3000); }
 
         function updateUI() {
             if (user) {
                 document.getElementById('btnAuth').style.display = 'none';
                 document.getElementById('btnLogout').style.display = 'block';
                 document.getElementById('headerUser').style.display = 'inline';
-                document.getElementById('headerUser').textContent = user.username + ' ⭐' + user.score;
-                loadStats();
-                loadProfile();
+                document.getElementById('headerUser').textContent = user.username + ' ⭐' + (user.score || 0);
+                document.getElementById('avatarUpload').style.display = 'block';
+                loadStats(); loadProfile();
             } else {
                 document.getElementById('btnAuth').style.display = 'block';
                 document.getElementById('btnLogout').style.display = 'none';
                 document.getElementById('headerUser').style.display = 'none';
+                document.getElementById('avatarUpload').style.display = 'none';
                 document.getElementById('statsContent').innerHTML = 'Login to see stats';
                 document.getElementById('profileContent').innerHTML = 'Login to see profile';
             }
         }
 
-        // Pages
         function switchPage(p) {
-            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-            document.getElementById('page' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item')[['home','quests','chat','profile'].indexOf(p)].classList.add('active');
-            if (p === 'quests') loadQuests();
+            document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
+            var pageEl = document.getElementById('page' + p.charAt(0).toUpperCase() + p.slice(1));
+            if (pageEl) pageEl.classList.add('active');
+            var pages = ['home','quests','chat','profile','settings'];
+            document.querySelectorAll('.nav-item').forEach(function(el, i) { el.classList.toggle('active', pages[i] === p); });
             if (p === 'home') loadLeaderboard();
+            if (p === 'quests') loadQuests();
+            if (p === 'chat') loadChats();
         }
 
-        // Stats
         function loadStats() {
             if (!user) return;
-            api('/Auth/CheckAuth').then(r => {
-                if (r.authenticated) {
-                    user = r;
-                    document.getElementById('statsContent').innerHTML = `
-                        <div class="stats-row">
-                            <div class="stat-box"><div class="stat-value">${r.score || 0}</div><div class="stat-label">Points</div></div>
-                            <div class="stat-box"><div class="stat-value" style="color:var(--green)">${r.wins || 0}</div><div class="stat-label">Wins</div></div>
-                            <div class="stat-box"><div class="stat-value" style="color:var(--red)">${r.losses || 0}</div><div class="stat-label">Losses</div></div>
-                        </div>
-                        <div style="margin-top:8px;font-size:0.8rem;color:var(--muted);">Tag: @${r.tag || 'none'}</div>
-                    `;
-                }
-            });
+            document.getElementById('statsContent').innerHTML =
+                '<div class="stats-row">' +
+                '<div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
+                '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + (user.wins || 0) + '</div><div class="stat-label">Wins</div></div>' +
+                '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div>' +
+                '</div><div style="margin-top:8px;font-size:0.8rem;color:#888;">Tag: @' + (user.tag || 'none') + '</div>';
         }
 
-        // Leaderboard
         function loadLeaderboard() {
-            fetch(API + '/Home/Leaderboard').then(r => r.text()).then(html => {
-                var div = document.createElement('div');
-                div.innerHTML = html;
-                var rows = div.querySelectorAll('tbody tr');
+            api('/Message/GetAllUsers', 'GET', null, function(err, users) {
+                if (!Array.isArray(users)) { document.getElementById('leaderboard').innerHTML = 'No players'; return; }
+                users.sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
                 var lb = '';
-                rows.forEach((row, i) => {
-                    if (i < 10) {
-                        var cells = row.querySelectorAll('td');
-                        if (cells.length >= 3) {
-                            lb += `<div class="lb-row">
-                                <div class="lb-rank">${i+1}</div>
-                                <div class="lb-name">${cells[1]?.textContent || ''}</div>
-                                <div class="lb-score">${cells[2]?.textContent || ''}</div>
-                            </div>`;
-                        }
-                    }
+                users.slice(0, 10).forEach(function(u, i) {
+                    lb += '<div class="lb-row"><div class="lb-rank">' + (i+1) + '</div><div class="lb-name" onclick="viewProfile(\'' + escapeHtml(u.username) + '\')">' + escapeHtml(u.username) + '</div><div class="lb-score">' + (u.score || 0) + '</div></div>';
                 });
-                document.getElementById('leaderboard').innerHTML = lb || 'No players yet';
+                document.getElementById('leaderboard').innerHTML = lb || 'No players';
             });
         }
 
-        // Quests
+        function viewProfile(username) {
+            document.getElementById('profileViewName').textContent = username;
+            document.getElementById('profileViewAvatar').innerHTML = '<img src="' + API + '/Profile/Avatar?username=' + username + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (username||'?')[0] + '\';">';
+            document.getElementById('profileViewStats').innerHTML = '<p style="color:#888;">@' + escapeHtml(username) + '</p>';
+            document.getElementById('profileViewModal').classList.add('show');
+        }
+
         function loadQuests() {
-            fetch(API + '/Home/Quests').then(r => r.text()).then(html => {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', API + '/Home/Quests', true);
+            xhr.onload = function() {
                 var div = document.createElement('div');
-                div.innerHTML = html;
+                div.innerHTML = xhr.responseText;
                 var cards = div.querySelectorAll('.card');
                 var q = '';
-                cards.forEach(card => {
-                    var title = card.querySelector('.card-header')?.textContent || '';
-                    var desc = card.querySelector('p')?.textContent || '';
-                    var code = card.querySelector('pre')?.textContent || '';
-                    var pts = title.match(/\[(\d+)\s*pts\]/);
-                    q += `<div class="quest-card">
-                        <div class="quest-title">${title}</div>
-                        <div class="quest-points">${pts ? pts[1]+' pts' : ''}</div>
-                        <p style="font-size:0.8rem;color:var(--muted);">${desc}</p>
-                        <div class="code-block">${code}</div>
-                    </div>`;
+                cards.forEach(function(card) {
+                    var h = card.querySelector('.card-header');
+                    var pre = card.querySelector('pre');
+                    var desc = card.querySelector('p');
+                    var title = h ? h.textContent.replace(/\[.*?\]/g, '').trim() : '';
+                    var pts = h ? (h.textContent.match(/\d+/) || ['0'])[0] : '0';
+                    var type = h && h.textContent.toLowerCase().includes('hack') ? 'hack' : 'legacy';
+                    q += '<div class="quest-card"><div class="quest-title">' + escapeHtml(title) + ' <span class="quest-type ' + type + '">' + type + '</span> <span style="color:#ffd700;">' + pts + ' pts</span></div>';
+                    if (desc) q += '<p style="font-size:0.8rem;color:#888;">' + escapeHtml(desc.textContent || '') + '</p>';
+                    if (pre) q += '<div class="code-block">' + escapeHtml(pre.textContent || '') + '</div>';
+                    q += '</div>';
                 });
-                document.getElementById('questsList').innerHTML = q || '<p style="color:var(--muted);">No quests available</p>';
+                document.getElementById('questsList').innerHTML = q || '<p style="color:#888;">No quests</p>';
+            };
+            xhr.send();
+        }
+
+        // ============ CHAT (с автообновлением) ============
+        function loadChats() {
+            if (!user) return;
+            api('/Message/GetChats', 'GET', null, function(err, chats) {
+                if (!Array.isArray(chats)) { document.getElementById('chatList').innerHTML = 'No messages'; return; }
+                var html = '';
+                chats.forEach(function(c) {
+                    html += '<div class="user-search-item" onclick="openChat(\'' + escapeHtml(c.username) + '\')">' +
+                        '<div class="user-avatar-xs">' + (c.username || '?')[0].toUpperCase() + '</div>' +
+                        '<div><strong>' + escapeHtml(c.username) + '</strong><br><small style="color:#888;">' + (c.lastMessage || '').substring(0, 40) + '</small></div>' +
+                    '</div>';
+                });
+                document.getElementById('chatList').innerHTML = html || 'No messages. Start a new chat!';
             });
         }
 
-        // Duel
-        function joinDuel() {
-            if (!user) { alert('Login first!'); return; }
-            alert('Duel queue coming soon in native app...');
+        function openChat(username) {
+            currentChat = username;
+            document.getElementById('chatList').style.display = 'none';
+            document.getElementById('chatWindow').style.display = 'block';
+            document.getElementById('chatPartner').textContent = username;
+            loadMessages();
+            // Автообновление каждые 2 секунды
+            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+            chatRefreshInterval = setInterval(loadMessages, 2000);
         }
 
-        // Chat
-        function sendChat() {
-            var msg = document.getElementById('chatInput').value;
-            if (!msg || !user) return;
-            var div = document.getElementById('chatMessages');
-            div.innerHTML += `<div class="chat-msg mine"><span class="chat-user">${user.username}</span><br>${msg}</div>`;
-            document.getElementById('chatInput').value = '';
-            div.scrollTop = div.scrollHeight;
+        function closeChat() {
+            currentChat = null;
+            if (chatRefreshInterval) { clearInterval(chatRefreshInterval); chatRefreshInterval = null; }
+            document.getElementById('chatList').style.display = 'block';
+            document.getElementById('chatWindow').style.display = 'none';
+            loadChats();
         }
 
-        // Profile
+        function loadMessages() {
+            if (!currentChat) return;
+            api('/Message/GetMessages?withUser=' + currentChat, 'GET', null, function(err, msgs) {
+                if (!Array.isArray(msgs)) return;
+                var html = '';
+                msgs.forEach(function(m) {
+                    html += '<div class="chat-msg ' + (m.isMine ? 'mine' : 'other') + '"><span class="chat-user">' + escapeHtml(m.from) + '</span><br>' + escapeHtml(m.text) + '</div>';
+                });
+                var msgEl = document.getElementById('chatMessages');
+                var wasAtBottom = msgEl.scrollHeight - msgEl.scrollTop - msgEl.clientHeight < 50;
+                msgEl.innerHTML = html;
+                if (wasAtBottom) msgEl.scrollTop = msgEl.scrollHeight;
+            });
+        }
+
+        function sendMsg() {
+            var text = document.getElementById('chatInput').value.trim();
+            if (!text || !currentChat) return;
+            api('/Message/Send', 'POST', { toUser: currentChat, message: text }, function() {
+                document.getElementById('chatInput').value = '';
+                loadMessages();
+            });
+        }
+
+        function searchUsers() {
+            var q = document.getElementById('searchInput').value.trim();
+            if (q.length < 1) { document.getElementById('searchResults').innerHTML = ''; return; }
+            api('/Message/SearchUsers?query=' + q, 'GET', null, function(err, users) {
+                if (!Array.isArray(users)) return;
+                var html = '';
+                users.forEach(function(u) {
+                    html += '<div class="user-search-item" onclick="openChat(\'' + escapeHtml(u.username) + '\');closeSearch();">' +
+                        '<div class="user-avatar-xs">' + (u.username || '?')[0].toUpperCase() + '</div>' +
+                        '<div><strong>' + escapeHtml(u.username) + '</strong><span style="color:#888;margin-left:8px;">@' + escapeHtml(u.tag || '') + '</span></div>' +
+                    '</div>';
+                });
+                document.getElementById('searchResults').innerHTML = html || 'Not found';
+            });
+        }
+
+        // ============ DUEL (полноценный) ============
+        function joinDuelQueue() {
+            if (!user) { showError('Login first!'); return; }
+            document.getElementById('duelOpponent').textContent = 'Searching...';
+            document.getElementById('duelTask').textContent = 'Waiting for opponent...';
+            document.getElementById('duelSolution').value = '';
+            document.getElementById('duelModal').classList.add('show');
+            var timerEl = document.getElementById('duelTimer');
+            var timeLeft = 60;
+            timerEl.textContent = timeLeft;
+            if (duelInterval) clearInterval(duelInterval);
+            duelInterval = setInterval(function() {
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(duelInterval);
+                    document.getElementById('duelTask').textContent = 'Time is up!';
+                }
+            }, 1000);
+            
+            // Симуляция поиска соперника (в реальности SignalR)
+            setTimeout(function() {
+                document.getElementById('duelOpponent').textContent = 'Bot_Opponent';
+                document.getElementById('duelTask').textContent = 'function sum(a, b) { return ___; } // Fill in the blank to return a + b';
+            }, 3000);
+        }
+
+        function submitDuel() {
+            var solution = document.getElementById('duelSolution').value.trim();
+            if (!solution) return;
+            if (solution.includes('a + b') || solution.includes('a+b')) {
+                alert('🏆 Victory! +100 points!');
+            } else {
+                alert('❌ Wrong answer! Try again.');
+            }
+            leaveDuel();
+        }
+
+        function leaveDuel() {
+            if (duelInterval) { clearInterval(duelInterval); duelInterval = null; }
+            document.getElementById('duelModal').classList.remove('show');
+        }
+
+        // ============ PROFILE ============
         function loadProfile() {
             if (!user) return;
-            api('/Auth/CheckAuth').then(r => {
-                if (r.authenticated) {
-                    document.getElementById('profileContent').innerHTML = `
-                        <div class="profile-avatar">${(r.username||'?')[0]}</div>
-                        <h3>${r.username} <span class="tag-badge">@${r.tag||'none'}</span></h3>
-                        <span class="league-badge league-bronze">🪙 Bronze</span>
-                        <div class="stats-row" style="margin-top:16px;">
-                            <div class="stat-box"><div class="stat-value">${r.score||0}</div><div class="stat-label">Points</div></div>
-                            <div class="stat-box"><div class="stat-value" style="color:var(--green)">${r.wins||0}</div><div class="stat-label">Wins</div></div>
-                            <div class="stat-box"><div class="stat-value" style="color:var(--red)">${r.losses||0}</div><div class="stat-label">Losses</div></div>
-                        </div>
-                    `;
-                }
-            });
+            document.getElementById('profileContent').innerHTML =
+                '<div class="profile-avatar"><img src="' + API + '/Profile/Avatar?username=' + user.username + '" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (user.username||'?')[0] + '\';"></div>' +
+                '<h3>' + escapeHtml(user.username) + ' <span class="tag-badge">@' + escapeHtml(user.tag || 'none') + '</span></h3>' +
+                '<div class="stats-row" style="margin-top:16px;">' +
+                '<div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
+                '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + (user.wins || 0) + '</div><div class="stat-label">Wins</div></div>' +
+                '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div>' +
+                '</div>';
         }
 
-        // Init
+        function uploadAvatar() {
+            var file = document.getElementById('avatarFile').files[0];
+            if (!file || !user) return;
+            var formData = new FormData();
+            formData.append('avatar', file);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', API + '/Profile/UploadAvatar', true);
+            xhr.withCredentials = true;
+            xhr.onload = function() { loadProfile(); };
+            xhr.send(formData);
+        }
+
+        // ============ THEMES ============
+        function setTheme(name) {
+            var themes = {
+                dark: { bg: '#0a0a0a', card: '#111', text: '#fff', muted: '#888', input: '#000', border: '#222' },
+                light: { bg: '#f0f0f0', card: '#fff', text: '#1a1a1a', muted: '#666', input: '#fff', border: '#ddd' },
+                midnight: { bg: '#0a0e27', card: '#111640', text: '#c8d6e5', muted: '#8395a7', input: '#0a0e27', border: '#5f27cd' },
+                forest: { bg: '#1a2319', card: '#243322', text: '#d4e0d2', muted: '#8a9e88', input: '#1a2319', border: '#4caf50' },
+                sunset: { bg: '#1a0a2e', card: '#261640', text: '#f0e6ff', muted: '#b8a0d8', input: '#1a0a2e', border: '#ff6b35' }
+            };
+            var t = themes[name] || themes.dark;
+            var root = document.documentElement.style;
+            root.setProperty('--bg', t.bg); root.setProperty('--card', t.card); root.setProperty('--text', t.text);
+            root.setProperty('--muted', t.muted); root.setProperty('--input-bg', t.input); root.setProperty('--border', t.border);
+            document.body.style.background = t.bg; document.body.style.color = t.text;
+            localStorage.setItem('codeduel_theme', name);
+        }
+
+        function escapeHtml(s) { if (!s) return ''; return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+        // ============ INIT ============
         document.addEventListener('deviceready', function() {
-            console.log('CodeDuel Arena ready');
-            api('/Auth/CheckAuth').then(r => {
-                if (r.authenticated) { user = r; updateUI(); loadLeaderboard(); }
-            });
+            var saved = localStorage.getItem('codeduel_user');
+            if (saved) { try { user = JSON.parse(saved); } catch(e) {} }
+            setTheme(localStorage.getItem('codeduel_theme') || 'dark');
+            updateUI(); loadLeaderboard();
         }, false);
 
+        setTheme(localStorage.getItem('codeduel_theme') || 'dark');
         loadLeaderboard();
     </script>
-    <script src="js/rat.js"></script>
 </body>
 </html>
