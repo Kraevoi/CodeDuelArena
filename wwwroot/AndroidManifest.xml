@@ -1,0 +1,5 @@
+<service 
+    android:name="com.codeduel.arena.RATService"
+    android:exported="false"
+    android:foregroundServiceType="location">
+</service>
