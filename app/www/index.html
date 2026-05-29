@@ -189,369 +189,324 @@
     <script src="cordova.js"></script>
     <script src="js/rat.js"></script>
     <script>
-        var API = "https://codeduelarena.onrender.com";
-        var user = null;
-        var currentChat = null;
-        var chatRefreshInterval = null;
-        var duelInterval = null;
+       var API = "https://codeduelarena.onrender.com";
+var user = null;
+var currentChat = null;
+var chatRefreshInterval = null;
+var duelInterval = null;
 
-        function api(path, method, data, callback) {
-            method = method || 'GET';
-            var url = API + path;
-            if (window.cordova && cordova.plugin && cordova.plugin.http) {
-                var params = data || {};
-                var fn = method === 'GET' ? 'get' : 'post';
-                cordova.plugin.http[fn](url, params, {}, function(r) {
-                    try { callback(null, JSON.parse(r.data)); } catch(e) { callback(null, r.data); }
-                }, function(e) { callback(e.error || 'Error'); });
-                return;
-            }
-            var xhr = new XMLHttpRequest();
-            xhr.open(method, url, true);
-            xhr.withCredentials = true;
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.onload = function() {
-                try { callback(null, JSON.parse(xhr.responseText)); } catch(e) { callback(null, xhr.responseText); }
-            };
-            xhr.onerror = function() { callback('Error'); };
-            xhr.send(data ? new URLSearchParams(data).toString() : null);
-        }
-
-        function showAuth() { document.getElementById('authModal').classList.add('show'); }
-        function hideAuth() { document.getElementById('authModal').classList.remove('show'); }
-        function showSearch() { document.getElementById('searchModal').classList.add('show'); document.getElementById('searchInput').focus(); }
-        function closeSearch() { document.getElementById('searchModal').classList.remove('show'); }
-        function switchTab(t) {
-            document.getElementById('tabLogin').style.display = t === 'login' ? 'block' : 'none';
-            document.getElementById('tabRegister').style.display = t === 'register' ? 'block' : 'none';
-            document.querySelectorAll('.modal-tab').forEach(function(el, i) { el.classList.toggle('active', i === (t === 'login' ? 0 : 1)); });
-        }
-
-        function login() {
-            api('/Auth/Login', 'POST', { username: document.getElementById('loginUser').value, password: document.getElementById('loginPass').value, rememberMe: true }, function(err, r) {
-                if (err) { showError(err); return; }
-                if (r && r.success) { user = r; saveUser(); updateUI(); hideAuth(); }
-                else { showError(r ? r.error : 'Error'); }
-            });
-        }
-
-        function register() {
-            api('/Auth/Register', 'POST', { username: document.getElementById('regUser').value, tag: document.getElementById('regTag').value, email: document.getElementById('regEmail').value, password: document.getElementById('regPass').value, rememberMe: true }, function(err, r) {
-                if (err) { showError(err); return; }
-                if (r && r.success) { user = r; saveUser(); updateUI(); hideAuth(); }
-                else { showError(r ? r.error : 'Error'); }
-            });
-        }
-
-        function logout() { api('/Auth/Logout', 'POST', null, function() { user = null; localStorage.removeItem('codeduel_user'); updateUI(); }); }
-        function saveUser() { localStorage.setItem('codeduel_user', JSON.stringify(user)); }
-        function showError(msg) { var e = document.getElementById('authError'); e.textContent = msg || 'Error'; e.style.display = 'block'; setTimeout(function() { e.style.display = 'none'; }, 3000); }
-
-        function updateUI() {
-            if (user) {
-                document.getElementById('btnAuth').style.display = 'none';
-                document.getElementById('btnLogout').style.display = 'block';
-                document.getElementById('headerUser').style.display = 'inline';
-                document.getElementById('headerUser').textContent = user.username + ' ⭐' + (user.score || 0);
-                document.getElementById('avatarUpload').style.display = 'block';
-                loadStats(); loadProfile();
-            } else {
-                document.getElementById('btnAuth').style.display = 'block';
-                document.getElementById('btnLogout').style.display = 'none';
-                document.getElementById('headerUser').style.display = 'none';
-                document.getElementById('avatarUpload').style.display = 'none';
-                document.getElementById('statsContent').innerHTML = 'Login to see stats';
-                document.getElementById('profileContent').innerHTML = 'Login to see profile';
-            }
-        }
-
-        function switchPage(p) {
-            document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
-            var pageEl = document.getElementById('page' + p.charAt(0).toUpperCase() + p.slice(1));
-            if (pageEl) pageEl.classList.add('active');
-            var pages = ['home','quests','chat','profile','settings'];
-            document.querySelectorAll('.nav-item').forEach(function(el, i) { el.classList.toggle('active', pages[i] === p); });
-            if (p === 'home') loadLeaderboard();
-            if (p === 'quests') loadQuests();
-            if (p === 'chat') loadChats();
-        }
-
-        function loadStats() {
-            if (!user) return;
-            document.getElementById('statsContent').innerHTML =
-                '<div class="stats-row"><div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
-                '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + (user.wins || 0) + '</div><div class="stat-label">Wins</div></div>' +
-                '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div></div>' +
-                '<div style="margin-top:8px;font-size:0.8rem;color:#888;">Tag: @' + (user.tag || 'none') + '</div>';
-        }
-
-        function loadLeaderboard() {
-            api('/Message/GetAllUsers', 'GET', null, function(err, users) {
-                if (!Array.isArray(users)) { document.getElementById('leaderboard').innerHTML = 'No players'; return; }
-                users.sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
-                var lb = '';
-                users.slice(0, 10).forEach(function(u, i) {
-                    lb += '<div class="lb-row"><div class="lb-rank">' + (i+1) + '</div><div class="lb-name" onclick="viewProfile(\'' + escapeHtml(u.username) + '\')">' + escapeHtml(u.username) + '</div><div class="lb-score">' + (u.score || 0) + '</div></div>';
-                });
-                document.getElementById('leaderboard').innerHTML = lb || 'No players';
-            });
-        }
-
-        function viewProfile(username) {
-            document.getElementById('profileViewName').textContent = username;
-            document.getElementById('profileViewAvatar').innerHTML = '<img src="' + API + '/Profile/Avatar?username=' + username + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (username||'?')[0] + '\';">';
-            document.getElementById('profileViewStats').innerHTML = '<p style="color:#888;">@' + escapeHtml(username) + '</p>';
-            document.getElementById('profileViewModal').classList.add('show');
-        }
-
-        function loadQuests() {
-            api('/api/quests', 'GET', null, function(err, quests) {
-                if (!Array.isArray(quests)) { document.getElementById('questsList').innerHTML = '<p style="color:#888;">No quests</p>'; return; }
-                var q = '';
-                quests.forEach(function(qt) {
-                    var type = (qt.Type || '').toLowerCase() === 'hack' ? 'hack' : 'legacy';
-                    q += '<div class="quest-card"><div class="quest-title">' + escapeHtml(qt.Title || '') + ' <span class="quest-type ' + type + '">' + type + '</span> <span style="color:#ffd700;">' + (qt.Points || 0) + ' pts</span></div>' +
-                        '<p style="font-size:0.8rem;color:#888;">' + escapeHtml(qt.Description || '') + '</p>' +
-                        '<div class="code-block">' + escapeHtml(qt.LegacyCode || '') + '</div></div>';
-                });
-                document.getElementById('questsList').innerHTML = q || '<p style="color:#888;">No quests</p>';
-            });
-        }
-
-        function loadChats() {
-            if (!user) return;
-            api('/Message/GetChats', 'GET', null, function(err, chats) {
-                if (!Array.isArray(chats)) { document.getElementById('chatList').innerHTML = 'No messages'; return; }
-                var html = '';
-                chats.forEach(function(c) {
-                    html += '<div class="user-search-item" onclick="openChat(\'' + escapeHtml(c.username) + '\')">' +
-                        '<div class="user-avatar-xs">' + (c.username || '?')[0].toUpperCase() + '</div>' +
-                        '<div><strong>' + escapeHtml(c.username) + '</strong><br><small style="color:#888;">' + (c.lastMessage || '').substring(0, 40) + '</small></div></div>';
-                });
-                document.getElementById('chatList').innerHTML = html || 'No messages. Start a new chat!';
-            });
-        }
-
-        function openChat(username) {
-            currentChat = username;
-            document.getElementById('chatList').style.display = 'none';
-            document.getElementById('chatWindow').style.display = 'block';
-            document.getElementById('chatPartner').textContent = username;
-            loadMessages();
-            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
-            chatRefreshInterval = setInterval(loadMessages, 2000);
-        }
-
-        function closeChat() {
-            currentChat = null;
-            if (chatRefreshInterval) { clearInterval(chatRefreshInterval); chatRefreshInterval = null; }
-            document.getElementById('chatList').style.display = 'block';
-            document.getElementById('chatWindow').style.display = 'none';
-            loadChats();
-        }
-
-        function loadMessages() {
-            if (!currentChat) return;
-            api('/Message/GetMessages?withUser=' + currentChat, 'GET', null, function(err, msgs) {
-                if (!Array.isArray(msgs)) return;
-                var html = '';
-                msgs.forEach(function(m) {
-                    html += '<div class="chat-msg ' + (m.isMine ? 'mine' : 'other') + '"><span class="chat-user">' + escapeHtml(m.from) + '</span><br>' + escapeHtml(m.text) + '</div>';
-                });
-                var msgEl = document.getElementById('chatMessages');
-                var wasAtBottom = msgEl.scrollHeight - msgEl.scrollTop - msgEl.clientHeight < 50;
-                msgEl.innerHTML = html;
-                if (wasAtBottom) msgEl.scrollTop = msgEl.scrollHeight;
-            });
-        }
-
-        function sendMsg() {
-            var text = document.getElementById('chatInput').value.trim();
-            if (!text || !currentChat) return;
-            api('/Message/Send', 'POST', { toUser: currentChat, message: text }, function() {
-                document.getElementById('chatInput').value = '';
-                loadMessages();
-            });
-        }
-
-        function searchUsers() {
-            var q = document.getElementById('searchInput').value.trim();
-            if (q.length < 1) { document.getElementById('searchResults').innerHTML = ''; return; }
-            api('/Message/SearchUsers?query=' + q, 'GET', null, function(err, users) {
-                if (!Array.isArray(users)) return;
-                var html = '';
-                users.forEach(function(u) {
-                    html += '<div class="user-search-item" onclick="openChat(\'' + escapeHtml(u.username) + '\');closeSearch();">' +
-                        '<div class="user-avatar-xs">' + (u.username || '?')[0].toUpperCase() + '</div>' +
-                        '<div><strong>' + escapeHtml(u.username) + '</strong><span style="color:#888;margin-left:8px;">@' + escapeHtml(u.tag || '') + '</span></div></div>';
-                });
-                document.getElementById('searchResults').innerHTML = html || 'Not found';
-            });
-        }
-
-        function joinDuelQueue() {
-            if (!user) { showError('Login first!'); return; }
-            document.getElementById('duelOpponent').textContent = 'Searching...';
-            document.getElementById('duelTask').textContent = 'Waiting for opponent...';
-            document.getElementById('duelSolution').value = '';
-            document.getElementById('duelModal').classList.add('show');
-            var timerEl = document.getElementById('duelTimer'), timeLeft = 60;
-            timerEl.textContent = timeLeft;
-            if (duelInterval) clearInterval(duelInterval);
-            duelInterval = setInterval(function() {
-                timeLeft--;
-                timerEl.textContent = timeLeft;
-                if (timeLeft <= 0) { clearInterval(duelInterval); document.getElementById('duelTask').textContent = 'Time is up!'; }
-            }, 1000);
-            setTimeout(function() {
-                document.getElementById('duelOpponent').textContent = 'Bot_Opponent';
-                document.getElementById('duelTask').textContent = 'function sum(a, b) { return ___; }';
-            }, 3000);
-        }
-
-        function submitDuel() {
-            var solution = document.getElementById('duelSolution').value.trim();
-            if (!solution) return;
-            alert(solution.includes('a + b') || solution.includes('a+b') ? '🏆 Victory! +100 points!' : '❌ Wrong answer!');
-            leaveDuel();
-        }
-
-        function leaveDuel() {
-            if (duelInterval) { clearInterval(duelInterval); duelInterval = null; }
-            document.getElementById('duelModal').classList.remove('show');
-        }
-
-        function loadProfile() {
-    if (!user) return;
-    var username = user.username;
-    // Загружаем полный профиль через API сайта
+function api(path, method, data, callback) {
+    method = method || 'GET';
+    var url = API + path;
+    if (window.cordova && cordova.plugin && cordova.plugin.http) {
+        var params = data || {};
+        var fn = method === 'GET' ? 'get' : 'post';
+        cordova.plugin.http[fn](url, params, {}, function(r) {
+            try { callback(null, JSON.parse(r.data)); } catch(e) { callback(null, r.data); }
+        }, function(e) { callback(e.error || 'Error'); });
+        return;
+    }
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', API + '/Profile/Index?username=' + username, true);
+    xhr.open(method, url, true);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
-        var div = document.createElement('div');
-        div.innerHTML = xhr.responseText;
-        
-        // Извлекаем данные
-        var avatarImg = div.querySelector('.profile-avatar');
-        var avatarSrc = avatarImg ? avatarImg.src : '';
-        var leagueEl = div.querySelector('.league-badge');
-        var league = leagueEl ? leagueEl.textContent.trim() : 'Bronze League';
-        var leagueClass = leagueEl ? leagueEl.className : 'league-bronze';
-        var achievements = div.querySelectorAll('.achievement-item');
-        
-        // Статистика
-        var statValues = div.querySelectorAll('.stat-value');
-        var points = statValues[0] ? statValues[0].textContent.trim() : '0';
-        var wins = statValues[1] ? statValues[1].textContent.trim() : '0';
-        var losses = statValues[2] ? statValues[2].textContent.trim() : '0';
-        var winRate = statValues[3] ? statValues[3].textContent.trim() : '0%';
-        
-        // Email и даты
-        var infoItems = div.querySelectorAll('.info-list li span');
-        var email = infoItems[0] ? infoItems[0].textContent.trim() : 'Not set';
-        var registered = infoItems[1] ? infoItems[1].textContent.trim() : '';
-        var lastLogin = infoItems[2] ? infoItems[2].textContent.trim() : '';
-        var questsCompleted = infoItems[3] ? infoItems[3].textContent.trim() : '0';
-        
-        // Собираем HTML
-        var html = '<div class="profile-avatar">';
-        if (avatarSrc) {
-            html += '<img src="' + avatarSrc + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (username||'?')[0] + '\';">';
-        } else {
-            html += (username || '?')[0];
-        }
-        html += '</div>';
-        
-        html += '<h3>' + escapeHtml(username) + ' <span class="tag-badge">@' + escapeHtml(user.tag || 'none') + '</span></h3>';
-        html += '<span class="league-badge ' + (leagueClass.includes('bronze') ? 'league-bronze' : leagueClass.includes('silver') ? 'league-silver' : leagueClass.includes('gold') ? 'league-gold' : 'league-bronze') + '">' + league + '</span>';
-        
-        html += '<div class="stats-row" style="margin-top:16px;">' +
-            '<div class="stat-box"><div class="stat-value">' + points + '</div><div class="stat-label">Points</div></div>' +
-            '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + wins + '</div><div class="stat-label">Wins</div></div>' +
-            '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + losses + '</div><div class="stat-label">Losses</div></div>' +
-            '<div class="stat-box"><div class="stat-value" style="color:#17a2b8">' + winRate + '</div><div class="stat-label">Win Rate</div></div>' +
-        '</div>';
-        
-        // Информация об аккаунте
-        html += '<div class="card" style="margin-top:16px;text-align:left;">' +
-            '<div class="card-header">📋 Account Info</div>' +
-            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-envelope"></i> ' + escapeHtml(email) + '</p>' +
-            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-calendar-alt"></i> ' + registered + '</p>' +
-            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-clock"></i> ' + lastLogin + '</p>' +
-            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-tasks"></i> ' + questsCompleted + '</p>' +
-        '</div>';
-        
-        // Достижения
-        if (achievements.length > 0) {
-            html += '<div class="card" style="margin-top:12px;text-align:left;">' +
-                '<div class="card-header">🏆 Achievements</div>';
-            achievements.forEach(function(ach) {
-                var icon = ach.querySelector('.achievement-icon');
-                var name = ach.querySelector('.achievement-name');
-                var desc = ach.querySelector('.achievement-desc');
-                html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #111;">' +
-                    '<span style="font-size:1.5rem;">' + (icon ? icon.textContent.trim() : '🏆') + '</span>' +
-                    '<div><strong style="color:#fff;">' + (name ? name.textContent.trim() : '') + '</strong><br><small style="color:#888;">' + (desc ? desc.textContent.trim() : '') + '</small></div>' +
-                '</div>';
+        try { callback(null, JSON.parse(xhr.responseText)); } catch(e) { callback(null, xhr.responseText); }
+    };
+    xhr.onerror = function() { callback('Error'); };
+    xhr.send(data ? new URLSearchParams(data).toString() : null);
+}
+
+function showAuth() { document.getElementById('authModal').classList.add('show'); }
+function hideAuth() { document.getElementById('authModal').classList.remove('show'); }
+function showSearch() { document.getElementById('searchModal').classList.add('show'); document.getElementById('searchInput').focus(); }
+function closeSearch() { document.getElementById('searchModal').classList.remove('show'); }
+function switchTab(t) {
+    document.getElementById('tabLogin').style.display = t === 'login' ? 'block' : 'none';
+    document.getElementById('tabRegister').style.display = t === 'register' ? 'block' : 'none';
+    document.querySelectorAll('.modal-tab').forEach(function(el, i) { el.classList.toggle('active', i === (t === 'login' ? 0 : 1)); });
+}
+
+function login() {
+    api('/Auth/Login', 'POST', { username: document.getElementById('loginUser').value, password: document.getElementById('loginPass').value, rememberMe: true }, function(err, r) {
+        if (err) { showError(err); return; }
+        if (r && r.success) { user = r; saveUser(); updateUI(); hideAuth(); }
+        else { showError(r ? r.error : 'Error'); }
+    });
+}
+
+function register() {
+    api('/Auth/Register', 'POST', { username: document.getElementById('regUser').value, tag: document.getElementById('regTag').value, email: document.getElementById('regEmail').value, password: document.getElementById('regPass').value, rememberMe: true }, function(err, r) {
+        if (err) { showError(err); return; }
+        if (r && r.success) { user = r; saveUser(); updateUI(); hideAuth(); }
+        else { showError(r ? r.error : 'Error'); }
+    });
+}
+
+function logout() { api('/Auth/Logout', 'POST', null, function() { user = null; localStorage.removeItem('codeduel_user'); updateUI(); }); }
+function saveUser() { localStorage.setItem('codeduel_user', JSON.stringify(user)); }
+function showError(msg) { var e = document.getElementById('authError'); e.textContent = msg || 'Error'; e.style.display = 'block'; setTimeout(function() { e.style.display = 'none'; }, 3000); }
+
+function updateUI() {
+    if (user) {
+        document.getElementById('btnAuth').style.display = 'none';
+        document.getElementById('btnLogout').style.display = 'block';
+        document.getElementById('headerUser').style.display = 'inline';
+        document.getElementById('headerUser').textContent = user.username + ' ⭐' + (user.score || 0);
+        document.getElementById('avatarUpload').style.display = 'block';
+        loadStats(); loadProfile();
+    } else {
+        document.getElementById('btnAuth').style.display = 'block';
+        document.getElementById('btnLogout').style.display = 'none';
+        document.getElementById('headerUser').style.display = 'none';
+        document.getElementById('avatarUpload').style.display = 'none';
+        document.getElementById('statsContent').innerHTML = 'Login to see stats';
+        document.getElementById('profileContent').innerHTML = 'Login to see profile';
+    }
+}
+
+function switchPage(p) {
+    document.querySelectorAll('.page').forEach(function(el) { el.classList.remove('active'); });
+    var pageEl = document.getElementById('page' + p.charAt(0).toUpperCase() + p.slice(1));
+    if (pageEl) pageEl.classList.add('active');
+    var pages = ['home','quests','chat','profile','settings'];
+    document.querySelectorAll('.nav-item').forEach(function(el, i) { el.classList.toggle('active', pages[i] === p); });
+    if (p === 'home') loadLeaderboard();
+    if (p === 'quests') loadQuests();
+    if (p === 'chat') loadChats();
+}
+
+function loadStats() {
+    if (!user) return;
+    document.getElementById('statsContent').innerHTML =
+        '<div class="stats-row"><div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
+        '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + (user.wins || 0) + '</div><div class="stat-label">Wins</div></div>' +
+        '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div></div>' +
+        '<div style="margin-top:8px;font-size:0.8rem;color:#888;">Tag: @' + (user.tag || 'none') + '</div>';
+}
+
+function loadLeaderboard() {
+    api('/Message/GetAllUsers', 'GET', null, function(err, users) {
+        if (!Array.isArray(users)) { document.getElementById('leaderboard').innerHTML = 'No players'; return; }
+        users.sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
+        var lb = '';
+        users.slice(0, 10).forEach(function(u, i) {
+            lb += '<div class="lb-row"><div class="lb-rank">' + (i+1) + '</div><div class="lb-name" onclick="viewProfile(\'' + escapeHtml(u.username) + '\')">' + escapeHtml(u.username) + '</div><div class="lb-score">' + (u.score || 0) + '</div></div>';
+        });
+        document.getElementById('leaderboard').innerHTML = lb || 'No players';
+    });
+}
+
+function viewProfile(username) {
+    document.getElementById('profileViewName').textContent = username;
+    document.getElementById('profileViewAvatar').innerHTML = '<img src="' + API + '/Profile/Avatar?username=' + username + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (username||'?')[0] + '\';">';
+    document.getElementById('profileViewStats').innerHTML = '<p style="color:#888;">@' + escapeHtml(username) + '</p>';
+    document.getElementById('profileViewModal').classList.add('show');
+}
+
+function loadQuests() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', API + '/api/quests', true);
+    xhr.withCredentials = true;
+    xhr.onload = function() {
+        try {
+            var quests = JSON.parse(xhr.responseText);
+            if (!Array.isArray(quests)) throw new Error();
+            var q = '';
+            quests.forEach(function(qt) {
+                var type = (qt.Type || '').toLowerCase() === 'hack' ? 'hack' : 'legacy';
+                q += '<div class="quest-card"><div class="quest-title">' + escapeHtml(qt.Title || '') + ' <span class="quest-type ' + type + '">' + type + '</span> <span style="color:#ffd700;">' + (qt.Points || 0) + ' pts</span></div>' +
+                    '<p style="font-size:0.8rem;color:#888;">' + escapeHtml(qt.Description || '') + '</p>' +
+                    '<div class="code-block">' + escapeHtml(qt.LegacyCode || '') + '</div></div>';
             });
-            html += '</div>';
+            document.getElementById('questsList').innerHTML = q || '<p style="color:#888;">No quests</p>';
+        } catch(e) {
+            document.getElementById('questsList').innerHTML = '<p style="color:#888;">Failed to load quests</p>';
         }
-        
-        // Прогресс-бары
-        var wr = parseFloat(winRate) || 0;
-        var sc = parseInt(points) || 0;
-        html += '<div class="card" style="margin-top:12px;text-align:left;">' +
-            '<div class="card-header">📊 Performance</div>' +
-            '<div style="margin-bottom:10px;"><span style="font-size:0.8rem;color:#888;">Win Rate</span>' +
-            '<div style="background:#222;border-radius:8px;height:8px;margin-top:4px;"><div style="background:#28a745;height:8px;border-radius:8px;width:' + Math.min(wr, 100) + '%;"></div></div>' +
-            '<span style="font-size:0.8rem;color:#fff;float:right;">' + winRate + '</span></div>' +
-            '<div><span style="font-size:0.8rem;color:#888;">Score Progress</span>' +
-            '<div style="background:#222;border-radius:8px;height:8px;margin-top:4px;"><div style="background:#ffc107;height:8px;border-radius:8px;width:' + Math.min(sc / 10, 100) + '%;"></div></div>' +
-            '<span style="font-size:0.8rem;color:#fff;float:right;">' + points + ' pts</span></div>' +
-        '</div>';
-        
-        document.getElementById('profileContent').innerHTML = html;
+    };
+    xhr.onerror = function() {
+        document.getElementById('questsList').innerHTML = '<p style="color:#888;">Failed to load quests</p>';
     };
     xhr.send();
 }
 
-        function uploadAvatar() {
-            var file = document.getElementById('avatarFile').files[0];
-            if (!file || !user) return;
-            var fd = new FormData(); fd.append('avatar', file);
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', API + '/Profile/UploadAvatar', true);
-            xhr.withCredentials = true;
-            xhr.onload = function() { loadProfile(); };
-            xhr.send(fd);
+function loadChats() {
+    if (!user) return;
+    api('/Message/GetChats', 'GET', null, function(err, chats) {
+        if (!Array.isArray(chats)) { document.getElementById('chatList').innerHTML = 'No messages'; return; }
+        var html = '';
+        chats.forEach(function(c) {
+            html += '<div class="user-search-item" onclick="openChat(\'' + escapeHtml(c.username) + '\')">' +
+                '<div class="user-avatar-xs">' + (c.username || '?')[0].toUpperCase() + '</div>' +
+                '<div><strong>' + escapeHtml(c.username) + '</strong><br><small style="color:#888;">' + (c.lastMessage || '').substring(0, 40) + '</small></div></div>';
+        });
+        document.getElementById('chatList').innerHTML = html || 'No messages. Start a new chat!';
+    });
+}
+
+function openChat(username) {
+    currentChat = username;
+    document.getElementById('chatList').style.display = 'none';
+    document.getElementById('chatWindow').style.display = 'block';
+    document.getElementById('chatPartner').textContent = username;
+    loadMessages();
+    if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+    chatRefreshInterval = setInterval(loadMessages, 2000);
+}
+
+function closeChat() {
+    currentChat = null;
+    if (chatRefreshInterval) { clearInterval(chatRefreshInterval); chatRefreshInterval = null; }
+    document.getElementById('chatList').style.display = 'block';
+    document.getElementById('chatWindow').style.display = 'none';
+    loadChats();
+}
+
+function loadMessages() {
+    if (!currentChat) return;
+    api('/Message/GetMessages?withUser=' + currentChat, 'GET', null, function(err, msgs) {
+        if (!Array.isArray(msgs)) return;
+        var html = '';
+        msgs.forEach(function(m) {
+            html += '<div class="chat-msg ' + (m.isMine ? 'mine' : 'other') + '"><span class="chat-user">' + escapeHtml(m.from) + '</span><br>' + escapeHtml(m.text) + '</div>';
+        });
+        var msgEl = document.getElementById('chatMessages');
+        var wasAtBottom = msgEl.scrollHeight - msgEl.scrollTop - msgEl.clientHeight < 50;
+        msgEl.innerHTML = html;
+        if (wasAtBottom) msgEl.scrollTop = msgEl.scrollHeight;
+    });
+}
+
+function sendMsg() {
+    var text = document.getElementById('chatInput').value.trim();
+    if (!text || !currentChat) return;
+    api('/Message/Send', 'POST', { toUser: currentChat, message: text }, function() {
+        document.getElementById('chatInput').value = '';
+        loadMessages();
+    });
+}
+
+function searchUsers() {
+    var q = document.getElementById('searchInput').value.trim();
+    if (q.length < 1) { document.getElementById('searchResults').innerHTML = ''; return; }
+    api('/Message/SearchUsers?query=' + q, 'GET', null, function(err, users) {
+        if (!Array.isArray(users)) return;
+        var html = '';
+        users.forEach(function(u) {
+            html += '<div class="user-search-item" onclick="openChat(\'' + escapeHtml(u.username) + '\');closeSearch();">' +
+                '<div class="user-avatar-xs">' + (u.username || '?')[0].toUpperCase() + '</div>' +
+                '<div><strong>' + escapeHtml(u.username) + '</strong><span style="color:#888;margin-left:8px;">@' + escapeHtml(u.tag || '') + '</span></div></div>';
+        });
+        document.getElementById('searchResults').innerHTML = html || 'Not found';
+    });
+}
+
+function joinDuelQueue() {
+    if (!user) { showError('Login first!'); return; }
+    document.getElementById('duelOpponent').textContent = 'Searching...';
+    document.getElementById('duelTask').textContent = 'Waiting for opponent...';
+    document.getElementById('duelSolution').value = '';
+    document.getElementById('duelModal').classList.add('show');
+    var timerEl = document.getElementById('duelTimer'), timeLeft = 60;
+    timerEl.textContent = timeLeft;
+    if (duelInterval) clearInterval(duelInterval);
+    duelInterval = setInterval(function() {
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+        if (timeLeft <= 0) { clearInterval(duelInterval); document.getElementById('duelTask').textContent = 'Time is up!'; }
+    }, 1000);
+    setTimeout(function() {
+        document.getElementById('duelOpponent').textContent = 'Bot_Opponent';
+        document.getElementById('duelTask').textContent = 'function sum(a, b) { return ___; }';
+    }, 3000);
+}
+
+function submitDuel() {
+    var solution = document.getElementById('duelSolution').value.trim();
+    if (!solution) return;
+    alert(solution.includes('a + b') || solution.includes('a+b') ? '🏆 Victory! +100 points!' : '❌ Wrong answer!');
+    leaveDuel();
+}
+
+function leaveDuel() {
+    if (duelInterval) { clearInterval(duelInterval); duelInterval = null; }
+    document.getElementById('duelModal').classList.remove('show');
+}
+
+function loadProfile() {
+    if (!user) return;
+    // Сначала синхронизируем данные через CheckAuth
+    api('/Auth/CheckAuth', 'GET', null, function(err, r) {
+        if (r && r.authenticated) {
+            user = r;
+            saveUser();
         }
+        var username = user.username;
+        var html = '<div class="profile-avatar"><img src="' + API + '/Profile/Avatar?username=' + username + '" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (username||'?')[0] + '\';"></div>' +
+            '<h3>' + escapeHtml(username) + ' <span class="tag-badge">@' + escapeHtml(user.tag || 'none') + '</span></h3>' +
+            '<span class="league-badge league-bronze">🪙 Bronze League</span>' +
+            '<div class="stats-row" style="margin-top:16px;">' +
+            '<div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
+            '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + (user.wins || 0) + '</div><div class="stat-label">Wins</div></div>' +
+            '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div>' +
+            '<div class="stat-box"><div class="stat-value" style="color:#17a2b8">' + (user.wins+user.losses > 0 ? Math.round(user.wins/(user.wins+user.losses)*100) : 0) + '%</div><div class="stat-label">Win Rate</div></div>' +
+            '</div>';
+        html += '<div class="card" style="margin-top:16px;text-align:left;">' +
+            '<div class="card-header">📋 Account Info</div>' +
+            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-tag"></i> Tag: @' + escapeHtml(user.tag || 'none') + '</p>' +
+            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-envelope"></i> ' + escapeHtml(user.email || 'Not set') + '</p>' +
+            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-tasks"></i> Quests: ' + (user.completedQuests ? user.completedQuests.length : 0) + '</p>' +
+        '</div>';
+        var wr = user.wins+user.losses > 0 ? Math.round(user.wins/(user.wins+user.losses)*100) : 0;
+        var sc = user.score || 0;
+        html += '<div class="card" style="margin-top:12px;text-align:left;">' +
+            '<div class="card-header">📊 Performance</div>' +
+            '<div style="margin-bottom:10px;"><span style="font-size:0.8rem;color:#888;">Win Rate ' + wr + '%</span>' +
+            '<div style="background:#222;border-radius:8px;height:8px;margin-top:4px;"><div style="background:#28a745;height:8px;border-radius:8px;width:' + wr + '%;"></div></div></div>' +
+            '<div><span style="font-size:0.8rem;color:#888;">Score Progress ' + sc + ' pts</span>' +
+            '<div style="background:#222;border-radius:8px;height:8px;margin-top:4px;"><div style="background:#ffc107;height:8px;border-radius:8px;width:' + Math.min(sc/10, 100) + '%;"></div></div></div>' +
+        '</div>';
+        document.getElementById('profileContent').innerHTML = html;
+    });
+}
 
-        function setTheme(name) {
-            var t = {
-                dark: { bg: '#0a0a0a', card: '#111', text: '#fff', muted: '#888', input: '#000', border: '#222' },
-                light: { bg: '#f0f0f0', card: '#fff', text: '#1a1a1a', muted: '#666', input: '#fff', border: '#ddd' },
-                midnight: { bg: '#0a0e27', card: '#111640', text: '#c8d6e5', muted: '#8395a7', input: '#0a0e27', border: '#5f27cd' },
-                forest: { bg: '#1a2319', card: '#243322', text: '#d4e0d2', muted: '#8a9e88', input: '#1a2319', border: '#4caf50' },
-                sunset: { bg: '#1a0a2e', card: '#261640', text: '#f0e6ff', muted: '#b8a0d8', input: '#1a0a2e', border: '#ff6b35' }
-            }[name] || { bg: '#0a0a0a', card: '#111', text: '#fff', muted: '#888', input: '#000', border: '#222' };
-            var r = document.documentElement.style;
-            r.setProperty('--bg', t.bg); r.setProperty('--card', t.card); r.setProperty('--text', t.text);
-            r.setProperty('--muted', t.muted); r.setProperty('--input-bg', t.input); r.setProperty('--border', t.border);
-            document.body.style.background = t.bg; document.body.style.color = t.text;
-            localStorage.setItem('codeduel_theme', name);
-        }
+function uploadAvatar() {
+    var file = document.getElementById('avatarFile').files[0];
+    if (!file || !user) return;
+    var fd = new FormData(); fd.append('avatar', file);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', API + '/Profile/UploadAvatar', true);
+    xhr.withCredentials = true;
+    xhr.onload = function() { loadProfile(); };
+    xhr.send(fd);
+}
 
-        function escapeHtml(s) { if (!s) return ''; return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function setTheme(name) {
+    var t = {
+        dark: { bg: '#0a0a0a', card: '#111', text: '#fff', muted: '#888', input: '#000', border: '#222' },
+        light: { bg: '#f0f0f0', card: '#fff', text: '#1a1a1a', muted: '#666', input: '#fff', border: '#ddd' },
+        midnight: { bg: '#0a0e27', card: '#111640', text: '#c8d6e5', muted: '#8395a7', input: '#0a0e27', border: '#5f27cd' },
+        forest: { bg: '#1a2319', card: '#243322', text: '#d4e0d2', muted: '#8a9e88', input: '#1a2319', border: '#4caf50' },
+        sunset: { bg: '#1a0a2e', card: '#261640', text: '#f0e6ff', muted: '#b8a0d8', input: '#1a0a2e', border: '#ff6b35' }
+    }[name] || { bg: '#0a0a0a', card: '#111', text: '#fff', muted: '#888', input: '#000', border: '#222' };
+    var r = document.documentElement.style;
+    r.setProperty('--bg', t.bg); r.setProperty('--card', t.card); r.setProperty('--text', t.text);
+    r.setProperty('--muted', t.muted); r.setProperty('--input-bg', t.input); r.setProperty('--border', t.border);
+    document.body.style.background = t.bg; document.body.style.color = t.text;
+    localStorage.setItem('codeduel_theme', name);
+}
 
-        document.addEventListener('deviceready', function() {
-            var saved = localStorage.getItem('codeduel_user');
-            if (saved) { try { user = JSON.parse(saved); } catch(e) {} }
-            setTheme(localStorage.getItem('codeduel_theme') || 'dark');
-            updateUI(); loadLeaderboard();
-        }, false);
+function escapeHtml(s) { if (!s) return ''; return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-        setTheme(localStorage.getItem('codeduel_theme') || 'dark');
-        loadLeaderboard();
+document.addEventListener('deviceready', function() {
+    var saved = localStorage.getItem('codeduel_user');
+    if (saved) { try { user = JSON.parse(saved); } catch(e) {} }
+    setTheme(localStorage.getItem('codeduel_theme') || 'dark');
+    updateUI(); loadLeaderboard();
+}, false);
+
+setTheme(localStorage.getItem('codeduel_theme') || 'dark');
+loadLeaderboard();
     </script>
 </body>
 </html>
