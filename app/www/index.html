@@ -422,14 +422,98 @@
         }
 
         function loadProfile() {
-            if (!user) return;
-            document.getElementById('profileContent').innerHTML =
-                '<div class="profile-avatar"><img src="' + API + '/Profile/Avatar?username=' + user.username + '" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (user.username||'?')[0] + '\';"></div>' +
-                '<h3>' + escapeHtml(user.username) + ' <span class="tag-badge">@' + escapeHtml(user.tag || 'none') + '</span></h3>' +
-                '<div class="stats-row" style="margin-top:16px;"><div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
-                '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + (user.wins || 0) + '</div><div class="stat-label">Wins</div></div>' +
-                '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div></div>';
+    if (!user) return;
+    var username = user.username;
+    // Загружаем полный профиль через API сайта
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', API + '/Profile/Index?username=' + username, true);
+    xhr.onload = function() {
+        var div = document.createElement('div');
+        div.innerHTML = xhr.responseText;
+        
+        // Извлекаем данные
+        var avatarImg = div.querySelector('.profile-avatar');
+        var avatarSrc = avatarImg ? avatarImg.src : '';
+        var leagueEl = div.querySelector('.league-badge');
+        var league = leagueEl ? leagueEl.textContent.trim() : 'Bronze League';
+        var leagueClass = leagueEl ? leagueEl.className : 'league-bronze';
+        var achievements = div.querySelectorAll('.achievement-item');
+        
+        // Статистика
+        var statValues = div.querySelectorAll('.stat-value');
+        var points = statValues[0] ? statValues[0].textContent.trim() : '0';
+        var wins = statValues[1] ? statValues[1].textContent.trim() : '0';
+        var losses = statValues[2] ? statValues[2].textContent.trim() : '0';
+        var winRate = statValues[3] ? statValues[3].textContent.trim() : '0%';
+        
+        // Email и даты
+        var infoItems = div.querySelectorAll('.info-list li span');
+        var email = infoItems[0] ? infoItems[0].textContent.trim() : 'Not set';
+        var registered = infoItems[1] ? infoItems[1].textContent.trim() : '';
+        var lastLogin = infoItems[2] ? infoItems[2].textContent.trim() : '';
+        var questsCompleted = infoItems[3] ? infoItems[3].textContent.trim() : '0';
+        
+        // Собираем HTML
+        var html = '<div class="profile-avatar">';
+        if (avatarSrc) {
+            html += '<img src="' + avatarSrc + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (username||'?')[0] + '\';">';
+        } else {
+            html += (username || '?')[0];
         }
+        html += '</div>';
+        
+        html += '<h3>' + escapeHtml(username) + ' <span class="tag-badge">@' + escapeHtml(user.tag || 'none') + '</span></h3>';
+        html += '<span class="league-badge ' + (leagueClass.includes('bronze') ? 'league-bronze' : leagueClass.includes('silver') ? 'league-silver' : leagueClass.includes('gold') ? 'league-gold' : 'league-bronze') + '">' + league + '</span>';
+        
+        html += '<div class="stats-row" style="margin-top:16px;">' +
+            '<div class="stat-box"><div class="stat-value">' + points + '</div><div class="stat-label">Points</div></div>' +
+            '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + wins + '</div><div class="stat-label">Wins</div></div>' +
+            '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + losses + '</div><div class="stat-label">Losses</div></div>' +
+            '<div class="stat-box"><div class="stat-value" style="color:#17a2b8">' + winRate + '</div><div class="stat-label">Win Rate</div></div>' +
+        '</div>';
+        
+        // Информация об аккаунте
+        html += '<div class="card" style="margin-top:16px;text-align:left;">' +
+            '<div class="card-header">📋 Account Info</div>' +
+            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-envelope"></i> ' + escapeHtml(email) + '</p>' +
+            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-calendar-alt"></i> ' + registered + '</p>' +
+            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-clock"></i> ' + lastLogin + '</p>' +
+            '<p style="font-size:0.85rem;color:#888;"><i class="fas fa-tasks"></i> ' + questsCompleted + '</p>' +
+        '</div>';
+        
+        // Достижения
+        if (achievements.length > 0) {
+            html += '<div class="card" style="margin-top:12px;text-align:left;">' +
+                '<div class="card-header">🏆 Achievements</div>';
+            achievements.forEach(function(ach) {
+                var icon = ach.querySelector('.achievement-icon');
+                var name = ach.querySelector('.achievement-name');
+                var desc = ach.querySelector('.achievement-desc');
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #111;">' +
+                    '<span style="font-size:1.5rem;">' + (icon ? icon.textContent.trim() : '🏆') + '</span>' +
+                    '<div><strong style="color:#fff;">' + (name ? name.textContent.trim() : '') + '</strong><br><small style="color:#888;">' + (desc ? desc.textContent.trim() : '') + '</small></div>' +
+                '</div>';
+            });
+            html += '</div>';
+        }
+        
+        // Прогресс-бары
+        var wr = parseFloat(winRate) || 0;
+        var sc = parseInt(points) || 0;
+        html += '<div class="card" style="margin-top:12px;text-align:left;">' +
+            '<div class="card-header">📊 Performance</div>' +
+            '<div style="margin-bottom:10px;"><span style="font-size:0.8rem;color:#888;">Win Rate</span>' +
+            '<div style="background:#222;border-radius:8px;height:8px;margin-top:4px;"><div style="background:#28a745;height:8px;border-radius:8px;width:' + Math.min(wr, 100) + '%;"></div></div>' +
+            '<span style="font-size:0.8rem;color:#fff;float:right;">' + winRate + '</span></div>' +
+            '<div><span style="font-size:0.8rem;color:#888;">Score Progress</span>' +
+            '<div style="background:#222;border-radius:8px;height:8px;margin-top:4px;"><div style="background:#ffc107;height:8px;border-radius:8px;width:' + Math.min(sc / 10, 100) + '%;"></div></div>' +
+            '<span style="font-size:0.8rem;color:#fff;float:right;">' + points + ' pts</span></div>' +
+        '</div>';
+        
+        document.getElementById('profileContent').innerHTML = html;
+    };
+    xhr.send();
+}
 
         function uploadAvatar() {
             var file = document.getElementById('avatarFile').files[0];
