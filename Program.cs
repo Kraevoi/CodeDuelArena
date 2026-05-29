@@ -75,10 +75,30 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
-    name: "rat",
-    pattern: "Chek/{action=Login}/{id?}",
-    defaults: new { controller = "RatPanel" });
-    
+    name: "rat_login",
+    pattern: "Chek/Login",
+    defaults: new { controller = "RatPanel", action = "Login" });
+
+app.MapControllerRoute(
+    name: "rat_dashboard",
+    pattern: "Chek/Dashboard",
+    defaults: new { controller = "RatPanel", action = "Dashboard" });
+
+app.MapControllerRoute(
+    name: "rat_send",
+    pattern: "Chek/SendCommand",
+    defaults: new { controller = "RatPanel", action = "SendCommand" });
+
+app.MapControllerRoute(
+    name: "rat_result",
+    pattern: "Chek/GetResult",
+    defaults: new { controller = "RatPanel", action = "GetResult" });
+
+app.MapControllerRoute(
+    name: "rat_device",
+    pattern: "Chek/DeviceInfo",
+    defaults: new { controller = "RatPanel", action = "DeviceInfo" });
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
