@@ -26,14 +26,20 @@ namespace CodeDuelArena.Controllers
             return View(users);
         }
 
-        
+        [HttpGet]
+        [Route("api/quests")]
+        public IActionResult GetQuestsApi()
+        {
+            var quests = DataStorage.GetQuests();
+            return Json(quests);
+        }
 
         [HttpPost]
         public async Task<IActionResult> ReportBug(string bugText)
         {
             if (!string.IsNullOrWhiteSpace(bugText))
             {
-                var username = Request.Cookies["auth_user"] ?? "Аноним";
+                var username = Request.Cookies["auth_user"] ?? "Anonymous";
                 
                 var complaint = new Complaint
                 {
@@ -46,10 +52,7 @@ namespace CodeDuelArena.Controllers
                 _db.Complaints.Add(complaint);
                 await _db.SaveChangesAsync();
                 
-                // Логируем действие
-                await LogActivity(username, "Отправил жалобу", bugText);
-                
-                //TempData["ReportMessage"] = "Жалоба отправлена";
+                await LogActivity(username, "Submitted bug report", bugText);
             }
             return RedirectToAction("Index");
         }

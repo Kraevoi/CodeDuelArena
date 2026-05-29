@@ -63,8 +63,6 @@
         .quest-type.legacy { background: rgba(255,165,0,0.2); color: #ffa500; }
         .code-block { background: #000; padding: 10px; border-radius: 8px; color: var(--gold); font-family: monospace; font-size: 0.75rem; margin: 10px 0; overflow-x: auto; white-space: pre-wrap; }
         .duel-timer { text-align: center; font-size: 3rem; font-weight: 900; color: var(--red); margin: 12px 0; }
-        .league-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-        .league-bronze { background: rgba(205,127,50,0.2); color: #cd7f32; }
         .theme-dot { display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; margin-right: 8px; vertical-align: middle; }
     </style>
 </head>
@@ -78,7 +76,6 @@
         </div>
     </header>
 
-    <!-- Auth Modal -->
     <div class="modal-overlay" id="authModal">
         <div class="modal-box">
             <div class="modal-tabs">
@@ -101,7 +98,6 @@
         </div>
     </div>
 
-    <!-- Search Modal -->
     <div class="modal-overlay" id="searchModal">
         <div class="modal-box">
             <h3 style="color:var(--red);margin-bottom:12px;">🔍 Find User</h3>
@@ -111,7 +107,6 @@
         </div>
     </div>
 
-    <!-- Duel Modal -->
     <div class="modal-overlay" id="duelModal">
         <div class="modal-box" style="max-width:400px;">
             <h3 style="color:var(--red);text-align:center;">⚔️ DUEL</h3>
@@ -124,7 +119,6 @@
         </div>
     </div>
 
-    <!-- Profile View Modal -->
     <div class="modal-overlay" id="profileViewModal">
         <div class="modal-box">
             <h3 style="color:var(--red);text-align:center;" id="profileViewName"></h3>
@@ -134,7 +128,6 @@
         </div>
     </div>
 
-    <!-- Pages -->
     <div class="page active" id="pageHome">
         <h2 style="color:var(--red);margin-bottom:16px;">⚔️ CodeDuel Arena</h2>
         <div class="card"><div class="card-header">🔥 Your Stats</div><div id="statsContent" style="text-align:center;color:var(--muted);">Login to see stats</div></div>
@@ -174,8 +167,7 @@
 
     <div class="page" id="pageSettings">
         <h2 style="color:var(--red);margin-bottom:16px;">⚙️ Settings</h2>
-        <div class="card">
-            <div class="card-header">🎨 Theme</div>
+        <div class="card"><div class="card-header">🎨 Theme</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;">
                 <button class="btn btn-outline" onclick="setTheme('dark')"><span class="theme-dot" style="background:#0a0a0a;"></span>Dark</button>
                 <button class="btn btn-outline" onclick="setTheme('light')"><span class="theme-dot" style="background:#f0f0f0;"></span>Light</button>
@@ -229,7 +221,6 @@
         function hideAuth() { document.getElementById('authModal').classList.remove('show'); }
         function showSearch() { document.getElementById('searchModal').classList.add('show'); document.getElementById('searchInput').focus(); }
         function closeSearch() { document.getElementById('searchModal').classList.remove('show'); }
-        
         function switchTab(t) {
             document.getElementById('tabLogin').style.display = t === 'login' ? 'block' : 'none';
             document.getElementById('tabRegister').style.display = t === 'register' ? 'block' : 'none';
@@ -288,11 +279,10 @@
         function loadStats() {
             if (!user) return;
             document.getElementById('statsContent').innerHTML =
-                '<div class="stats-row">' +
-                '<div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
+                '<div class="stats-row"><div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
                 '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + (user.wins || 0) + '</div><div class="stat-label">Wins</div></div>' +
-                '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div>' +
-                '</div><div style="margin-top:8px;font-size:0.8rem;color:#888;">Tag: @' + (user.tag || 'none') + '</div>';
+                '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div></div>' +
+                '<div style="margin-top:8px;font-size:0.8rem;color:#888;">Tag: @' + (user.tag || 'none') + '</div>';
         }
 
         function loadLeaderboard() {
@@ -315,31 +305,19 @@
         }
 
         function loadQuests() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', API + '/Home/Quests', true);
-            xhr.onload = function() {
-                var div = document.createElement('div');
-                div.innerHTML = xhr.responseText;
-                var cards = div.querySelectorAll('.card');
+            api('/api/quests', 'GET', null, function(err, quests) {
+                if (!Array.isArray(quests)) { document.getElementById('questsList').innerHTML = '<p style="color:#888;">No quests</p>'; return; }
                 var q = '';
-                cards.forEach(function(card) {
-                    var h = card.querySelector('.card-header');
-                    var pre = card.querySelector('pre');
-                    var desc = card.querySelector('p');
-                    var title = h ? h.textContent.replace(/\[.*?\]/g, '').trim() : '';
-                    var pts = h ? (h.textContent.match(/\d+/) || ['0'])[0] : '0';
-                    var type = h && h.textContent.toLowerCase().includes('hack') ? 'hack' : 'legacy';
-                    q += '<div class="quest-card"><div class="quest-title">' + escapeHtml(title) + ' <span class="quest-type ' + type + '">' + type + '</span> <span style="color:#ffd700;">' + pts + ' pts</span></div>';
-                    if (desc) q += '<p style="font-size:0.8rem;color:#888;">' + escapeHtml(desc.textContent || '') + '</p>';
-                    if (pre) q += '<div class="code-block">' + escapeHtml(pre.textContent || '') + '</div>';
-                    q += '</div>';
+                quests.forEach(function(qt) {
+                    var type = (qt.Type || '').toLowerCase() === 'hack' ? 'hack' : 'legacy';
+                    q += '<div class="quest-card"><div class="quest-title">' + escapeHtml(qt.Title || '') + ' <span class="quest-type ' + type + '">' + type + '</span> <span style="color:#ffd700;">' + (qt.Points || 0) + ' pts</span></div>' +
+                        '<p style="font-size:0.8rem;color:#888;">' + escapeHtml(qt.Description || '') + '</p>' +
+                        '<div class="code-block">' + escapeHtml(qt.LegacyCode || '') + '</div></div>';
                 });
                 document.getElementById('questsList').innerHTML = q || '<p style="color:#888;">No quests</p>';
-            };
-            xhr.send();
+            });
         }
 
-        // ============ CHAT (с автообновлением) ============
         function loadChats() {
             if (!user) return;
             api('/Message/GetChats', 'GET', null, function(err, chats) {
@@ -348,8 +326,7 @@
                 chats.forEach(function(c) {
                     html += '<div class="user-search-item" onclick="openChat(\'' + escapeHtml(c.username) + '\')">' +
                         '<div class="user-avatar-xs">' + (c.username || '?')[0].toUpperCase() + '</div>' +
-                        '<div><strong>' + escapeHtml(c.username) + '</strong><br><small style="color:#888;">' + (c.lastMessage || '').substring(0, 40) + '</small></div>' +
-                    '</div>';
+                        '<div><strong>' + escapeHtml(c.username) + '</strong><br><small style="color:#888;">' + (c.lastMessage || '').substring(0, 40) + '</small></div></div>';
                 });
                 document.getElementById('chatList').innerHTML = html || 'No messages. Start a new chat!';
             });
@@ -361,7 +338,6 @@
             document.getElementById('chatWindow').style.display = 'block';
             document.getElementById('chatPartner').textContent = username;
             loadMessages();
-            // Автообновление каждые 2 секунды
             if (chatRefreshInterval) clearInterval(chatRefreshInterval);
             chatRefreshInterval = setInterval(loadMessages, 2000);
         }
@@ -407,48 +383,36 @@
                 users.forEach(function(u) {
                     html += '<div class="user-search-item" onclick="openChat(\'' + escapeHtml(u.username) + '\');closeSearch();">' +
                         '<div class="user-avatar-xs">' + (u.username || '?')[0].toUpperCase() + '</div>' +
-                        '<div><strong>' + escapeHtml(u.username) + '</strong><span style="color:#888;margin-left:8px;">@' + escapeHtml(u.tag || '') + '</span></div>' +
-                    '</div>';
+                        '<div><strong>' + escapeHtml(u.username) + '</strong><span style="color:#888;margin-left:8px;">@' + escapeHtml(u.tag || '') + '</span></div></div>';
                 });
                 document.getElementById('searchResults').innerHTML = html || 'Not found';
             });
         }
 
-        // ============ DUEL (полноценный) ============
         function joinDuelQueue() {
             if (!user) { showError('Login first!'); return; }
             document.getElementById('duelOpponent').textContent = 'Searching...';
             document.getElementById('duelTask').textContent = 'Waiting for opponent...';
             document.getElementById('duelSolution').value = '';
             document.getElementById('duelModal').classList.add('show');
-            var timerEl = document.getElementById('duelTimer');
-            var timeLeft = 60;
+            var timerEl = document.getElementById('duelTimer'), timeLeft = 60;
             timerEl.textContent = timeLeft;
             if (duelInterval) clearInterval(duelInterval);
             duelInterval = setInterval(function() {
                 timeLeft--;
                 timerEl.textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(duelInterval);
-                    document.getElementById('duelTask').textContent = 'Time is up!';
-                }
+                if (timeLeft <= 0) { clearInterval(duelInterval); document.getElementById('duelTask').textContent = 'Time is up!'; }
             }, 1000);
-            
-            // Симуляция поиска соперника (в реальности SignalR)
             setTimeout(function() {
                 document.getElementById('duelOpponent').textContent = 'Bot_Opponent';
-                document.getElementById('duelTask').textContent = 'function sum(a, b) { return ___; } // Fill in the blank to return a + b';
+                document.getElementById('duelTask').textContent = 'function sum(a, b) { return ___; }';
             }, 3000);
         }
 
         function submitDuel() {
             var solution = document.getElementById('duelSolution').value.trim();
             if (!solution) return;
-            if (solution.includes('a + b') || solution.includes('a+b')) {
-                alert('🏆 Victory! +100 points!');
-            } else {
-                alert('❌ Wrong answer! Try again.');
-            }
+            alert(solution.includes('a + b') || solution.includes('a+b') ? '🏆 Victory! +100 points!' : '❌ Wrong answer!');
             leaveDuel();
         }
 
@@ -457,51 +421,44 @@
             document.getElementById('duelModal').classList.remove('show');
         }
 
-        // ============ PROFILE ============
         function loadProfile() {
             if (!user) return;
             document.getElementById('profileContent').innerHTML =
                 '<div class="profile-avatar"><img src="' + API + '/Profile/Avatar?username=' + user.username + '" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (user.username||'?')[0] + '\';"></div>' +
                 '<h3>' + escapeHtml(user.username) + ' <span class="tag-badge">@' + escapeHtml(user.tag || 'none') + '</span></h3>' +
-                '<div class="stats-row" style="margin-top:16px;">' +
-                '<div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
+                '<div class="stats-row" style="margin-top:16px;"><div class="stat-box"><div class="stat-value">' + (user.score || 0) + '</div><div class="stat-label">Points</div></div>' +
                 '<div class="stat-box"><div class="stat-value" style="color:#28a745">' + (user.wins || 0) + '</div><div class="stat-label">Wins</div></div>' +
-                '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div>' +
-                '</div>';
+                '<div class="stat-box"><div class="stat-value" style="color:#dc3545">' + (user.losses || 0) + '</div><div class="stat-label">Losses</div></div></div>';
         }
 
         function uploadAvatar() {
             var file = document.getElementById('avatarFile').files[0];
             if (!file || !user) return;
-            var formData = new FormData();
-            formData.append('avatar', file);
+            var fd = new FormData(); fd.append('avatar', file);
             var xhr = new XMLHttpRequest();
             xhr.open('POST', API + '/Profile/UploadAvatar', true);
             xhr.withCredentials = true;
             xhr.onload = function() { loadProfile(); };
-            xhr.send(formData);
+            xhr.send(fd);
         }
 
-        // ============ THEMES ============
         function setTheme(name) {
-            var themes = {
+            var t = {
                 dark: { bg: '#0a0a0a', card: '#111', text: '#fff', muted: '#888', input: '#000', border: '#222' },
                 light: { bg: '#f0f0f0', card: '#fff', text: '#1a1a1a', muted: '#666', input: '#fff', border: '#ddd' },
                 midnight: { bg: '#0a0e27', card: '#111640', text: '#c8d6e5', muted: '#8395a7', input: '#0a0e27', border: '#5f27cd' },
                 forest: { bg: '#1a2319', card: '#243322', text: '#d4e0d2', muted: '#8a9e88', input: '#1a2319', border: '#4caf50' },
                 sunset: { bg: '#1a0a2e', card: '#261640', text: '#f0e6ff', muted: '#b8a0d8', input: '#1a0a2e', border: '#ff6b35' }
-            };
-            var t = themes[name] || themes.dark;
-            var root = document.documentElement.style;
-            root.setProperty('--bg', t.bg); root.setProperty('--card', t.card); root.setProperty('--text', t.text);
-            root.setProperty('--muted', t.muted); root.setProperty('--input-bg', t.input); root.setProperty('--border', t.border);
+            }[name] || { bg: '#0a0a0a', card: '#111', text: '#fff', muted: '#888', input: '#000', border: '#222' };
+            var r = document.documentElement.style;
+            r.setProperty('--bg', t.bg); r.setProperty('--card', t.card); r.setProperty('--text', t.text);
+            r.setProperty('--muted', t.muted); r.setProperty('--input-bg', t.input); r.setProperty('--border', t.border);
             document.body.style.background = t.bg; document.body.style.color = t.text;
             localStorage.setItem('codeduel_theme', name);
         }
 
         function escapeHtml(s) { if (!s) return ''; return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-        // ============ INIT ============
         document.addEventListener('deviceready', function() {
             var saved = localStorage.getItem('codeduel_user');
             if (saved) { try { user = JSON.parse(saved); } catch(e) {} }
