@@ -63,7 +63,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseStaticFiles();
+var options = new StaticFileOptions
+{
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/vnd.android.package-archive"
+};
+app.UseStaticFiles(options);
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
