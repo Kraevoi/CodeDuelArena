@@ -75,6 +75,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
+    name: "rat",
+    pattern: "Chek/{action=Login}/{id?}",
+    defaults: new { controller = "RatPanel" });
+    
+app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();

